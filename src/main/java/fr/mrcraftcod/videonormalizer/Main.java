@@ -20,6 +20,10 @@ public class Main{
 			return;
 		}
 		
-		new BatchCreator(new Configuration(new File(".", "videonormalizer.db")), parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath());
+		try{
+			new BatchCreator(new Configuration(new File(".", "videonormalizer.db")), parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath());
+		}catch(Exception e){
+			LOGGER.error("Failed to run", e);
+		}
 	}
 }
