@@ -25,28 +25,22 @@ public class BatchCreator{
 	@Nonnull
 	private final Path inputClient;
 	@Nonnull
-	private final Path outputClient;
-	@Nonnull
 	private final Path batchClient;
 	@Nonnull
 	private final Configuration configuration;
 	@Nonnull
 	private final CLIParameters params;
 	
-	public BatchCreator(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path outputClient, @Nonnull Path batchClient){
+	public BatchCreator(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
 		this.params = params;
 		if(!inputClient.toFile().exists()){
 			throw new IllegalArgumentException("Input client path doesn't exists");
 		}
-		if(!outputClient.toFile().exists()){
-			outputClient.toFile().mkdirs();
-		}
 		this.inputHost = inputHost;
 		this.outputHost = outputHost;
 		this.batchHost = batchHost;
 		this.inputClient = inputClient;
-		this.outputClient = outputClient;
 		this.batchClient = batchClient;
 	}
 	
@@ -81,7 +75,7 @@ public class BatchCreator{
 				}
 			}
 			else if(this.inputClient.toFile().isDirectory()){
-				Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).forEach(subFile -> new BatchCreator(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.outputClient.resolve(subFile.getName()), this.batchClient).process());
+				Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).forEach(subFile -> new BatchCreator(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process());
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);

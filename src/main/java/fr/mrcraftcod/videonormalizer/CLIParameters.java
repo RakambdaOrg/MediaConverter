@@ -26,11 +26,6 @@ public class CLIParameters{
 	private Path inputClient;
 	
 	@Parameter(names = {
-			"--output-folder-client"
-	}, description = "The folder to put converted videos on the client machine", converter = PathConverter.class, required = true)
-	private Path outputClient;
-	
-	@Parameter(names = {
 			"--batch-folder-client"
 	}, description = "The folder to put batches on the client machine", converter = PathConverter.class, required = true)
 	private Path batchClient;
@@ -64,10 +59,6 @@ public class CLIParameters{
 	
 	public Path getInputClient(){
 		return inputClient;
-	}
-	
-	public Path getOutputClient(){
-		return outputClient;
 	}
 	
 	public Path getBatchClient(){
