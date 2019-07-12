@@ -21,7 +21,7 @@ public class Main{
 		}
 		
 		try{
-			new BatchCreator(new Configuration(new File(".", "videonormalizer.db")), parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath());
+			new BatchCreator(new Configuration(new File(".", "videonormalizer.db")), parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
 		}catch(Exception e){
 			LOGGER.error("Failed to run", e);
 		}
