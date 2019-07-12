@@ -41,7 +41,7 @@ public class BatchCreator{
 		this.batchClient = batchClient;
 		LOGGER.debug(this.inputClient.toFile().getAbsolutePath());
 		if(!this.inputClient.toFile().exists()){
-			throw new IllegalArgumentException("Input client path doesn't exists");
+			throw new IllegalArgumentException("Input client path " + this.inputClient.toAbsolutePath().toString() + " doesn't exists");
 		}
 	}
 	
@@ -78,7 +78,14 @@ public class BatchCreator{
 				}
 			}
 			else if(this.inputClient.toFile().isDirectory()){
-				Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).forEach(subFile -> new BatchCreator(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process());
+				Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).forEach(subFile -> {
+					try{
+						new BatchCreator(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process();
+					}
+					catch(Exception e){
+						LOGGER.error("Error processing {}", this.inputClient.resolve(subFile.getName()), e);
+					}
+				});
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
