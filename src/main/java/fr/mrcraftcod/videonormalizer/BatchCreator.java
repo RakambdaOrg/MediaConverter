@@ -34,14 +34,15 @@ public class BatchCreator{
 	public BatchCreator(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
 		this.params = params;
-		if(!inputClient.toFile().exists()){
-			throw new IllegalArgumentException("Input client path doesn't exists");
-		}
 		this.inputHost = inputHost;
 		this.outputHost = outputHost;
 		this.batchHost = batchHost;
 		this.inputClient = inputClient;
 		this.batchClient = batchClient;
+		LOGGER.debug(this.inputClient.toFile().getAbsolutePath());
+		if(!this.inputClient.toFile().exists()){
+			throw new IllegalArgumentException("Input client path doesn't exists");
+		}
 	}
 	
 	public void process(){
@@ -58,9 +59,11 @@ public class BatchCreator{
 				if(this.shouldSkip(this.inputClient)){
 					LOGGER.info("Skipping {}", this.inputClient);
 					this.configuration.setUseless(this.inputClient);
+					return;
 				}
 				if(this.isPicture(this.inputClient)){
 					LOGGER.info("Skipping photo {}", this.inputClient);
+					return;
 				}
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
@@ -93,6 +96,9 @@ public class BatchCreator{
 	
 	private boolean shouldSkip(Path path){
 		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches()).orElse(false);
+		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> {
+			LOGGER.debug(ext);
+			return ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches();
+		}).orElse(false);
 	}
 }
