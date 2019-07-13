@@ -5,6 +5,7 @@ import com.beust.jcommander.ParameterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
+import java.util.Objects;
 
 public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -19,11 +20,18 @@ public class Main{
 			e.usage();
 			return;
 		}
-		
+		Configuration conf = null;
 		try{
-			new BatchCreator(new Configuration(new File(".", "videonormalizer.db")), parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
-		}catch(Exception e){
+			conf = new Configuration(new File(".", "videonormalizer.db"));
+			new BatchCreator(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
+		}
+		catch(Exception e){
 			LOGGER.error("Failed to run", e);
+		}
+		finally{
+			if(Objects.nonNull(conf)){
+				conf.close();
+			}
 		}
 	}
 }

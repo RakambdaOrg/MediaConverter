@@ -1,4 +1,4 @@
-module fr.mrcraftcod.videonormalizer {
+open module fr.mrcraftcod.videonormalizer {
 	requires jcommander;
 	
 	requires org.slf4j;

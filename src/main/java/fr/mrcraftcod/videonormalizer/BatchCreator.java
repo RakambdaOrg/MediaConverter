@@ -86,6 +86,7 @@ public class BatchCreator{
 						LOGGER.error("Error processing {}", this.inputClient.resolve(subFile.getName()), e);
 					}
 				});
+				System.out.println();
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
