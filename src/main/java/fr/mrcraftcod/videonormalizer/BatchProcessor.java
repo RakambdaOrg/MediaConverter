@@ -1,37 +1,35 @@
 package fr.mrcraftcod.videonormalizer;
 
+import fr.mrcraftcod.videonormalizer.utils.CLIParameters;
+import fr.mrcraftcod.videonormalizer.utils.Configuration;
 import net.bramp.ffmpeg.FFprobe;
-import net.bramp.ffmpeg.probe.FFmpegFormat;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 
-public class BatchCreator{
-	private static final Logger LOGGER = LoggerFactory.getLogger(BatchCreator.class);
+class BatchProcessor{
+	private static final Logger LOGGER = LoggerFactory.getLogger(BatchProcessor.class);
 	private static final Pattern SKIPPED_EXTENSIONS = Pattern.compile("(loc|msg|pbf|prproj|aep|ini|txt|db|dat|rtf|docx|pdf|dropbox|ds_store|js|xlsm|webm|wmv|html|htm|gpx)");
 	private static final Pattern PICTURE_EXTENSIONS = Pattern.compile("(jpg|png|jpeg|JPG|PNG|gif|svg|tiff)");
-	@Nonnull
 	private final Path inputHost;
-	@Nonnull
 	private final Path outputHost;
-	@Nonnull
 	private final Path batchHost;
-	@Nonnull
 	private final Path inputClient;
-	@Nonnull
 	private final Path batchClient;
-	@Nonnull
 	private final Configuration configuration;
-	@Nonnull
 	private final CLIParameters params;
+	private static final List<String> ACCEPTED_FORMATS = List.of("QuickTime / MOV");
+	private static final List<String> ACCEPTED_CODECS = List.of("h264");
+	private static final List<String> USELESS_CODECS = List.of("hevc");
 	
-	public BatchCreator(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
+	BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
 		this.params = params;
 		this.inputHost = inputHost;
@@ -39,62 +37,77 @@ public class BatchCreator{
 		this.batchHost = batchHost;
 		this.inputClient = inputClient;
 		this.batchClient = batchClient;
-		LOGGER.debug(this.inputClient.toFile().getAbsolutePath());
 		if(!this.inputClient.toFile().exists()){
 			throw new IllegalArgumentException("Input client path " + this.inputClient.toAbsolutePath().toString() + " doesn't exists");
 		}
 	}
 	
-	public void process(){
+	BatchProcessorResult process(){
 		try{
 			if(this.configuration.isUseless(this.inputClient)){
-				return;
+				return BatchProcessorResult.EMPTY;
 			}
 			if(this.inputClient.toFile().isHidden()){
 				LOGGER.warn("Path {} (H: {}) is hidden, skipping", this.inputClient, this.inputHost);
-				return;
+				return BatchProcessorResult.EMPTY;
 			}
 			LOGGER.info("Processing {}", this.inputClient);
 			if(this.inputClient.toFile().isFile()){
 				if(this.shouldSkip(this.inputClient)){
 					LOGGER.info("Skipping {}", this.inputClient);
 					this.configuration.setUseless(this.inputClient);
-					return;
+					return BatchProcessorResult.SCANNED_1;
 				}
 				if(this.isPicture(this.inputClient)){
 					LOGGER.info("Skipping photo {}", this.inputClient);
-					return;
+					return BatchProcessorResult.SCANNED_1;
 				}
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
-					FFmpegFormat format = probeResult.getFormat();
-					System.out.format("%nFile: '%s' ; Format: '%s' ; Duration: %.3fs", format.filename, format.format_long_name, format.duration);
-					FFmpegStream stream = probeResult.getStreams().get(0);
-					System.out.format("%nCodec: '%s' ; Width: %dpx ; Height: %dpx", stream.codec_long_name, stream.width, stream.height);
+					if(ACCEPTED_FORMATS.contains(probeResult.getFormat().format_long_name)){
+						if(probeResult.getStreams().stream().anyMatch(s -> ACCEPTED_CODECS.contains(s.codec_name))){
+							if(configuration.getBatchCreator().create(probeResult, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+								return BatchProcessorResult.CREATED_1;
+							}
+						}
+						else if(probeResult.getStreams().stream().anyMatch(s -> USELESS_CODECS.contains(s.codec_name))){
+							configuration.setUseless(this.inputClient);
+							LOGGER.debug("Codec is useless, marking as useless");
+						}
+						else{
+							LOGGER.debug("No streams match the criteria");
+						}
+					}
+					else{
+						LOGGER.debug("Format {} not handled, skipping", probeResult.getFormat().format_long_name);
+					}
 				}
 				catch(Exception e){
 					LOGGER.error("Failed to get video infos {}", this.inputClient, e);
 				}
+				return BatchProcessorResult.SCANNED_1;
 			}
 			else if(this.inputClient.toFile().isDirectory()){
-				Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).forEach(subFile -> {
+				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).map(subFile -> {
 					try{
-						new BatchCreator(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process();
+						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process();
 					}
 					catch(Exception e){
 						LOGGER.error("Error processing {}", this.inputClient.resolve(subFile.getName()), e);
 					}
-				});
-				System.out.println();
+					return BatchProcessorResult.SCANNED_1;
+				}).collect(Collector.of(() -> new BatchProcessorResult(0, 0), BatchProcessorResult::add, BatchProcessorResult::add));
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
 			}
+			return BatchProcessorResult.EMPTY;
 		}
 		catch(Exception e){
 			LOGGER.error("Error processing {}", this.inputClient, e);
 		}
+		return BatchProcessorResult.EMPTY;
 	}
 	
 	private boolean isPicture(Path path){
@@ -104,9 +117,6 @@ public class BatchCreator{
 	
 	private boolean shouldSkip(Path path){
 		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> {
-			LOGGER.debug(ext);
-			return ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches();
-		}).orElse(false);
+		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches()).orElse(false);
 	}
 }

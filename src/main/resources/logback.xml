@@ -15,6 +15,16 @@
         </encoder>
     </appender>
 
+    <logger name="net.bramp.ffmpeg" additivity="false" level="WARN">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="fr.mrcraftcod.utils.config" additivity="false" level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
     <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>

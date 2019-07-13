@@ -2,6 +2,8 @@ package fr.mrcraftcod.videonormalizer;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import fr.mrcraftcod.videonormalizer.utils.CLIParameters;
+import fr.mrcraftcod.videonormalizer.utils.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -23,7 +25,9 @@ public class Main{
 		Configuration conf = null;
 		try{
 			conf = new Configuration(new File(".", "videonormalizer.db"));
-			new BatchCreator(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
+			final var result = new BatchProcessor(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
+			LOGGER.info("Created {} batch files (scanned {} files)", result.getCreated(), result.getScanned());
+			
 		}
 		catch(Exception e){
 			LOGGER.error("Failed to run", e);

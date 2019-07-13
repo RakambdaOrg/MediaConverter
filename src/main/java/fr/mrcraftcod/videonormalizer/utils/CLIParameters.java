@@ -1,4 +1,4 @@
-package fr.mrcraftcod.videonormalizer;
+package fr.mrcraftcod.videonormalizer.utils;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.PathConverter;
@@ -33,7 +33,7 @@ public class CLIParameters{
 	@Parameter(names = {
 			"--ffprobe"
 	}, description = "The folder to ffprobe executable")
-	private String ffprobePath;
+	private String ffprobePath = "ffprobe";
 	
 	@Parameter(names = {
 			"-h",

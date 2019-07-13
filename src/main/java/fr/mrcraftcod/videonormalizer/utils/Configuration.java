@@ -1,8 +1,10 @@
-package fr.mrcraftcod.videonormalizer;
+package fr.mrcraftcod.videonormalizer.utils;
 
 import fr.mrcraftcod.utils.config.PreparedStatementFiller;
 import fr.mrcraftcod.utils.config.SQLValue;
 import fr.mrcraftcod.utils.config.SQLiteManager;
+import fr.mrcraftcod.videonormalizer.batch.BatchCreator;
+import fr.mrcraftcod.videonormalizer.batch.PS1BatchCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -19,15 +21,15 @@ import java.util.stream.IntStream;
  * @author Thomas Couchoud
  * @since 2017-12-09
  */
-class Configuration extends SQLiteManager{
+public class Configuration extends SQLiteManager{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
 	
-	Configuration(final File dbFile) throws ClassNotFoundException, InterruptedException{
+	public Configuration(final File dbFile) throws ClassNotFoundException, InterruptedException{
 		super(dbFile);
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));").waitSafely();
 	}
 	
-	boolean isUseless(final Path path) throws InterruptedException{
+	public boolean isUseless(final Path path) throws InterruptedException{
 		final var useless = new boolean[1];
 		sendQueryRequest("SELECT * FROM Useless WHERE Filee='" + path.toString().replace("\\", "/") + "';").done(resultSet -> {
 			try{
@@ -46,7 +48,11 @@ class Configuration extends SQLiteManager{
 		super.close();
 	}
 	
-	void setUseless(final Path path) throws InterruptedException{
+	public BatchCreator getBatchCreator(){
+		return new PS1BatchCreator();
+	}
+	
+	public void setUseless(final Path path) throws InterruptedException{
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES(?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/")))).waitSafely();
 	}
 	
