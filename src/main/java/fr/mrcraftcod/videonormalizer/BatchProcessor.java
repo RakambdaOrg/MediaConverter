@@ -89,7 +89,7 @@ class BatchProcessor{
 				return BatchProcessorResult.SCANNED_1;
 			}
 			else if(this.inputClient.toFile().isDirectory()){
-				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).map(subFile -> {
+				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().parallel().flatMap(Arrays::stream).map(subFile -> {
 					try{
 						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process();
 					}
