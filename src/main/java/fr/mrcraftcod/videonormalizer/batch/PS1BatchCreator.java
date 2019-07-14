@@ -5,7 +5,9 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -22,7 +24,8 @@ public class PS1BatchCreator implements BatchCreator{
 			batClientPath.getParent().toFile().mkdirs();
 		if(batClientPath.toFile().exists())
 			return false;
-		try(final var pw = new PrintWriter(batClientPath.toFile())){
+		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){
+			pw.print('\ufeff');
 			pw.printf("$host.ui.RawUI.WindowTitle = \"%s\"\r\n", batFilename);
 			pw.printf("if (!(Test-Path \"%s\")){\r\n", outputHost.getParent().toString());
 			pw.printf("\tmkdir \"%s\"\r\n", outputHost.getParent().toString());

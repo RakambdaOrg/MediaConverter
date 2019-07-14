@@ -5,7 +5,9 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -22,7 +24,7 @@ public class BatBatchCreator implements BatchCreator{
 			batClientPath.getParent().toFile().mkdirs();
 		if(batClientPath.toFile().exists())
 			return false;
-		try(final var pw = new PrintWriter(batClientPath.toFile())){
+		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){
 			pw.printf("title %s\r\n", batFilename);
 			pw.printf("mkdir \"%s\"\r\n", outputHost.getParent().toString());
 			pw.printf("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a \"%s\"\r\n", inputHost.toString(), outputHost.toString());
