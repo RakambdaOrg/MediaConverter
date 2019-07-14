@@ -10,4 +10,6 @@ open module fr.mrcraftcod.videonormalizer {
 	requires jdeferred.core;
 	
 	requires ffmpeg;
+	requires org.apache.commons.lang3;
+	requires commons.math3;
 }
