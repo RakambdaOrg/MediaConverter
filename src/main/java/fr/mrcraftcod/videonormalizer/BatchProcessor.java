@@ -60,6 +60,7 @@ class BatchProcessor{
 				}
 				if(this.isPicture(this.inputClient)){
 					LOGGER.info("Skipping photo {}", this.inputClient);
+					this.configuration.setUseless(this.inputClient);
 					return BatchProcessorResult.SCANNED_1;
 				}
 				try{
