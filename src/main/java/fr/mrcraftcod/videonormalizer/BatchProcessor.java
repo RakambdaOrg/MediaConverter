@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 class BatchProcessor{
 	private static final Logger LOGGER = LoggerFactory.getLogger(BatchProcessor.class);
-	private static final Pattern SKIPPED_EXTENSIONS = Pattern.compile("(loc|msg|pbf|prproj|aep|ini|txt|db|dat|rtf|docx|pdf|dropbox|ds_store|js|xlsm|webm|wmv|html|htm|gpx)");
+	private static final Pattern SKIPPED_EXTENSIONS = Pattern.compile("(loc|msg|pbf|prproj|aep|ini|txt|db|dat|rtf|docx|pdf|dropbox|ds_store|js|xlsm|webm|wmv|html|htm|gpx|m4a)");
 	private static final Pattern PICTURE_EXTENSIONS = Pattern.compile("(jpg|png|jpeg|JPG|PNG|gif|svg|tiff)");
 	private final Path inputHost;
 	private final Path outputHost;
