@@ -10,9 +10,11 @@ import javax.annotation.Nonnull;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 class BatchProcessor{
 	private static final Logger LOGGER = LoggerFactory.getLogger(BatchProcessor.class);
@@ -40,6 +42,7 @@ class BatchProcessor{
 		if(!this.inputClient.toFile().exists()){
 			throw new IllegalArgumentException("Input client path " + this.inputClient.toAbsolutePath().toString() + " doesn't exists");
 		}
+		LOGGER.trace("Created processor for {}", this.inputClient);
 	}
 	
 	BatchProcessorResult process(){
@@ -67,18 +70,23 @@ class BatchProcessor{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
 					if(ACCEPTED_FORMATS.contains(probeResult.getFormat().format_long_name)){
-						if(probeResult.getStreams().stream().anyMatch(s -> ACCEPTED_CODECS.contains(s.codec_name))){
-							if(configuration.getBatchCreator().create(probeResult, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+						return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
+							if(configuration.getBatchCreator().create(probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
 								return BatchProcessorResult.CREATED_1;
 							}
-						}
-						else if(probeResult.getStreams().stream().anyMatch(s -> USELESS_CODECS.contains(s.codec_name))){
-							configuration.setUseless(this.inputClient);
-							LOGGER.debug("Codec is useless, marking as useless");
-						}
-						else{
-							LOGGER.debug("No streams match the criteria");
-						}
+							return BatchProcessorResult.SCANNED_1;
+						}).orElseGet(() -> {
+							probeResult.getStreams().stream().filter(s -> USELESS_CODECS.contains(s.codec_name)).findFirst().ifPresentOrElse(stream -> {
+								try{
+									configuration.setUseless(this.inputClient);
+								}
+								catch(InterruptedException e){
+									LOGGER.error("Failed to mark {} as useless", this.inputClient, e);
+								}
+								LOGGER.debug("Codec {} is useless, marking as useless", stream.codec_name);
+							}, () -> LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", "))));
+							return BatchProcessorResult.SCANNED_1;
+						});
 					}
 					else{
 						LOGGER.debug("Format {} not handled, skipping", probeResult.getFormat().format_long_name);
@@ -90,12 +98,20 @@ class BatchProcessor{
 				return BatchProcessorResult.SCANNED_1;
 			}
 			else if(this.inputClient.toFile().isDirectory()){
-				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().parallel().flatMap(Arrays::stream).map(subFile -> {
+				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).parallel().map(subFile -> {
 					try{
-						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient).process();
+						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient);
 					}
 					catch(Exception e){
-						LOGGER.error("Error processing {}", this.inputClient.resolve(subFile.getName()), e);
+						LOGGER.error("Error creating processor {}", this.inputClient.resolve(subFile.getName()), e);
+					}
+					return null;
+				}).filter(Objects::nonNull).map(processor -> {
+					try{
+						return processor.process();
+					}
+					catch(Exception e){
+						LOGGER.error("Error processing {}", processor.inputClient, e);
 					}
 					return BatchProcessorResult.SCANNED_1;
 				}).collect(Collector.of(() -> new BatchProcessorResult(0, 0), BatchProcessorResult::add, BatchProcessorResult::add));

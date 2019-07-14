@@ -1,6 +1,7 @@
 package fr.mrcraftcod.videonormalizer.batch;
 
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
@@ -12,8 +13,8 @@ public class PS1BatchCreator implements BatchCreator{
 	private static final Logger LOGGER = LoggerFactory.getLogger(PS1BatchCreator.class);
 	
 	@Override
-	public boolean create(FFmpegProbeResult probeResult, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
-		final var batFilename = String.format("%s %s.ps1", Duration.ofSeconds((long) probeResult.format.duration).toString(), inputHost.getFileName().toString());
+	public boolean create(FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
+		final var batFilename = String.format("%s %s %s %s %f.bat", Duration.ofSeconds((long) probeResult.format.duration).toString(), inputHost.getParent().getFileName().toString(), inputHost.getFileName().toString(), stream.codec_name, stream.avg_frame_rate.doubleValue());
 		final var batHostPath = batchHost.resolve(batFilename);
 		final var batClientPath = batchClient.resolve(batFilename);
 		if(!batClientPath.getParent().toFile().exists())
