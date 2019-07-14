@@ -3,6 +3,7 @@ package fr.mrcraftcod.videonormalizer.utils;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.PathConverter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class CLIParameters{
 	@Parameter(names = {
@@ -34,6 +35,10 @@ public class CLIParameters{
 			"--ffprobe"
 	}, description = "The folder to ffprobe executable")
 	private String ffprobePath = "ffprobe";
+	@Parameter(names = {
+			"--config-db"
+	}, description = "The path to the db file", converter = PathConverter.class)
+	private Path configPath = Paths.get("VideoNormalizer.db");
 	
 	@Parameter(names = {
 			"-h",
