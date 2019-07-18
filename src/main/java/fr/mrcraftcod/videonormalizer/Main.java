@@ -29,7 +29,7 @@ public class Main{
 			}
 			conf = new Configuration(parameters.getConfigPath().toFile());
 			final var result = new BatchProcessor(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
-			LOGGER.info("Created {} batch files (scanned {} files)", result.getCreated(), result.getScanned());
+			LOGGER.info("Created {} batch files (handled {} files, scanned {} files)", result.getCreated(), result.getHandled(), result.getScanned());
 			
 		}
 		catch(Exception e){

@@ -46,23 +46,23 @@ class BatchProcessor{
 		try{
 			final var file = inputClient.toFile();
 			if(this.configuration.isUseless(this.inputClient)){
-				return BatchProcessorResult.EMPTY;
+				return BatchProcessorResult.SCANNED_1;
 			}
 			if(file.isHidden()){
 				LOGGER.warn("Path {} (H: {}) is hidden, skipping", this.inputClient, this.inputHost);
-				return BatchProcessorResult.EMPTY;
+				return BatchProcessorResult.SCANNED_1;
 			}
 			LOGGER.info("Processing {}", this.inputClient);
 			if(file.isFile()){
 				if(this.shouldSkip(this.inputClient)){
 					LOGGER.info("Skipping {}", this.inputClient);
 					this.configuration.setUseless(this.inputClient);
-					return BatchProcessorResult.SCANNED_1;
+					return BatchProcessorResult.HANDLED_1;
 				}
 				if(this.isPicture(this.inputClient)){
 					LOGGER.info("Skipping photo {}", this.inputClient);
 					this.configuration.setUseless(this.inputClient);
-					return BatchProcessorResult.SCANNED_1;
+					return BatchProcessorResult.HANDLED_1;
 				}
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
@@ -72,7 +72,7 @@ class BatchProcessor{
 							if(configuration.getBatchCreator().create(probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
 								return BatchProcessorResult.CREATED_1;
 							}
-							return BatchProcessorResult.SCANNED_1;
+							return BatchProcessorResult.HANDLED_1;
 						}).orElseGet(() -> {
 							probeResult.getStreams().stream().filter(s -> USELESS_CODECS.contains(s.codec_name)).findFirst().ifPresentOrElse(stream -> {
 								try{
@@ -83,7 +83,7 @@ class BatchProcessor{
 								}
 								LOGGER.debug("Codec {} is useless, marking as useless", stream.codec_name);
 							}, () -> LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", "))));
-							return BatchProcessorResult.SCANNED_1;
+							return BatchProcessorResult.HANDLED_1;
 						});
 					}
 					else{
@@ -93,7 +93,7 @@ class BatchProcessor{
 				catch(Exception e){
 					LOGGER.error("Failed to get video infos {}", this.inputClient, e);
 				}
-				return BatchProcessorResult.SCANNED_1;
+				return BatchProcessorResult.HANDLED_1;
 			}
 			else if(file.isDirectory()){
 				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().map(subFile -> {
@@ -112,17 +112,17 @@ class BatchProcessor{
 						LOGGER.error("Error processing {}", processor.inputClient, e);
 					}
 					return BatchProcessorResult.SCANNED_1;
-				}).collect(Collector.of(() -> new BatchProcessorResult(0, 0), BatchProcessorResult::add, BatchProcessorResult::add));
+				}).collect(Collector.of(() -> BatchProcessorResult.EMPTY, BatchProcessorResult::add, BatchProcessorResult::add));
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
 			}
-			return BatchProcessorResult.EMPTY;
+			return BatchProcessorResult.SCANNED_1;
 		}
 		catch(Exception e){
 			LOGGER.error("Error processing {}", this.inputClient, e);
 		}
-		return BatchProcessorResult.EMPTY;
+		return BatchProcessorResult.SCANNED_1;
 	}
 	
 	private boolean isPicture(Path path){
