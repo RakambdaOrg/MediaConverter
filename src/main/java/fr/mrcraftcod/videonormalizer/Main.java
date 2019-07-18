@@ -6,7 +6,6 @@ import fr.mrcraftcod.videonormalizer.utils.CLIParameters;
 import fr.mrcraftcod.videonormalizer.utils.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.File;
 import java.util.Objects;
 
 public class Main{
@@ -22,9 +21,13 @@ public class Main{
 			e.usage();
 			return;
 		}
+		
 		Configuration conf = null;
 		try{
-			conf = new Configuration(new File(".", "videonormalizer.db"));
+			if(!(parameters.getInputClient().toFile().exists())){
+				throw new IllegalArgumentException("Input client path " + parameters.getInputClient().toAbsolutePath().toString() + " doesn't exists");
+			}
+			conf = new Configuration(parameters.getConfigPath().toFile());
 			final var result = new BatchProcessor(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
 			LOGGER.info("Created {} batch files (scanned {} files)", result.getCreated(), result.getScanned());
 			

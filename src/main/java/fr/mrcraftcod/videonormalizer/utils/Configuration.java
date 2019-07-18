@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,6 +25,7 @@ import java.util.stream.IntStream;
  */
 public class Configuration extends SQLiteManager{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
+	private final Map<String, Boolean> useless = new ConcurrentHashMap<>();
 	
 	public Configuration(final File dbFile) throws ClassNotFoundException, InterruptedException{
 		super(dbFile);
@@ -30,16 +33,19 @@ public class Configuration extends SQLiteManager{
 	}
 	
 	public boolean isUseless(final Path path) throws InterruptedException{
-		final var useless = new boolean[1];
-		sendQueryRequest("SELECT * FROM Useless WHERE Filee='" + path.toString().replace("\\", "/") + "';").done(resultSet -> {
-			try{
-				useless[0] = resultSet.next();
-			}
-			catch(SQLException e){
-				LOGGER.error("Error getting useless status for {}", path, e);
-			}
-		}).waitSafely();
-		return useless[0];
+		if(useless.isEmpty()){
+			sendQueryRequest("SELECT * FROM Useless;").done(resultSet -> {
+				try{
+					while(resultSet.next()){
+						useless.put(resultSet.getString("Filee"), true);
+					}
+				}
+				catch(SQLException e){
+					LOGGER.error("Error getting useless status", e);
+				}
+			}).waitSafely();
+		}
+		return useless.containsKey(path.toString().replace("\\", "/"));
 	}
 	
 	@Override

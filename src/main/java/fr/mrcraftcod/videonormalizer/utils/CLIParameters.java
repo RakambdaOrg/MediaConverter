@@ -46,6 +46,10 @@ public class CLIParameters{
 	}, help = true)
 	private boolean help = false;
 	
+	public Path getConfigPath(){
+		return configPath;
+	}
+	
 	public String getFfprobePath(){
 		return ffprobePath;
 	}

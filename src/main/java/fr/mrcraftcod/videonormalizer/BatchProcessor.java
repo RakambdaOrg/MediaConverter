@@ -39,23 +39,21 @@ class BatchProcessor{
 		this.batchHost = batchHost;
 		this.inputClient = inputClient;
 		this.batchClient = batchClient;
-		if(!this.inputClient.toFile().exists()){
-			throw new IllegalArgumentException("Input client path " + this.inputClient.toAbsolutePath().toString() + " doesn't exists");
-		}
 		LOGGER.trace("Created processor for {}", this.inputClient);
 	}
 	
 	BatchProcessorResult process(){
 		try{
+			final var file = inputClient.toFile();
 			if(this.configuration.isUseless(this.inputClient)){
 				return BatchProcessorResult.EMPTY;
 			}
-			if(this.inputClient.toFile().isHidden()){
+			if(file.isHidden()){
 				LOGGER.warn("Path {} (H: {}) is hidden, skipping", this.inputClient, this.inputHost);
 				return BatchProcessorResult.EMPTY;
 			}
 			LOGGER.info("Processing {}", this.inputClient);
-			if(this.inputClient.toFile().isFile()){
+			if(file.isFile()){
 				if(this.shouldSkip(this.inputClient)){
 					LOGGER.info("Skipping {}", this.inputClient);
 					this.configuration.setUseless(this.inputClient);
@@ -97,8 +95,8 @@ class BatchProcessor{
 				}
 				return BatchProcessorResult.SCANNED_1;
 			}
-			else if(this.inputClient.toFile().isDirectory()){
-				return Optional.ofNullable(this.inputClient.toFile().listFiles()).stream().flatMap(Arrays::stream).parallel().map(subFile -> {
+			else if(file.isDirectory()){
+				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().map(subFile -> {
 					try{
 						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient);
 					}
