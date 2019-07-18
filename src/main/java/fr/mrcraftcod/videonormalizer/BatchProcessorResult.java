@@ -5,11 +5,11 @@ public class BatchProcessorResult{
 	public static final BatchProcessorResult SCANNED_1 = new BatchProcessorResult(1, 0, 0);
 	public static final BatchProcessorResult HANDLED_1 = new BatchProcessorResult(1, 1, 0);
 	public static final BatchProcessorResult CREATED_1 = new BatchProcessorResult(1, 1, 1);
-	private int scanned;
-	private int handled;
-	private int created;
+	private long scanned;
+	private long handled;
+	private long created;
 	
-	public BatchProcessorResult(int scanned, int handled, int created){
+	public BatchProcessorResult(long scanned, long handled, long created){
 		this.scanned = scanned;
 		this.handled = handled;
 		this.created = created;
@@ -22,15 +22,15 @@ public class BatchProcessorResult{
 		return this;
 	}
 	
-	public int getCreated(){
+	public long getCreated(){
 		return created;
 	}
 	
-	public int getHandled(){
+	public long getHandled(){
 		return handled;
 	}
 	
-	public int getScanned(){
+	public long getScanned(){
 		return scanned;
 	}
 }
