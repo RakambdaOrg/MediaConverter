@@ -27,7 +27,7 @@ class BatchProcessor{
 	private final Path batchClient;
 	private final Configuration configuration;
 	private final CLIParameters params;
-	private static final List<String> ACCEPTED_FORMATS = List.of("QuickTime / MOV");
+	private static final List<String> ACCEPTED_FORMATS = List.of("QuickTime / MOV", "Matroska / WebM");
 	private static final List<String> ACCEPTED_CODECS = List.of("h264");
 	private static final List<String> USELESS_CODECS = List.of("hevc");
 	
