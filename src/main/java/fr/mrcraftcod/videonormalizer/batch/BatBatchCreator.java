@@ -16,6 +16,9 @@ public class BatBatchCreator implements BatchCreator{
 	
 	@Override
 	public boolean create(FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
+		final var filename = outputHost.getFileName().toString();
+		final var cut = filename.lastIndexOf(".");
+		outputHost = outputHost.getParent().resolve((cut >= 0 ? filename.substring(0, cut) : filename) + ".mp4");
 		final var duration = Duration.ofSeconds((long) probeResult.format.duration);
 		final var batFilename = String.format("%dh%dm%ds %s %s %s %f.bat", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), inputHost.getParent().getFileName().toString(), inputHost.getFileName().toString(), stream.codec_name, stream.avg_frame_rate.doubleValue());
 		final var batHostPath = batchHost.resolve(batFilename);
