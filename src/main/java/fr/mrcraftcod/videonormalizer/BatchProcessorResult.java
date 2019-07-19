@@ -1,10 +1,6 @@
 package fr.mrcraftcod.videonormalizer;
 
 public class BatchProcessorResult{
-	public static final BatchProcessorResult EMPTY = new BatchProcessorResult(0, 0, 0);
-	public static final BatchProcessorResult SCANNED_1 = new BatchProcessorResult(1, 0, 0);
-	public static final BatchProcessorResult HANDLED_1 = new BatchProcessorResult(1, 1, 0);
-	public static final BatchProcessorResult CREATED_1 = new BatchProcessorResult(1, 1, 1);
 	private long scanned;
 	private long handled;
 	private long created;
@@ -32,5 +28,21 @@ public class BatchProcessorResult{
 	
 	public long getScanned(){
 		return scanned;
+	}
+	
+	public static BatchProcessorResult newEmpty(){
+		return new BatchProcessorResult(0, 0, 0);
+	}
+	
+	public static BatchProcessorResult newScanned(){
+		return new BatchProcessorResult(1, 0, 0);
+	}
+	
+	public static BatchProcessorResult newHandled(){
+		return new BatchProcessorResult(1, 1, 0);
+	}
+	
+	public static BatchProcessorResult newCreated(){
+		return new BatchProcessorResult(1, 1, 1);
 	}
 }
