@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 class BatchProcessor{
 	private static final Logger LOGGER = LoggerFactory.getLogger(BatchProcessor.class);
-	private static final Pattern SKIPPED_EXTENSIONS = Pattern.compile("(loc|msg|pbf|prproj|aep|ini|txt|db|dat|rtf|docx|pdf|dropbox|ds_store|js|xlsm|webm|wmv|html|htm|gpx|m4a|opus|mp3)");
+	private static final Pattern SKIPPED_EXTENSIONS = Pattern.compile("(loc|msg|pbf|prproj|aep|ini|txt|db|dat|rtf|docx|pdf|dropbox|ds_store|js|xlsm|html|htm|gpx)");
 	private static final Pattern PICTURE_EXTENSIONS = Pattern.compile("(jpg|png|jpeg|JPG|PNG|gif|svg|tiff)");
 	private final Path inputHost;
 	private final Path outputHost;
@@ -27,9 +27,8 @@ class BatchProcessor{
 	private final Path batchClient;
 	private final Configuration configuration;
 	private final CLIParameters params;
-	private static final List<String> ACCEPTED_FORMATS = List.of("QuickTime / MOV", "Matroska / WebM", "FLV (Flash Video)");
 	private static final List<String> ACCEPTED_CODECS = List.of("h264");
-	private static final List<String> USELESS_CODECS = List.of("hevc");
+	private static final List<String> USELESS_CODECS = List.of("hevc", "aac");
 	
 	BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
@@ -67,28 +66,26 @@ class BatchProcessor{
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
-					if(ACCEPTED_FORMATS.contains(probeResult.getFormat().format_long_name)){
-						return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
-							if(configuration.getBatchCreator().create(probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
-								return BatchProcessorResult.newCreated();
+					return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
+						if(configuration.getBatchCreator().create(probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+							return BatchProcessorResult.newCreated();
+						}
+						return BatchProcessorResult.newHandled();
+					}).orElseGet(() -> {
+						if(probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))){
+							try{
+								configuration.setUseless(this.inputClient);
 							}
-							return BatchProcessorResult.newHandled();
-						}).orElseGet(() -> {
-							probeResult.getStreams().stream().filter(s -> USELESS_CODECS.contains(s.codec_name)).findFirst().ifPresentOrElse(stream -> {
-								try{
-									configuration.setUseless(this.inputClient);
-								}
-								catch(InterruptedException e){
-									LOGGER.error("Failed to mark {} as useless", this.inputClient, e);
-								}
-								LOGGER.debug("Codec {} is useless, marking as useless", stream.codec_name);
-							}, () -> LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", "))));
-							return BatchProcessorResult.newHandled();
-						});
-					}
-					else{
-						LOGGER.debug("Format `{}` not handled, skipping", probeResult.getFormat().format_long_name);
-					}
+							catch(InterruptedException e){
+								LOGGER.error("Failed to mark {} as useless", this.inputClient, e);
+							}
+							LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
+						}
+						else{
+							LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
+						}
+						return BatchProcessorResult.newHandled();
+					});
 				}
 				catch(Exception e){
 					LOGGER.error("Failed to get video infos {}", this.inputClient, e);
