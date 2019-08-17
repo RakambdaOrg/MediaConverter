@@ -6,7 +6,7 @@ import fr.mrcraftcod.videonormalizer.utils.CLIParameters;
 import fr.mrcraftcod.videonormalizer.utils.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Objects;
+import java.util.stream.Collector;
 
 public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -22,23 +22,20 @@ public class Main{
 			return;
 		}
 		
-		Configuration conf = null;
 		try{
 			if(!(parameters.getInputClient().toFile().exists())){
 				throw new IllegalArgumentException("Input client path " + parameters.getInputClient().toAbsolutePath().toString() + " doesn't exists");
 			}
-			conf = new Configuration(parameters.getConfigPath().toFile());
-			final var result = new BatchProcessor(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).process();
-			LOGGER.info("Created {} batch files (handled {} files, scanned {} files)", result.getCreated(), result.getHandled(), result.getScanned());
-			
+			try(Configuration conf = new Configuration(parameters.getConfigPath().toFile())){
+				final var result = BatchProcessor.process(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).parallel().map(BatchProcessor::process).collect(Collector.of(BatchProcessorResult::newEmpty, BatchProcessorResult::add, BatchProcessorResult::add));
+				LOGGER.info("Created {} batch files (handled {} files, scanned {} files)", result.getCreated(), result.getHandled(), result.getScanned());
+			}
+			catch(Exception e){
+				LOGGER.error("Error running", e);
+			}
 		}
 		catch(Exception e){
-			LOGGER.error("Failed to run", e);
-		}
-		finally{
-			if(Objects.nonNull(conf)){
-				conf.close();
-			}
+			LOGGER.error("Failed to start", e);
 		}
 	}
 }

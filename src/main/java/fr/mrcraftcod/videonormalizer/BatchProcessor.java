@@ -10,11 +10,10 @@ import javax.annotation.Nonnull;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class BatchProcessor{
 	private static final Logger LOGGER = LoggerFactory.getLogger(BatchProcessor.class);
@@ -30,7 +29,7 @@ class BatchProcessor{
 	private static final List<String> ACCEPTED_CODECS = List.of("h264");
 	private static final List<String> USELESS_CODECS = List.of("hevc", "aac");
 	
-	BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
+	private BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
 		this.params = params;
 		this.inputHost = inputHost;
@@ -41,28 +40,58 @@ class BatchProcessor{
 		LOGGER.trace("Created processor for {}", this.inputClient);
 	}
 	
+	static Stream<BatchProcessor> process(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
+		try{
+			final var file = inputClient.toFile();
+			if(configuration.isUseless(inputClient)){
+				return Stream.empty();
+			}
+			if(file.isHidden()){
+				LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
+				return Stream.empty();
+			}
+			if(file.isFile()){
+				if(shouldSkip(inputClient)){
+					LOGGER.info("Skipping {}", inputClient);
+					configuration.setUseless(inputClient);
+					return Stream.empty();
+				}
+				if(isPicture(inputClient)){
+					LOGGER.info("Skipping photo {}", inputClient);
+					configuration.setUseless(inputClient);
+					return Stream.empty();
+				}
+				return Stream.of(new BatchProcessor(configuration, params, inputHost, outputHost, batchHost, inputClient, batchClient));
+			}
+			else if(file.isDirectory()){
+				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getName()), outputHost.resolve(subFile.getName()), batchHost, inputClient.resolve(subFile.getName()), batchClient));
+			}
+			else{
+				LOGGER.warn("What kind if file is that? {} (H: {})", inputClient, inputHost);
+			}
+			return Stream.empty();
+		}
+		catch(Exception e){
+			LOGGER.error("Error processing {}", inputClient, e);
+		}
+		return Stream.empty();
+	}
+	
+	private static boolean isPicture(Path path){
+		final var filename = path.getFileName().toString();
+		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || PICTURE_EXTENSIONS.matcher(ext).matches()).orElse(false);
+	}
+	
+	private static boolean shouldSkip(Path path){
+		final var filename = path.getFileName().toString();
+		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches()).orElse(false);
+	}
+	
 	BatchProcessorResult process(){
 		try{
 			final var file = inputClient.toFile();
-			if(this.configuration.isUseless(this.inputClient)){
-				return BatchProcessorResult.newScanned();
-			}
-			if(file.isHidden()){
-				LOGGER.warn("Path {} (H: {}) is hidden, skipping", this.inputClient, this.inputHost);
-				return BatchProcessorResult.newScanned();
-			}
 			LOGGER.info("Processing {}", this.inputClient);
 			if(file.isFile()){
-				if(this.shouldSkip(this.inputClient)){
-					LOGGER.info("Skipping {}", this.inputClient);
-					this.configuration.setUseless(this.inputClient);
-					return BatchProcessorResult.newHandled();
-				}
-				if(this.isPicture(this.inputClient)){
-					LOGGER.info("Skipping photo {}", this.inputClient);
-					this.configuration.setUseless(this.inputClient);
-					return BatchProcessorResult.newHandled();
-				}
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
@@ -93,23 +122,7 @@ class BatchProcessor{
 				return BatchProcessorResult.newHandled();
 			}
 			else if(file.isDirectory()){
-				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().map(subFile -> {
-					try{
-						return new BatchProcessor(this.configuration, this.params, this.inputHost.resolve(subFile.getName()), this.outputHost.resolve(subFile.getName()), this.batchHost, this.inputClient.resolve(subFile.getName()), this.batchClient);
-					}
-					catch(Exception e){
-						LOGGER.error("Error creating processor {}", this.inputClient.resolve(subFile.getName()), e);
-					}
-					return null;
-				}).filter(Objects::nonNull).map(processor -> {
-					try{
-						return processor.process();
-					}
-					catch(Exception e){
-						LOGGER.error("Error processing {}", processor.inputClient, e);
-					}
-					return BatchProcessorResult.newScanned();
-				}).collect(Collector.of(BatchProcessorResult::newEmpty, BatchProcessorResult::add, BatchProcessorResult::add));
+				LOGGER.warn("Tried to process a folder {}", this.inputClient);
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
@@ -120,15 +133,5 @@ class BatchProcessor{
 			LOGGER.error("Error processing {}", this.inputClient, e);
 		}
 		return BatchProcessorResult.newScanned();
-	}
-	
-	private boolean isPicture(Path path){
-		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || PICTURE_EXTENSIONS.matcher(ext).matches()).orElse(false);
-	}
-	
-	private boolean shouldSkip(Path path){
-		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches()).orElse(false);
 	}
 }
