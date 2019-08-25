@@ -38,7 +38,7 @@ public class CLIParameters{
 	@Parameter(names = {
 			"--config-db"
 	}, description = "The path to the db file", converter = PathConverter.class)
-	private Path configPath = Paths.get("VideoNormalizer.db");
+	private Path databasePath = Paths.get("VideoNormalizer.db");
 	
 	@Parameter(names = {
 			"-h",
@@ -46,8 +46,8 @@ public class CLIParameters{
 	}, help = true)
 	private boolean help = false;
 	
-	public Path getConfigPath(){
-		return configPath;
+	public Path getDatabasePath(){
+		return databasePath;
 	}
 	
 	public String getFfprobePath(){
