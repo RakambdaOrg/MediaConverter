@@ -46,10 +46,6 @@ class BatchProcessor{
 			if(configuration.isUseless(inputClient)){
 				return Stream.empty();
 			}
-			if(file.isHidden()){
-				LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
-				return Stream.empty();
-			}
 			if(file.isFile()){
 				if(shouldSkip(inputClient)){
 					LOGGER.info("Skipping {}", inputClient);
@@ -61,13 +57,25 @@ class BatchProcessor{
 					configuration.setUseless(inputClient);
 					return Stream.empty();
 				}
+				if(file.isHidden()){
+					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
+					return Stream.empty();
+				}
 				return Stream.of(new BatchProcessor(configuration, params, inputHost, outputHost, batchHost, inputClient, batchClient));
 			}
 			else if(file.isDirectory()){
+				if(file.isHidden()){
+					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
+					return Stream.empty();
+				}
 				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getName()), outputHost.resolve(subFile.getName()), batchHost, inputClient.resolve(subFile.getName()), batchClient));
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", inputClient, inputHost);
+				if(file.isHidden()){
+					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
+					return Stream.empty();
+				}
 			}
 			return Stream.empty();
 		}
