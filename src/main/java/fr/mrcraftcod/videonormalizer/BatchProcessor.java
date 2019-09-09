@@ -26,7 +26,7 @@ class BatchProcessor{
 	private final Path batchClient;
 	private final Configuration configuration;
 	private final CLIParameters params;
-	private static final List<String> ACCEPTED_CODECS = List.of("h264");
+	private static final List<String> ACCEPTED_CODECS = List.of("h264", "vp9");
 	private static final List<String> USELESS_CODECS = List.of("hevc", "aac");
 	
 	private BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
