@@ -1,0 +1,36 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up JDK 12
+        uses: actions/setup-java@v1
+        with:
+          java-version: 12
+      #      - name: Deploy on artifactory
+      #        run: mvn -s .m2/settings.xml --batch-mode deploy
+      #        env:
+      #          MAVEN_URL: ${{ secrets.MAVEN_URL }}
+      #          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+      #          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy on Dropbox
+        run: |
+          curl "${UPLOADER_FETCH_URL}" -o "${UPLOADER}" &&
+          echo "OAUTH_ACCESS_TOKEN=${DROPBOX_DEPLOY_TOKEN}" > "${UPLOADER_CONFIG}" &&
+          mvn -s .m2/settings.xml --batch-mode package &&
+          bash "${UPLOADER}" -f "${UPLOADER_CONFIG}" mkdir "${TARGET_FOLDER}" &>/dev/null || echo "Target folder exists" &&
+          bash "${UPLOADER}" -f "${UPLOADER_CONFIG}" upload builds/*.jar "${TARGET_FOLDER}"
+        env:
+          TARGET_FOLDER: "/Documents/JARs"
+          UPLOADER_FETCH_URL: "https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh"
+          UPLOADER: "dropbox_uploader.sh"
+          UPLOADER_CONFIG: "dropbox_uploader.cfg"
+          DROPBOX_DEPLOY_TOKEN: ${{ secrets.DROPBOX_DEPLOY_TOKEN }}
