@@ -40,10 +40,10 @@ public class PS1BatchCreator implements BatchCreator{
 			pw.printf("\t$FileAccessDate = (Get-ChildItem \"%s\").LastAccessTime\r\n", inputHost.toString());
 			pw.printf("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.CreationTime = $FileCreationDate}\r\n", outputHost.toString());
 			pw.printf("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.LastAccessTime = $FileAccessDate}\r\n", outputHost.toString());
-			pw.printf("\t[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('%s','OnlyErrorDialogs','SendToRecycleBin')\r\n", inputHost.toString());
+			pw.printf("\t[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(\"%s\",'OnlyErrorDialogs','SendToRecycleBin')\r\n", inputHost.toString());
 			pw.printf("\tWrite-Output \"Deleted %s\"\r\n", inputHost.toString());
 			pw.printf("\tif (Test-Path \"%s\") {\r\n", batHostPath.toString());
-			pw.printf("\t\t[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('%s','OnlyErrorDialogs','SendToRecycleBin')\r\n", batHostPath.toString());
+			pw.printf("\t\t[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(\"%s\",'OnlyErrorDialogs','SendToRecycleBin')\r\n", batHostPath.toString());
 			pw.printf("\t\tWrite-Output \"Deleted %s\"\r\n", batHostPath.toString());
 			pw.printf("\t}\r\n");
 			pw.printf("}\r\n");
