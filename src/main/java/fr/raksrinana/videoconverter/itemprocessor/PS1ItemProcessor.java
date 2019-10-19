@@ -1,5 +1,6 @@
-package fr.mrcraftcod.videonormalizer.batch;
+package fr.raksrinana.videoconverter.itemprocessor;
 
+import fr.raksrinana.videoconverter.utils.CLIParameters;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
@@ -14,11 +15,11 @@ import java.time.Duration;
 /**
  * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
  */
-public class PS1BatchCreator implements BatchCreator{
-	private static final Logger LOGGER = LoggerFactory.getLogger(PS1BatchCreator.class);
+public class PS1ItemProcessor implements ItemProcessor{
+	private static final Logger LOGGER = LoggerFactory.getLogger(PS1ItemProcessor.class);
 	
 	@Override
-	public boolean create(FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
+	public boolean create(CLIParameters params, FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
 		final var filename = outputHost.getFileName().toString();
 		final var cut = filename.lastIndexOf(".");
 		outputHost = outputHost.getParent().resolve((cut >= 0 ? filename.substring(0, cut) : filename) + ".mp4");
@@ -26,8 +27,9 @@ public class PS1BatchCreator implements BatchCreator{
 		final var batFilename = String.format("%dh%dm%ds %s %s %s %f.ps1", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), inputHost.getParent().getFileName().toString(), inputHost.getFileName().toString(), stream.codec_name, stream.avg_frame_rate.doubleValue());
 		final var batHostPath = batchHost.resolve(batFilename);
 		final var batClientPath = batchClient.resolve(batFilename);
-		if(!batClientPath.getParent().toFile().exists())
+		if(!batClientPath.getParent().toFile().exists()){
 			batClientPath.getParent().toFile().mkdirs();
+		}
 		if(batClientPath.toFile().exists())
 			return false;
 		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){

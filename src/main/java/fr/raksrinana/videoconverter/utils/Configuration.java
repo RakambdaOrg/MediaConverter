@@ -1,10 +1,10 @@
-package fr.mrcraftcod.videonormalizer.utils;
+package fr.raksrinana.videoconverter.utils;
 
 import fr.mrcraftcod.utils.config.PreparedStatementFiller;
 import fr.mrcraftcod.utils.config.SQLValue;
 import fr.mrcraftcod.utils.config.SQLiteManager;
-import fr.mrcraftcod.videonormalizer.batch.BatchCreator;
-import fr.mrcraftcod.videonormalizer.batch.PS1BatchCreator;
+import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
+import fr.raksrinana.videoconverter.itemprocessor.PS1ItemProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -54,8 +54,8 @@ public class Configuration extends SQLiteManager{
 		super.close();
 	}
 	
-	public BatchCreator getBatchCreator(){
-		return new PS1BatchCreator();
+	public ItemProcessor getBatchCreator(){
+		return new PS1ItemProcessor();
 	}
 	
 	public void setUseless(final Path path) throws InterruptedException{

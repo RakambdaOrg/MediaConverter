@@ -1,12 +1,14 @@
-package fr.mrcraftcod.videonormalizer;
+package fr.raksrinana.videoconverter;
 
-import fr.mrcraftcod.videonormalizer.utils.CLIParameters;
-import fr.mrcraftcod.videonormalizer.utils.Configuration;
+import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
+import fr.raksrinana.videoconverter.utils.CLIParameters;
+import fr.raksrinana.videoconverter.utils.Configuration;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -104,8 +106,14 @@ class BatchProcessor{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
 					return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
-						if(configuration.getBatchCreator().create(probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
-							return BatchProcessorResult.newCreated();
+						try{
+							if(((Class<? extends ItemProcessor>) this.params.getItemProcessor()).getConstructor().newInstance().create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+								return BatchProcessorResult.newCreated();
+							}
+						}
+						catch(InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e){
+							LOGGER.error("Failed to instantiate item processor", e);
+							return BatchProcessorResult.newErrored();
 						}
 						return BatchProcessorResult.newHandled();
 					}).orElseGet(() -> {

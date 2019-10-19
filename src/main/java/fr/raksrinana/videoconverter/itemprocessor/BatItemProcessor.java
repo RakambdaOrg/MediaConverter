@@ -1,5 +1,6 @@
-package fr.mrcraftcod.videonormalizer.batch;
+package fr.raksrinana.videoconverter.itemprocessor;
 
+import fr.raksrinana.videoconverter.utils.CLIParameters;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.slf4j.Logger;
@@ -11,11 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 
-public class BatBatchCreator implements BatchCreator{
-	private static final Logger LOGGER = LoggerFactory.getLogger(BatBatchCreator.class);
+public class BatItemProcessor implements ItemProcessor{
+	private static final Logger LOGGER = LoggerFactory.getLogger(BatItemProcessor.class);
 	
 	@Override
-	public boolean create(FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
+	public boolean create(CLIParameters params, FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
 		final var filename = outputHost.getFileName().toString();
 		final var cut = filename.lastIndexOf(".");
 		outputHost = outputHost.getParent().resolve((cut >= 0 ? filename.substring(0, cut) : filename) + ".mp4");
@@ -23,8 +24,9 @@ public class BatBatchCreator implements BatchCreator{
 		final var batFilename = String.format("%dh%dm%ds %s %s %s %f.bat", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), inputHost.getParent().getFileName().toString(), inputHost.getFileName().toString(), stream.codec_name, stream.avg_frame_rate.doubleValue());
 		final var batHostPath = batchHost.resolve(batFilename);
 		final var batClientPath = batchClient.resolve(batFilename);
-		if(!batClientPath.getParent().toFile().exists())
+		if(!batClientPath.getParent().toFile().exists()){
 			batClientPath.getParent().toFile().mkdirs();
+		}
 		if(batClientPath.toFile().exists())
 			return false;
 		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){
