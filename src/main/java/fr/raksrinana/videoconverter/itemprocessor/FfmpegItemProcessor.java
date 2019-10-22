@@ -27,7 +27,8 @@ public class FfmpegItemProcessor implements ItemProcessor{
 		final var cut = filename.lastIndexOf(".");
 		outputHost = outputHost.getParent().resolve((cut >= 0 ? filename.substring(0, cut) : filename) + ".mp4");
 		final var duration = Duration.ofSeconds((long) probeResult.format.duration);
-		LOGGER.info("Converting {} ({}h{}m{}s) to {}", inputHost, duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), outputHost);
+		final var durationStr = String.format("%dh%dm%s", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
+		LOGGER.info("Converting {} ({}) to {}", inputHost, durationStr, outputHost);
 		if(!outputHost.getParent().toFile().exists()){
 			outputHost.getParent().toFile().mkdirs();
 		}
@@ -37,8 +38,8 @@ public class FfmpegItemProcessor implements ItemProcessor{
 				final var tempFile = params.getTempDirectory().resolve(outputHost.getFileName());
 				LOGGER.debug("Will convert to temp file {}", tempFile);
 				final var ffmpeg = new FFmpeg(params.getFfmpegPath());
-				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").done().build();
-				ffmpeg.run(ffmpegOptions);
+				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").done();
+				ffmpeg.run(ffmpegOptions, progress -> LOGGER.info("{} - {} / {} frames - {} fps - {} / {}", filename, progress.frame, probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0), progress.fps, Duration.ofNanos(progress.out_time_ns), durationStr));
 				if(tempFile.toFile().exists()){
 					Files.move(tempFile, outputHost);
 					final var baseAttributes = Files.getFileAttributeView(inputHost, BasicFileAttributeView.class).readAttributes();
