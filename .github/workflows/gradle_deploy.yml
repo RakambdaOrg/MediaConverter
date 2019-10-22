@@ -14,6 +14,8 @@ jobs:
         uses: MrRamych/gradle-actions/openjdk-12@3.0
       - name: Deploy on Dropbox
         run: |
+          pwd &&
+          ls -R . &&
           curl "${UPLOADER_FETCH_URL}" -o "${UPLOADER}" &&
           echo "OAUTH_ACCESS_TOKEN=${DROPBOX_DEPLOY_TOKEN}" > "${UPLOADER_CONFIG}" &&
           bash "${UPLOADER}" -f "${UPLOADER_CONFIG}" mkdir "${TARGET_FOLDER}" &>/dev/null || echo "Target folder exists" &&
