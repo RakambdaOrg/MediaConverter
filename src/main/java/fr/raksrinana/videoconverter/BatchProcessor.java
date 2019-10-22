@@ -29,7 +29,7 @@ class BatchProcessor{
 	private final Configuration configuration;
 	private final CLIParameters params;
 	private static final List<String> ACCEPTED_CODECS = List.of("h264", "vp9", "wmv3");
-	private static final List<String> USELESS_CODECS = List.of("hevc", "aac");
+	private static final List<String> USELESS_CODECS = List.of("hevc", "aac", "opus", "mp3");
 	
 	private BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
 		this.configuration = configuration;
