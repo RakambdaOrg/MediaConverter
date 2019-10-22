@@ -1,7 +1,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%highlight(%date{ISO8601} %level [%thread] - %logger.%method:%line) - %message%n</pattern>
+            <pattern>%highlight(%date{ISO8601} %level [%thread] - %logger{15}.%method:%line) - %message%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
