@@ -39,7 +39,10 @@ public class FfmpegItemProcessor implements ItemProcessor{
 				LOGGER.debug("Will convert to temp file {}", tempFile);
 				final var ffmpeg = new FFmpeg(params.getFfmpegPath());
 				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").done();
-				ffmpeg.run(ffmpegOptions, progress -> LOGGER.info("{} - {} / {} frames - {} fps - {} / {}", filename, progress.frame, probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0), progress.fps, Duration.ofNanos(progress.out_time_ns), durationStr));
+				ffmpeg.run(ffmpegOptions, progress -> {
+					final var dur = Duration.ofNanos(progress.out_time_ns);
+					LOGGER.info("{} - {} / {} frames - {} fps - {}h{}m{}s / {}", filename, progress.frame, probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0), progress.fps.floatValue(), dur.toHours(), dur.toMinutesPart(), dur.toSecondsPart(), durationStr);
+				});
 				if(tempFile.toFile().exists()){
 					Files.move(tempFile, outputHost);
 					final var baseAttributes = Files.getFileAttributeView(inputHost, BasicFileAttributeView.class).readAttributes();
