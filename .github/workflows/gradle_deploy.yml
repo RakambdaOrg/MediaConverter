@@ -20,6 +20,8 @@ jobs:
         uses: MrRamych/gradle-actions/openjdk-12@3.0
         with:
           args: build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy on Dropbox
         run: |
           curl "${UPLOADER_FETCH_URL}" -o "${UPLOADER}" &&

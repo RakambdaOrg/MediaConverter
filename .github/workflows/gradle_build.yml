@@ -15,3 +15,5 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Build with gradle
         uses: MrRamych/gradle-actions/openjdk-12@3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
