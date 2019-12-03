@@ -60,10 +60,7 @@ repositories {
         url = 'https://jcenter.bintray.com'
     }
     maven {
-        url = 'https://maven.mrcraftcod.fr'
-    }
-    maven {
-        url = 'https://maven.pkg.github.com/RakSrinaNa/NameAsCreated/'
+        url = 'https://maven.pkg.github.com/RakSrinaNa/JavaUtils/'
         credentials {
             username buildProperties.secrets['GITHUB_USER'].string
             password buildProperties.secrets['GITHUB_TOKEN'].string
