@@ -17,7 +17,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Build with gradle
-        uses: MrRamych/gradle-actions/openjdk-12@3.0
+        uses: MrRamych/gradle-actions/openjdk-13@3.1
         with:
           args: build
         env:
