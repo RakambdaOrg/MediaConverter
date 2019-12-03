@@ -1,18 +1,19 @@
 package fr.raksrinana.videoconverter;
 
-import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
 import fr.raksrinana.videoconverter.utils.CLIParameters;
 import fr.raksrinana.videoconverter.utils.Configuration;
+import lombok.NonNull;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,7 +32,7 @@ class BatchProcessor{
 	private static final List<String> ACCEPTED_CODECS = List.of("h264", "vp9", "wmv3");
 	private static final List<String> USELESS_CODECS = List.of("hevc", "aac", "opus", "mp3");
 	
-	private BatchProcessor(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
+	private BatchProcessor(@NonNull Configuration configuration, @NonNull CLIParameters params, @NonNull Path inputHost, @NonNull Path outputHost, @NonNull Path batchHost, @NonNull Path inputClient, @NonNull Path batchClient){
 		this.configuration = configuration;
 		this.params = params;
 		this.inputHost = inputHost;
@@ -42,7 +43,7 @@ class BatchProcessor{
 		LOGGER.trace("Created processor for {}", this.inputClient);
 	}
 	
-	static Stream<BatchProcessor> process(@Nonnull Configuration configuration, @Nonnull CLIParameters params, @Nonnull Path inputHost, @Nonnull Path outputHost, @Nonnull Path batchHost, @Nonnull Path inputClient, @Nonnull Path batchClient){
+	static Stream<BatchProcessor> process(@NonNull Configuration configuration, @NonNull CLIParameters params, @NonNull Path inputHost, @NonNull Path outputHost, @NonNull Path batchHost, @NonNull Path inputClient, @NonNull Path batchClient){
 		try{
 			final var file = inputClient.toFile();
 			if(configuration.isUseless(inputClient)){
@@ -107,7 +108,7 @@ class BatchProcessor{
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
 					return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
 						try{
-							if(((Class<? extends ItemProcessor>) this.params.getItemProcessor()).getConstructor().newInstance().create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+							if(this.params.getItemProcessor().getConstructor().newInstance().create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
 								return BatchProcessorResult.newCreated();
 							}
 						}
@@ -121,7 +122,7 @@ class BatchProcessor{
 							try{
 								configuration.setUseless(this.inputClient);
 							}
-							catch(InterruptedException e){
+							catch(InterruptedException | TimeoutException | ExecutionException e){
 								LOGGER.error("Failed to mark {} as useless", this.inputClient, e);
 							}
 							LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));

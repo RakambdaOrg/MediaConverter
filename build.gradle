@@ -1,12 +1,36 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id "com.github.ben-manes.versions" version '0.27.0'
+    id 'com.novoda.build-properties' version '0.4.1'
     id 'java'
     id 'application'
+    id 'io.freefair.lombok' version '4.1.5'
+}
+
+def secretsFile = new File(".", "secrets.properties")
+
+if (!secretsFile.getParentFile().exists()) {
+    secretsFile.mkdirs()
+}
+
+if (!secretsFile.exists()) {
+    secretsFile.withWriterAppend { w ->
+        w << "\n"
+    }
+}
+
+buildProperties {
+    secrets {
+        using(file('secrets.properties')).or(System.getenv()).or([
+                "GITHUB_USER" : "RakSrinaNa",
+                "GITHUB_TOKEN": "N/A"
+        ])
+    }
 }
 
 group = 'fr.raksrinana'
 description = 'VideoConverter'
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_12
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_13
 
 ext.moduleName = project.moduleName
 mainClassName = project.mainClass
@@ -18,9 +42,10 @@ dependencies {
     }
 
     implementation("org.slf4j:slf4j-api:${project.slf4j_version}")
-    implementation("ch.qos.logback:logback-classic:${project.logback_version}")
-    implementation("fr.mrcraftcod:utils.config:${project.raksrinana_utils_version}")
-    implementation("com.google.code.findbugs:jsr305:${project.jsr305_version}")
+    implementation("ch.qos.logback:logback-classic:${project.logback_version}") {
+        exclude group: 'edu.washington.cs.types.checker', module: 'checker-framework'
+    }
+    implementation("fr.raksrinana:utils.config:${project.raksrinana_utils_version}")
 
     implementation("org.apache.commons:commons-math3:${project.commons_math3_version}")
     implementation("org.apache.commons:commons-lang3:${project.commons_lang3_version}")
@@ -36,6 +61,13 @@ repositories {
     }
     maven {
         url = 'https://maven.mrcraftcod.fr'
+    }
+    maven {
+        url = 'https://maven.pkg.github.com/RakSrinaNa/NameAsCreated/'
+        credentials {
+            username buildProperties.secrets['GITHUB_USER'].string
+            password buildProperties.secrets['GITHUB_TOKEN'].string
+        }
     }
 }
 

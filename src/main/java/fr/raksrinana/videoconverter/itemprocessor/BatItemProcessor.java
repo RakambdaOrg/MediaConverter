@@ -27,8 +27,9 @@ public class BatItemProcessor implements ItemProcessor{
 		if(!batClientPath.getParent().toFile().exists()){
 			batClientPath.getParent().toFile().mkdirs();
 		}
-		if(batClientPath.toFile().exists())
+		if(batClientPath.toFile().exists()){
 			return false;
+		}
 		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){
 			pw.printf("title %s\r\n", batFilename);
 			pw.printf("mkdir \"%s\"\r\n", outputHost.getParent().toString());

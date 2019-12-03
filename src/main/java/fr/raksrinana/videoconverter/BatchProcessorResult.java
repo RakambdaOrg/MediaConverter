@@ -1,5 +1,8 @@
 package fr.raksrinana.videoconverter;
 
+import lombok.Getter;
+
+@Getter
 public class BatchProcessorResult{
 	private long scanned;
 	private long handled;
@@ -17,20 +20,8 @@ public class BatchProcessorResult{
 		return new BatchProcessorResult(0, 0, 0, 0);
 	}
 	
-	public long getCreated(){
-		return created;
-	}
-	
 	public static BatchProcessorResult newScanned(){
 		return new BatchProcessorResult(1, 0, 0, 0);
-	}
-	
-	public long getHandled(){
-		return handled;
-	}
-	
-	public long getScanned(){
-		return scanned;
 	}
 	
 	public static BatchProcessorResult newHandled(){
@@ -51,9 +42,5 @@ public class BatchProcessorResult{
 		this.created += processorResult.getCreated();
 		this.errored += processorResult.getErrored();
 		return this;
-	}
-	
-	public long getErrored(){
-		return errored;
 	}
 }

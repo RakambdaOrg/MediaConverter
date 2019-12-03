@@ -47,7 +47,7 @@ public class Main{
 			if(!(parameters.getInputClient().toFile().exists())){
 				throw new IllegalArgumentException("Input client path " + parameters.getInputClient().toAbsolutePath().toString() + " doesn't exists");
 			}
-			try(Configuration conf = new Configuration(parameters.getDatabasePath().toFile())){
+			try(Configuration conf = new Configuration(parameters.getDatabasePath())){
 				var processStream = BatchProcessor.process(conf, parameters, parameters.getInputHost().normalize().toAbsolutePath(), parameters.getOutputHost().normalize().toAbsolutePath(), parameters.getBatchHost().normalize().toAbsolutePath(), parameters.getInputClient().normalize().toAbsolutePath(), parameters.getBatchClient().normalize().toAbsolutePath()).map(BatchProcessor::process);
 				if(parameters.isRunningParallel()){
 					processStream = processStream.parallel();
