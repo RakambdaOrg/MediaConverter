@@ -11,7 +11,7 @@
             <maxHistory>10</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%date{ISO8601} %level [%thread] - %logger.%method:%line - %message%n</pattern>
+            <pattern>%date{ISO8601} %level [%thread] - %logger{15}.%method:%line - %message%n</pattern>
         </encoder>
     </appender>
 
@@ -20,7 +20,7 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <logger name="fr.mrcraftcod.utils.config" additivity="false" level="INFO">
+    <logger name="fr.raksrinana.utils" additivity="false" level="WARN">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>

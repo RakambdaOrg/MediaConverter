@@ -74,7 +74,7 @@ public class FfmpegItemProcessor implements ItemProcessor{
 			}
 		}
 		catch(IOException e){
-			log.error("Failed to run ffmpeg", e);
+			log.error("Failed to run ffmpeg on {}", inputHost, e);
 		}
 		return false;
 	}
