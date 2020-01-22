@@ -1,25 +1,24 @@
 package fr.raksrinana.videoconverter.itemprocessor;
 
 import fr.raksrinana.videoconverter.utils.CLIParameters;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
  */
+@Slf4j
 public class PS1ItemProcessor implements ItemProcessor{
-	private static final Logger LOGGER = LoggerFactory.getLogger(PS1ItemProcessor.class);
-	
 	@Override
-	public boolean create(CLIParameters params, FFmpegProbeResult probeResult, FFmpegStream stream, Path inputHost, Path outputHost, Path batchHost, Path batchClient){
+	public boolean create(@NonNull CLIParameters params, @NonNull FFmpegProbeResult probeResult, @NonNull FFmpegStream stream, @NonNull Path inputHost, @NonNull Path outputHost, @NonNull Path batchHost, @NonNull Path batchClient){
 		final var filename = outputHost.getFileName().toString();
 		final var cut = filename.lastIndexOf(".");
 		outputHost = outputHost.getParent().resolve((cut >= 0 ? filename.substring(0, cut) : filename) + ".mp4");
@@ -27,37 +26,26 @@ public class PS1ItemProcessor implements ItemProcessor{
 		final var batFilename = String.format("%dh%dm%ds %s %s %s %f.ps1", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), inputHost.getParent().getFileName().toString(), inputHost.getFileName().toString(), stream.codec_name, stream.avg_frame_rate.doubleValue());
 		final var batHostPath = batchHost.resolve(batFilename);
 		final var batClientPath = batchClient.resolve(batFilename);
-		if(!batClientPath.getParent().toFile().exists()){
-			batClientPath.getParent().toFile().mkdirs();
+		if(!Files.exists(batchClient)){
+			try{
+				Files.createDirectories(batchClient);
+			}
+			catch(IOException e){
+				log.error("Failed to create directory {}", batchClient, e);
+			}
 		}
-		if(batClientPath.toFile().exists())
-			return false;
-		try(final var pw = new PrintWriter(new FileOutputStream(batClientPath.toFile()), false, StandardCharsets.UTF_8)){
-			pw.print('\ufeff');
-			pw.printf("$host.ui.RawUI.WindowTitle = \"%s\"\r\n", batFilename);
-			pw.printf("if (!(Test-Path \"%s\")){\r\n", outputHost.getParent().toString());
-			pw.printf("\tmkdir \"%s\"\r\n", outputHost.getParent().toString());
-			pw.printf("}\r\n");
-			pw.printf("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -movflags use_metadata_tags -map_metadata 0 \"%s\"\r\n", inputHost.toString(), outputHost.toString());
-			pw.printf("Add-Type -AssemblyName Microsoft.VisualBasic\r\n");
-			pw.printf("if (Test-Path \"%s\") {\r\n", outputHost.toString());
-			pw.printf("\t$FileCreationDate = (Get-ChildItem \"%s\").CreationTime\r\n", inputHost.toString());
-			pw.printf("\t$FileAccessDate = (Get-ChildItem \"%s\").LastAccessTime\r\n", inputHost.toString());
-			pw.printf("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.CreationTime = $FileCreationDate}\r\n", outputHost.toString());
-			pw.printf("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.LastAccessTime = $FileAccessDate}\r\n", outputHost.toString());
-			pw.printf("\tRemove-ItemSafely \"%s\"\r\n", inputHost.toString());
-			pw.printf("\tWrite-Output \"Deleted %s\"\r\n", inputHost.toString());
-			pw.printf("\tif (Test-Path \"%s\") {\r\n", batHostPath.toString());
-			pw.printf("\t\tRemove-ItemSafely \"%s\"\r\n", batHostPath.toString());
-			pw.printf("\t\tWrite-Output \"Deleted %s\"\r\n", batHostPath.toString());
-			pw.printf("\t}\r\n");
-			pw.printf("}\r\n");
-		}
-		catch(FileNotFoundException e){
-			LOGGER.error("Failed to write bat into {}", batClientPath, e);
+		if(Files.exists(batClientPath)){
 			return false;
 		}
-		LOGGER.info("Wrote ps1 file for {}", inputHost);
+		final var lines = List.of("\ufeff", String.format("$host.ui.RawUI.WindowTitle = \"%s\"", batFilename), String.format("if (!(Test-Path \"%s\")){", outputHost.getParent().toString()), String.format("\tmkdir \"%s\"", outputHost.getParent().toString()), "}", String.format("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -movflags use_metadata_tags -map_metadata 0 \"%s\"", inputHost.toString(), outputHost.toString()), "Add-Type -AssemblyName Microsoft.VisualBasic", String.format("if (Test-Path \"%s\") {", outputHost.toString()), String.format("\t$FileCreationDate = (Get-ChildItem \"%s\").CreationTime", inputHost.toString()), String.format("\t$FileAccessDate = (Get-ChildItem \"%s\").LastAccessTime", inputHost.toString()), String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.CreationTime = $FileCreationDate}", outputHost.toString()), String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.LastAccessTime = $FileAccessDate}", outputHost.toString()), String.format("\tRemove-ItemSafely \"%s\"", inputHost.toString()), String.format("\tWrite-Output \"Deleted %s\"", inputHost.toString()), String.format("\tif (Test-Path \"%s\") {", batHostPath.toString()), String.format("\t\tRemove-ItemSafely \"%s\"", batHostPath.toString()), String.format("\t\tWrite-Output \"Deleted %s\"", batHostPath.toString()), "\t}", "}");
+		try{
+			Files.write(batClientPath, lines, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+		}
+		catch(Exception e){
+			log.error("Failed to write bat into {}", batClientPath, e);
+			return false;
+		}
+		log.info("Wrote ps1 file for {}", inputHost);
 		return true;
 	}
 }

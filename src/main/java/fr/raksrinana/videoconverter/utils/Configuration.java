@@ -3,8 +3,8 @@ package fr.raksrinana.videoconverter.utils;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
 import fr.raksrinana.utils.config.SQLiteManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -17,38 +17,38 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class Configuration extends SQLiteManager{
-	private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
 	private final Map<String, Boolean> useless = new ConcurrentHashMap<>();
 	
-	public Configuration(final Path dbFile) throws ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException{
+	public Configuration(@NonNull final Path dbFile) throws ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException{
 		super(dbFile);
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));").get(30, TimeUnit.SECONDS);
 	}
 	
-	public boolean isUseless(final Path path) throws TimeoutException, ExecutionException, InterruptedException{
+	public boolean isUseless(@NonNull final Path path) throws TimeoutException, ExecutionException, InterruptedException{
 		if(useless.isEmpty()){
-			sendQueryRequest("SELECT * FROM Useless;").thenAccept(resultSet -> resultSet.ifPresent(result -> {
+			sendQueryRequest("SELECT * FROM Useless;").thenAccept(resultSet -> {
 				try{
-					while(result.next()){
-						useless.put(result.getString("Filee"), true);
+					while(resultSet.next()){
+						useless.put(resultSet.getString("Filee"), true);
 					}
 				}
 				catch(SQLException e){
-					LOGGER.error("Error getting useless status", e);
+					log.error("Error getting useless status", e);
 				}
-			})).get(30, TimeUnit.SECONDS);
+			}).get(30, TimeUnit.SECONDS);
 		}
 		return useless.containsKey(path.toString().replace("\\", "/"));
 	}
 	
 	@Override
 	public void close(){
-		LOGGER.info("Closing SQL Connection...");
+		log.info("Closing SQL Connection...");
 		super.close();
 	}
 	
-	public void setUseless(final Path path) throws InterruptedException, TimeoutException, ExecutionException{
+	public void setUseless(@NonNull final Path path) throws InterruptedException, TimeoutException, ExecutionException{
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES(?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/")))).get(30, TimeUnit.SECONDS);
 	}
 	
@@ -56,6 +56,6 @@ public class Configuration extends SQLiteManager{
 		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?)").collect(Collectors.joining(","));
 		final var values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path)).stream()).toArray(SQLValue[]::new);
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).get(30, TimeUnit.SECONDS);
-		LOGGER.debug("Set downloaded status for {} items", paths.size());
+		log.debug("Set downloaded status for {} items", paths.size());
 	}
 }

@@ -11,21 +11,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+@Getter
 public class CLIParameters{
 	@Parameter(names = {
 			"--input-folder-host"
 	}, description = "The folder to scan videos for on the host machine", converter = PathConverter.class, required = true)
-	@Getter
 	private Path inputHost;
 	@Parameter(names = {
 			"--output-folder-host"
 	}, description = "The folder to put converted videos on the host machine", converter = PathConverter.class, required = true)
-	@Getter
 	private Path outputHost;
 	@Parameter(names = {
 			"--batch-folder-host"
 	}, description = "The folder to put batches on the host machine", converter = PathConverter.class)
-	@Getter
 	private Path batchHost = Paths.get("videoconverter");
 	@Parameter(names = {
 			"--input-folder-client"
@@ -34,22 +32,18 @@ public class CLIParameters{
 	@Parameter(names = {
 			"--batch-folder-client"
 	}, description = "The folder to put batches on the client machine", converter = PathConverter.class)
-	@Getter
 	private Path batchClient = Paths.get("videoconverter");
 	@Parameter(names = {
 			"--ffprobe"
 	}, description = "The path to ffprobe executable")
-	@Getter
 	private String ffprobePath = "ffprobe";
 	@Parameter(names = {
 			"--ffmpeg"
 	}, description = "The path to ffmpeg executable")
-	@Getter
 	private String ffmpegPath = "ffmpeg";
 	@Parameter(names = {
 			"--config-db"
 	}, description = "The path to the db file", converter = PathConverter.class)
-	@Getter
 	private Path databasePath = Paths.get("VideoNormalizer.db");
 	@Parameter(names = {
 			"-h",
@@ -64,7 +58,6 @@ public class CLIParameters{
 	@Parameter(names = {
 			"--parallel"
 	}, help = true)
-	@Getter
 	private boolean runningParallel = false;
 	private Path tempDirectory;
 	
