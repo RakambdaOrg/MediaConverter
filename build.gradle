@@ -1,6 +1,6 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id "com.github.ben-manes.versions" version '0.27.0'
+    id "com.github.ben-manes.versions" version '0.28.0'
     id 'com.novoda.build-properties' version '0.4.1'
     id 'java'
     id 'application'
@@ -30,7 +30,7 @@ buildProperties {
 
 group = 'fr.raksrinana'
 description = 'VideoConverter'
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_13
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_14
 
 ext.moduleName = project.moduleName
 mainClassName = project.mainClass
@@ -99,4 +99,8 @@ shadowJar {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Wrapper) {
+    gradleVersion = project.wrapper_version
 }
