@@ -42,7 +42,7 @@ public class FfmpegItemProcessor implements ItemProcessor{
 				final var tempFile = params.getTempDirectory().resolve(outputHost.getFileName());
 				log.debug("Will convert to temp file {}", tempFile);
 				final var ffmpeg = new FFmpeg(params.getFfmpegPath());
-				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").done();
+				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").addExtraArgs("-max_muxing_queue_size", "512").done();
 				ffmpeg.run(ffmpegOptions, progress -> {
 					final var dur = Duration.ofNanos(progress.out_time_ns);
 					log.info("{} - {} / {} frames - {} fps - {}h{}m{}s / {}", filename, progress.frame, probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0), progress.fps.floatValue(), dur.toHours(), dur.toMinutesPart(), dur.toSecondsPart(), durationStr);
