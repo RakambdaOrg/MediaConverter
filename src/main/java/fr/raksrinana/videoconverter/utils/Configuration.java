@@ -20,7 +20,7 @@ public class Configuration extends H2Manager{
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
 	}
 	
-	public boolean isUseless(@NonNull final Path path) throws InterruptedException, SQLException{
+	public boolean isUseless(@NonNull final Path path) throws SQLException{
 		if(useless.isEmpty()){
 			useless.addAll(sendQueryRequest("SELECT * FROM Useless;", rs -> rs.getString("Filee")));
 		}
