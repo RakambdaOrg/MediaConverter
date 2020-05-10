@@ -1,45 +1,30 @@
 package fr.raksrinana.videoconverter.utils;
 
+import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
-import fr.raksrinana.utils.config.SQLiteManager;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
-public class Configuration extends SQLiteManager{
-	private final Map<String, Boolean> useless = new ConcurrentHashMap<>();
+public class Configuration extends H2Manager{
+	private final Collection<String> useless = new ConcurrentSkipListSet<>();
 	
-	public Configuration(@NonNull final Path dbFile) throws ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException{
+	public Configuration(@NonNull final Path dbFile) throws IOException, SQLException{
 		super(dbFile);
-		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));").get(30, TimeUnit.SECONDS);
+		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
 	}
 	
-	public boolean isUseless(@NonNull final Path path) throws TimeoutException, ExecutionException, InterruptedException{
+	public boolean isUseless(@NonNull final Path path) throws InterruptedException, SQLException{
 		if(useless.isEmpty()){
-			sendQueryRequest("SELECT * FROM Useless;").thenAccept(resultSet -> {
-				try{
-					while(resultSet.next()){
-						useless.put(resultSet.getString("Filee"), true);
-					}
-				}
-				catch(SQLException e){
-					log.error("Error getting useless status", e);
-				}
-			}).get(30, TimeUnit.SECONDS);
+			useless.addAll(sendQueryRequest("SELECT * FROM Useless;", rs -> rs.getString("Filee")));
 		}
-		return useless.containsKey(path.toString().replace("\\", "/"));
+		return useless.contains(path.toString().replace("\\", "/"));
 	}
 	
 	@Override
@@ -48,14 +33,7 @@ public class Configuration extends SQLiteManager{
 		super.close();
 	}
 	
-	public void setUseless(@NonNull final Path path) throws InterruptedException, TimeoutException, ExecutionException{
-		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES(?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/")))).get(30, TimeUnit.SECONDS);
-	}
-	
-	void setUseless(final Collection<Path> paths) throws InterruptedException, TimeoutException, ExecutionException{
-		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?)").collect(Collectors.joining(","));
-		final var values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path)).stream()).toArray(SQLValue[]::new);
-		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).get(30, TimeUnit.SECONDS);
-		log.debug("Set downloaded status for {} items", paths.size());
+	public void setUseless(@NonNull final Path path){
+		sendCompletablePreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES(?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
 	}
 }

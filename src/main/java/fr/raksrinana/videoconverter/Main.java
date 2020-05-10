@@ -16,7 +16,6 @@ import java.util.stream.Collector;
 @Slf4j
 public class Main{
 	public static void main(String[] args){
-		log.info("");
 		final var parameters = new CLIParameters();
 		try{
 			JCommander.newBuilder().addObject(parameters).build().parse(args);

@@ -12,8 +12,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -119,12 +117,7 @@ class BatchProcessor{
 						return BatchProcessorResult.newHandled();
 					}).orElseGet(() -> {
 						if(probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))){
-							try{
-								configuration.setUseless(this.inputClient);
-							}
-							catch(InterruptedException | TimeoutException | ExecutionException e){
-								LOGGER.error("Failed to mark {} as useless", this.inputClient, e);
-							}
+							configuration.setUseless(this.inputClient);
 							LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
 						}
 						else{
