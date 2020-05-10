@@ -34,6 +34,6 @@ public class Configuration extends H2Manager{
 	}
 	
 	public void setUseless(@NonNull final Path path){
-		sendCompletablePreparedUpdateRequest("INSERT OR IGNORE INTO Useless(Filee) VALUES(?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
+		sendCompletablePreparedUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
 	}
 }
