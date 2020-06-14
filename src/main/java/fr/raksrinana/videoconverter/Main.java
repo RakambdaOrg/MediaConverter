@@ -5,11 +5,7 @@ import com.beust.jcommander.ParameterException;
 import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
 import fr.raksrinana.videoconverter.utils.CLIParameters;
 import fr.raksrinana.videoconverter.utils.Configuration;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.stream.Collector;
 
@@ -27,19 +23,6 @@ public class Main{
 			log.error("Failed to parse arguments", e);
 			e.usage();
 			return;
-		}
-		final var lockFile = parameters.getDatabasePath().resolveSibling(parameters.getDatabasePath().getFileName().toString() + ".lock").normalize().toAbsolutePath();
-		try{
-			if(Files.exists(lockFile)){
-				log.error("Program is already running, lock file {} is present", lockFile);
-				System.exit(1);
-			}
-			touch(lockFile);
-			lockFile.toFile().deleteOnExit();
-		}
-		catch(Exception e){
-			log.error("Failed to setup lock file", e);
-			System.exit(1);
 		}
 		try{
 			if(!(parameters.getInputClient().toFile().exists())){
@@ -59,20 +42,6 @@ public class Main{
 		}
 		catch(Exception e){
 			log.error("Failed to start", e);
-		}
-		finally{
-			try{
-				Files.deleteIfExists(lockFile);
-			}
-			catch(IOException e){
-				log.error("Failed to delete lock", e);
-			}
-		}
-	}
-	
-	private static void touch(@NonNull final Path file) throws IOException{
-		if(!Files.exists(file)){
-			Files.createFile(file);
 		}
 	}
 }
