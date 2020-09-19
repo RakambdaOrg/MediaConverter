@@ -1,63 +1,60 @@
 package fr.raksrinana.videoconverter.utils;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.converters.PathConverter;
 import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
 import fr.raksrinana.videoconverter.itemprocessor.PS1ItemProcessor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+@NoArgsConstructor
 @Getter
+@CommandLine.Command(name = "videoconverter", mixinStandardHelpOptions = true)
 public class CLIParameters{
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--input-folder-host"
-	}, description = "The folder to scan videos for on the host machine", converter = PathConverter.class, required = true)
+	}, description = "The folder to scan videos for on the host machine", required = true)
 	private Path inputHost;
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--output-folder-host"
-	}, description = "The folder to put converted videos on the host machine", converter = PathConverter.class, required = true)
+	}, description = "The folder to put converted videos on the host machine", required = true)
 	private Path outputHost;
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--batch-folder-host"
-	}, description = "The folder to put batches on the host machine", converter = PathConverter.class)
+	}, description = "The folder to put batches on the host machine")
 	private Path batchHost = Paths.get("videoconverter");
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--input-folder-client"
-	}, description = "The folder to scan videos for on the client machine", converter = PathConverter.class)
+	}, description = "The folder to scan videos for on the client machine")
 	private Path inputClient;
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--batch-folder-client"
-	}, description = "The folder to put batches on the client machine", converter = PathConverter.class)
+	}, description = "The folder to put batches on the client machine")
 	private Path batchClient = Paths.get("videoconverter");
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--ffprobe"
 	}, description = "The path to ffprobe executable")
 	private String ffprobePath = "ffprobe";
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--ffmpeg"
 	}, description = "The path to ffmpeg executable")
 	private String ffmpegPath = "ffmpeg";
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--config-db"
-	}, description = "The path to the db file", converter = PathConverter.class)
+	}, description = "The path to the db file")
 	private Path databasePath = Paths.get("VideoNormalizer.db");
-	@Parameter(names = {
-			"-h",
-			"--help"
-	}, help = true)
-	private boolean help = false;
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--processor"
-	}, description = "The name of the item processor class to use (default is fr.raksrinana.videoconverter.itemprocessor.PS1Itemprocessor", converter = ClassConverter.class)
+	}, description = "The name of the item processor class to use (default is fr.raksrinana.videoconverter.itemprocessor.PS1Itemprocessor")
 	@Getter
 	private Class<? extends ItemProcessor> itemProcessor = PS1ItemProcessor.class;
-	@Parameter(names = {
+	@CommandLine.Option(names = {
 			"--parallel"
-	}, help = true)
+	})
 	private boolean runningParallel = false;
 	private Path tempDirectory;
 	

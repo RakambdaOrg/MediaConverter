@@ -69,7 +69,11 @@ class BatchProcessor{
 					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
 					return Stream.empty();
 				}
-				return Optional.ofNullable(file.listFiles()).map(Arrays::asList).orElse(List.of()).parallelStream().flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getName()), outputHost.resolve(subFile.getName()), batchHost, inputClient.resolve(subFile.getName()), batchClient));
+				return Optional.ofNullable(file.listFiles())
+						.map(Arrays::asList)
+						.orElse(List.of())
+						.parallelStream()
+						.flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getName()), outputHost.resolve(subFile.getName()), batchHost, inputClient.resolve(subFile.getName()), batchClient));
 			}
 			else{
 				LOGGER.warn("What kind if file is that? {} (H: {})", inputClient, inputHost);
@@ -88,12 +92,20 @@ class BatchProcessor{
 	
 	private static boolean isPicture(Path path){
 		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || PICTURE_EXTENSIONS.matcher(ext).matches()).orElse(false);
+		return Optional.of(filename.lastIndexOf("."))
+				.filter(i -> i >= 0)
+				.map(i -> filename.substring(i + 1))
+				.map(ext -> ext.isBlank() || PICTURE_EXTENSIONS.matcher(ext).matches())
+				.orElse(false);
 	}
 	
 	private static boolean shouldSkip(Path path){
 		final var filename = path.getFileName().toString();
-		return Optional.of(filename.lastIndexOf(".")).filter(i -> i >= 0).map(i -> filename.substring(i + 1)).map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches()).orElse(false);
+		return Optional.of(filename.lastIndexOf("."))
+				.filter(i -> i >= 0)
+				.map(i -> filename.substring(i + 1))
+				.map(ext -> ext.isBlank() || SKIPPED_EXTENSIONS.matcher(ext).matches())
+				.orElse(false);
 	}
 	
 	BatchProcessorResult process(){
@@ -104,27 +116,33 @@ class BatchProcessor{
 				try{
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
-					return probeResult.getStreams().stream().filter(s -> ACCEPTED_CODECS.contains(s.codec_name)).findFirst().map(stream -> {
-						try{
-							if(this.params.getItemProcessor().getConstructor().newInstance().create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
-								return BatchProcessorResult.newCreated();
-							}
-						}
-						catch(InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e){
-							LOGGER.error("Failed to instantiate item processor", e);
-							return BatchProcessorResult.newErrored();
-						}
-						return BatchProcessorResult.newHandled();
-					}).orElseGet(() -> {
-						if(probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))){
-							configuration.setUseless(this.inputClient);
-							LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
-						}
-						else{
-							LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
-						}
-						return BatchProcessorResult.newHandled();
-					});
+					return probeResult.getStreams().stream()
+							.filter(s -> ACCEPTED_CODECS.contains(s.codec_name))
+							.findFirst()
+							.map(stream -> {
+								try{
+									if(this.params.getItemProcessor()
+											.getConstructor()
+											.newInstance()
+											.create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+										return BatchProcessorResult.newCreated();
+									}
+								}
+								catch(InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e){
+									LOGGER.error("Failed to instantiate item processor", e);
+									return BatchProcessorResult.newErrored();
+								}
+								return BatchProcessorResult.newHandled();
+							}).orElseGet(() -> {
+								if(probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))){
+									configuration.setUseless(this.inputClient);
+									LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
+								}
+								else{
+									LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
+								}
+								return BatchProcessorResult.newHandled();
+							});
 				}
 				catch(Exception e){
 					LOGGER.error("Failed to get video infos {}", this.inputClient, e);

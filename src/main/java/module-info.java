@@ -4,7 +4,7 @@ open module fr.raksrinana.videonormalizer {
 	requires org.slf4j;
 	requires ch.qos.logback.classic;
 	requires fr.raksrinana.utils.config;
-	requires jcommander;
+	requires info.picocli;
 	requires org.apache.commons.lang3;
 	requires commons.math3;
 	requires static lombok;

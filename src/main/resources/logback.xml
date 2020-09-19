@@ -1,13 +1,13 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%highlight(%date{ISO8601} %level [%thread] - %logger{15}.%method:%line) - %message%n</pattern>
+            <pattern>%highlight(%date{ISO8601} %level [%thread] - %logger) - %message%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${HOME:-${USERPROFILE}}/logs/@project_name@.log</file>
+        <file>\${HOME:-\${USERPROFILE}}/logs/${project.name}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${HOME:-${USERPROFILE}}/logs/@project_name@.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>\${HOME:-\${USERPROFILE}}/logs/${project.name}.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>10</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -15,17 +15,7 @@
         </encoder>
     </appender>
 
-    <logger name="net.bramp.ffmpeg" additivity="false" level="WARN">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <logger name="fr.raksrinana.utils" additivity="false" level="WARN">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>

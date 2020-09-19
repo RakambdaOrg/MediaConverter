@@ -37,7 +37,21 @@ public class PS1ItemProcessor implements ItemProcessor{
 		if(Files.exists(batClientPath)){
 			return false;
 		}
-		final var lines = List.of("\ufeff", String.format("$host.ui.RawUI.WindowTitle = \"%s\"", batFilename), String.format("if (!(Test-Path \"%s\")){", outputHost.getParent().toString()), String.format("\tmkdir \"%s\"", outputHost.getParent().toString()), "}", String.format("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -movflags use_metadata_tags -map_metadata 0 \"%s\"", inputHost.toString(), outputHost.toString()), "Add-Type -AssemblyName Microsoft.VisualBasic", String.format("if (Test-Path \"%s\") {", outputHost.toString()), String.format("\t$FileCreationDate = (Get-ChildItem \"%s\").CreationTime", inputHost.toString()), String.format("\t$FileAccessDate = (Get-ChildItem \"%s\").LastAccessTime", inputHost.toString()), String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.CreationTime = $FileCreationDate}", outputHost.toString()), String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.LastAccessTime = $FileAccessDate}", outputHost.toString()), String.format("\tRemove-ItemSafely \"%s\"", inputHost.toString()), String.format("\tWrite-Output \"Deleted %s\"", inputHost.toString()), String.format("\tif (Test-Path \"%s\") {", batHostPath.toString()), String.format("\t\tRemove-ItemSafely \"%s\"", batHostPath.toString()), String.format("\t\tWrite-Output \"Deleted %s\"", batHostPath.toString()), "\t}", "}");
+		final var lines = List.of("\ufeff",
+				String.format("$host.ui.RawUI.WindowTitle = \"%s\"", batFilename),
+				String.format("if (!(Test-Path \"%s\")){", outputHost.getParent().toString()),
+				String.format("\tmkdir \"%s\"", outputHost.getParent().toString()), "}",
+				String.format("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -movflags use_metadata_tags -map_metadata 0 \"%s\"", inputHost.toString(), outputHost.toString()), "Add-Type -AssemblyName Microsoft.VisualBasic",
+				String.format("if (Test-Path \"%s\") {", outputHost.toString()),
+				String.format("\t$FileCreationDate = (Get-ChildItem \"%s\").CreationTime", inputHost.toString()),
+				String.format("\t$FileAccessDate = (Get-ChildItem \"%s\").LastAccessTime", inputHost.toString()),
+				String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.CreationTime = $FileCreationDate}", outputHost.toString()),
+				String.format("\tGet-ChildItem  \"%s\" | ForEach-Object {$_.LastAccessTime = $FileAccessDate}", outputHost.toString()),
+				String.format("\tRemove-ItemSafely \"%s\"", inputHost.toString()),
+				String.format("\tWrite-Output \"Deleted %s\"", inputHost.toString()),
+				String.format("\tif (Test-Path \"%s\") {", batHostPath.toString()),
+				String.format("\t\tRemove-ItemSafely \"%s\"", batHostPath.toString()),
+				String.format("\t\tWrite-Output \"Deleted %s\"", batHostPath.toString()), "\t}", "}");
 		try{
 			Files.write(batClientPath, lines, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 		}

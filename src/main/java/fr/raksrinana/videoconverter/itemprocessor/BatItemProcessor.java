@@ -34,7 +34,12 @@ public class BatItemProcessor implements ItemProcessor{
 		if(Files.exists(batClientPath)){
 			return false;
 		}
-		final var lines = List.of(String.format("title %s", batFilename), String.format("mkdir \"%s\"", outputHost.getParent().toString()), String.format("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:0 0:s:a \"%s\"", inputHost.toString(), outputHost.toString()), String.format("if exist \"%s\" trash \"%s\"", outputHost.toString(), inputHost.toString()), String.format("if exist \"%s\" trash \"%s\"", batHostPath.toString(), batHostPath.toString()));
+		final var lines = List.of(
+				String.format("title %s", batFilename),
+				String.format("mkdir \"%s\"", outputHost.getParent().toString()),
+				String.format("ffmpeg -n -i \"%s\" -c:v libx265 -preset medium -crf 23 -c:a aac -b:a 128k -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:0 0:s:a \"%s\"", inputHost.toString(), outputHost.toString()),
+				String.format("if exist \"%s\" trash \"%s\"", outputHost.toString(), inputHost.toString()),
+				String.format("if exist \"%s\" trash \"%s\"", batHostPath.toString(), batHostPath.toString()));
 		try{
 			Files.write(batClientPath, lines, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 		}

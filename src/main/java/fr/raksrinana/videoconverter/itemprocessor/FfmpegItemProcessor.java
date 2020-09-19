@@ -43,7 +43,19 @@ public class FfmpegItemProcessor implements ItemProcessor{
 				final var tempFile = params.getTempDirectory().resolve(outputHost.getFileName());
 				log.debug("Will convert to temp file {}", tempFile);
 				final var ffmpeg = new FFmpeg(params.getFfmpegPath());
-				final var ffmpegOptions = ffmpeg.builder().addInput(probeResult).overrideOutputFiles(false).addOutput(tempFile.toAbsolutePath().normalize().toString()).setAudioBitRate(128000).setAudioCodec("aac").setVideoCodec("libx265").setPreset("medium").setConstantRateFactor(23d).setVideoMovFlags("use_metadata_tags").addExtraArgs("-map_metadata", "0").addExtraArgs("-max_muxing_queue_size", "512").done();
+				final var ffmpegOptions = ffmpeg.builder()
+						.addInput(probeResult)
+						.overrideOutputFiles(false)
+						.addOutput(tempFile.toAbsolutePath().normalize().toString())
+						.setAudioBitRate(128000)
+						.setAudioCodec("aac")
+						.setVideoCodec("libx265")
+						.setPreset("medium")
+						.setConstantRateFactor(23d)
+						.setVideoMovFlags("use_metadata_tags")
+						.addExtraArgs("-map_metadata", "0")
+						.addExtraArgs("-max_muxing_queue_size", "512")
+						.done();
 				final var frameCount = probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0);
 				ffmpeg.run(ffmpegOptions, new ProgressBarNotifier(filename, frameCount, durationStr));
 				if(Files.exists(tempFile)){

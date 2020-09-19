@@ -1,29 +1,29 @@
 package fr.raksrinana.videoconverter;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-import fr.raksrinana.videoconverter.itemprocessor.ItemProcessor;
 import fr.raksrinana.videoconverter.utils.CLIParameters;
 import fr.raksrinana.videoconverter.utils.Configuration;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Objects;
+import picocli.CommandLine;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collector;
 
 @Slf4j
 public class Main{
 	public static void main(String[] args){
 		final var parameters = new CLIParameters();
+		var cli = new CommandLine(parameters);
+		cli.registerConverter(Path.class, Paths::get);
+		cli.setUnmatchedArgumentsAllowed(true);
 		try{
-			JCommander.newBuilder().addObject(parameters).build().parse(args);
-			if(Objects.isNull(parameters.getItemProcessor()) || !ItemProcessor.class.isAssignableFrom(parameters.getItemProcessor())){
-				throw new ParameterException("Given item processor class doesn't implements ItemProcessor.");
-			}
+			cli.parseArgs(args);
 		}
-		catch(final ParameterException e){
+		catch(final CommandLine.ParameterException e){
 			log.error("Failed to parse arguments", e);
-			e.usage();
+			cli.usage(System.out);
 			return;
 		}
+		
 		try{
 			if(!(parameters.getInputClient().toFile().exists())){
 				throw new IllegalArgumentException("Input client path " + parameters.getInputClient().toAbsolutePath().toString() + " doesn't exists");
