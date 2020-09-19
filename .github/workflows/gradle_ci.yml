@@ -40,6 +40,10 @@ jobs:
   dropbox:
     runs-on: ubuntu-latest
     needs: build
+    if:
+      contains('
+      refs/heads/master
+      ', github.ref)
     steps:
       - name: Checkout source
         uses: actions/checkout@v2
