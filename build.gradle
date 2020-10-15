@@ -6,7 +6,7 @@ buildscript {
         raksrinana_utils_version = '14.0.15'
         commons_math3_version = '3.6.1'
         commons_lang3_version = '3.11'
-        picocli_version = '4.5.1'
+        picocli_version = '4.5.2'
     }
 }
 
