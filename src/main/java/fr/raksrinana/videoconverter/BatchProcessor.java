@@ -7,10 +7,12 @@ import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,43 +43,37 @@ class BatchProcessor{
 		LOGGER.trace("Created processor for {}", this.inputClient);
 	}
 	
-	static Stream<BatchProcessor> process(@NonNull Configuration configuration, @NonNull CLIParameters params, @NonNull Path inputHost, @NonNull Path outputHost, @NonNull Path batchHost, @NonNull Path inputClient, @NonNull Path batchClient){
-		try{
-			final var file = inputClient.toFile();
-			if(configuration.isUseless(inputClient)){
+	static Stream<BatchProcessor> process(@NonNull Configuration configuration, @NonNull CLIParameters params, @NonNull Path inputHost, @NonNull Path outputHost, @NonNull Path batchHost, @NonNull Path inputClient, @NonNull Path batchClient) {
+		try {
+			if (configuration.isUseless(inputClient)) {
 				return Stream.empty();
 			}
-			if(file.isFile()){
-				if(shouldSkip(inputClient)){
+			if (Files.isRegularFile(inputClient)) {
+				if (shouldSkip(inputClient)) {
 					LOGGER.info("Skipping {}", inputClient);
 					configuration.setUseless(inputClient);
 					return Stream.empty();
 				}
-				if(isPicture(inputClient)){
+				if (isPicture(inputClient)) {
 					LOGGER.info("Skipping photo {}", inputClient);
 					configuration.setUseless(inputClient);
 					return Stream.empty();
 				}
-				if(file.isHidden()){
+				if (Files.isHidden(inputClient)) {
 					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
 					return Stream.empty();
 				}
 				return Stream.of(new BatchProcessor(configuration, params, inputHost, outputHost, batchHost, inputClient, batchClient));
-			}
-			else if(file.isDirectory()){
-				if(file.isHidden()){
+			} else if (Files.isDirectory(inputClient)) {
+				if (Files.isHidden(inputClient) && Objects.nonNull(inputClient.getParent())) {
 					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
 					return Stream.empty();
 				}
-				return Optional.ofNullable(file.listFiles())
-						.map(Arrays::asList)
-						.orElse(List.of())
-						.parallelStream()
-						.flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getName()), outputHost.resolve(subFile.getName()), batchHost, inputClient.resolve(subFile.getName()), batchClient));
-			}
-			else{
+				return Files.list(inputClient).parallel()
+						.flatMap(subFile -> BatchProcessor.process(configuration, params, inputHost.resolve(subFile.getFileName()), outputHost.resolve(subFile.getFileName()), batchHost, subFile, batchClient));
+			} else {
 				LOGGER.warn("What kind if file is that? {} (H: {})", inputClient, inputHost);
-				if(file.isHidden()){
+				if (Files.isHidden(inputClient)) {
 					LOGGER.warn("Path {} (H: {}) is hidden, skipping", inputClient, inputHost);
 					return Stream.empty();
 				}
@@ -108,51 +104,45 @@ class BatchProcessor{
 				.orElse(false);
 	}
 	
-	BatchProcessorResult process(){
-		try{
-			final var file = inputClient.toFile();
+	BatchProcessorResult process() {
+		try {
 			LOGGER.info("Processing {}", this.inputClient);
-			if(file.isFile()){
-				try{
+			if (Files.isRegularFile(inputClient)) {
+				try {
 					final var ffprobe = new FFprobe(this.params.getFfprobePath());
 					FFmpegProbeResult probeResult = ffprobe.probe(inputClient.toString());
 					return probeResult.getStreams().stream()
 							.filter(s -> ACCEPTED_CODECS.contains(s.codec_name))
 							.findFirst()
 							.map(stream -> {
-								try{
-									if(this.params.getItemProcessor()
+								try {
+									if (this.params.getItemProcessor()
 											.getConstructor()
 											.newInstance()
-											.create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)){
+											.create(this.params, probeResult, stream, this.inputHost, this.outputHost, this.batchHost, this.batchClient)) {
 										return BatchProcessorResult.newCreated();
 									}
-								}
-								catch(InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e){
+								} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 									LOGGER.error("Failed to instantiate item processor", e);
 									return BatchProcessorResult.newErrored();
 								}
 								return BatchProcessorResult.newHandled();
 							}).orElseGet(() -> {
-								if(probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))){
+								if (probeResult.getStreams().stream().allMatch(s -> USELESS_CODECS.contains(s.codec_name))) {
 									configuration.setUseless(this.inputClient);
 									LOGGER.debug("Codec {} is useless, marking as useless", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
-								}
-								else{
+								} else {
 									LOGGER.debug("No streams match the criteria (available codecs: {})", probeResult.getStreams().stream().map(s -> s.codec_name).collect(Collectors.joining(", ")));
 								}
 								return BatchProcessorResult.newHandled();
 							});
-				}
-				catch(Exception e){
+				} catch (Exception e) {
 					LOGGER.error("Failed to get video infos {}", this.inputClient, e);
 				}
 				return BatchProcessorResult.newHandled();
-			}
-			else if(file.isDirectory()){
+			} else if (Files.isDirectory(inputClient)) {
 				LOGGER.warn("Tried to process a folder {}", this.inputClient);
-			}
-			else{
+			} else {
 				LOGGER.warn("What kind if file is that? {} (H: {})", this.inputClient, this.inputHost);
 			}
 			return BatchProcessorResult.newScanned();
