@@ -101,9 +101,9 @@ compileJava {
 }
 
 shadowJar {
-    baseName = project.name
-    classifier = 'shaded'
-    version = null
+    archivesBaseName = project.name
+    archiveClassifier.set('shaded')
+    archiveVersion.set('')
 }
 
 tasks.withType(JavaCompile) {
