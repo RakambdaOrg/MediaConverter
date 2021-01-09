@@ -76,6 +76,6 @@ jobs:
         uses: deka0106/upload-to-dropbox@v2
         with:
           dropbox_access_token: ${{ secrets.DROPBOX_DEPLOY_TOKEN }}
-          src: "build/libs/vmediaonverter-shaded.jar"
+          src: "build/libs/mediaconverter-shaded.jar"
           dest: "/Documents/JARs/MediaConverter.jar"
           mode: overwrite
