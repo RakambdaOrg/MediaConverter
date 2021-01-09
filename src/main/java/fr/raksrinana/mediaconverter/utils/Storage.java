@@ -1,4 +1,4 @@
-package fr.raksrinana.videoconverter.utils;
+package fr.raksrinana.mediaconverter.utils;
 
 import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
@@ -12,11 +12,12 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
-public class Configuration extends H2Manager{
+public class Storage extends H2Manager{
 	private final Collection<String> useless = new ConcurrentSkipListSet<>();
 	
-	public Configuration(@NonNull final Path dbFile) throws IOException, SQLException{
+	public Storage(@NonNull final Path dbFile) throws IOException, SQLException{
 		super(dbFile);
+		log.debug("Marking {} as useless", dbFile);
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
 	}
 	
@@ -34,6 +35,7 @@ public class Configuration extends H2Manager{
 	}
 	
 	public void setUseless(@NonNull final Path path){
-		sendCompletablePreparedUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
+		sendCompletablePreparedUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)",
+				new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
 	}
 }

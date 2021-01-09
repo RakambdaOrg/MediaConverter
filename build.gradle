@@ -42,7 +42,7 @@ buildProperties {
 }
 
 group = 'fr.raksrinana'
-description = 'VideoConverter'
+description = 'MediaConverter'
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_15
 
 ext.moduleName = project.moduleName
