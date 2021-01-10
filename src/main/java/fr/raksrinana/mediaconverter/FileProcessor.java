@@ -3,7 +3,6 @@ package fr.raksrinana.mediaconverter;
 import fr.raksrinana.mediaconverter.codecprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.codecprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.utils.Storage;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFprobe;
@@ -14,6 +13,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,15 +55,26 @@ public class FileProcessor implements FileVisitor<Path>{
 		return CONTINUE;
 	}
 	
-	@SneakyThrows
 	@Override
-	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs){
-		if(Files.isHidden(file) || storage.isUseless(file)){
-			return CONTINUE;
+	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
+		try{
+			if(Files.isHidden(file) || storage.isUseless(file)){
+				return CONTINUE;
+			}
+		}
+		catch(SQLException e){
+			log.error("Failed to interact with storage", e);
 		}
 		
-		log.info("Scanning file {}", file);
-		var probeResult = ffprobe.probe(file.toString());
+		FFmpegProbeResult probeResult;
+		try{
+			log.info("Scanning file {}", file);
+			probeResult = ffprobe.probe(file.toString());
+		}
+		catch(IOException e){
+			log.error("Failed to probe file", e);
+			return CONTINUE;
+		}
 		
 		getProcessor(probeResult).ifPresentOrElse(processor -> {
 			var outfile = buildOutFile(file, processor.getDesiredExtension());
@@ -91,6 +102,10 @@ public class FileProcessor implements FileVisitor<Path>{
 	}
 	
 	private Optional<MediaProcessor> getProcessor(FFmpegProbeResult probeResult){
+		if(Objects.isNull(probeResult)){
+			return Optional.empty();
+		}
+		
 		for(var processor : processors){
 			if(processor.canHandle(probeResult)){
 				log.trace("Processor {} matched", processor.getClass().getSimpleName());
