@@ -1,4 +1,4 @@
-open module fr.raksrinana.videonormalizer {
+open module fr.raksrinana.mediaconverter {
 	requires java.sql;
 	requires java.desktop;
 	requires org.slf4j;
