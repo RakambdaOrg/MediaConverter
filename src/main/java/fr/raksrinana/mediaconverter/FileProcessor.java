@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,6 +24,14 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 @Slf4j
 public class FileProcessor implements FileVisitor<Path>{
+	private static final Collection<String> NON_MEDIA_EXTENSIONS = List.of(
+			"aep",
+			"gpx",
+			"loc",
+			"msg",
+			"pbf",
+			"txt"
+	);
 	private final ExecutorService executor;
 	private final Storage storage;
 	private final FFmpeg ffmpeg;
@@ -66,6 +75,11 @@ public class FileProcessor implements FileVisitor<Path>{
 			log.error("Failed to interact with storage", e);
 		}
 		
+		if(isNotMedia(file)){
+			storage.setUseless(file);
+			return CONTINUE;
+		}
+		
 		FFmpegProbeResult probeResult;
 		try{
 			log.info("Scanning file {}", file);
@@ -99,6 +113,18 @@ public class FileProcessor implements FileVisitor<Path>{
 		}, () -> storage.setUseless(file));
 		
 		return CONTINUE;
+	}
+	
+	private boolean isNotMedia(Path file){
+		var filename = file.getFileName().toString();
+		var dotIndex = filename.lastIndexOf('.');
+		
+		if(dotIndex <= 0){
+			return true;
+		}
+		
+		var extension = filename.substring(dotIndex);
+		return NON_MEDIA_EXTENSIONS.contains(extension);
 	}
 	
 	private Optional<MediaProcessor> getProcessor(FFmpegProbeResult probeResult){
