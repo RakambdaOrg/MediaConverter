@@ -123,7 +123,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			return true;
 		}
 		
-		var extension = filename.substring(dotIndex);
+		var extension = filename.substring(dotIndex + 1);
 		return NON_MEDIA_EXTENSIONS.contains(extension);
 	}
 	
