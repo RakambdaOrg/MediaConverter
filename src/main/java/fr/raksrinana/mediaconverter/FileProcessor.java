@@ -76,7 +76,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			log.error("Failed to interact with storage", e);
 		}
 		
-		if(isNotMedia(file)){
+		if(isNotMedia(file) || Files.isHidden(file)){
 			storage.setUseless(file);
 			return CONTINUE;
 		}
