@@ -30,13 +30,13 @@ public class Storage implements AutoCloseable{
 	}
 	
 	@Override
-	public void close() throws IOException{
+	public void close() throws IOException, SQLException{
 		log.info("Saving new useless files");
 		try(var db = new H2Manager(dbFile)){
 			var statementFillers = newUseless.stream()
 					.map(path -> new PreparedStatementFiller(new SQLValue(STRING, path)))
 					.collect(Collectors.toList());
-			db.sendCompletablePreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
+			db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
 		}
 	}
 	
