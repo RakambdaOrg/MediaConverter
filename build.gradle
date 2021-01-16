@@ -7,6 +7,7 @@ buildscript {
         commons_math3_version = '3.6.1'
         commons_lang3_version = '3.11'
         picocli_version = '4.6.1'
+        jaffree_version = '0.9.7'
     }
 }
 
@@ -49,10 +50,7 @@ ext.moduleName = project.moduleName
 mainClassName = project.mainClass
 
 dependencies {
-    implementation("net.bramp.ffmpeg:ffmpeg:${ffmpeg_version}") {
-        exclude module: 'commons-io'
-        exclude module: 'commons-lang3'
-    }
+    implementation("com.github.kokorin.jaffree:jaffree:${jaffree_version}")
 
     implementation("org.slf4j:slf4j-api:${slf4j_version}")
     implementation("ch.qos.logback:logback-classic:${logback_version}") {

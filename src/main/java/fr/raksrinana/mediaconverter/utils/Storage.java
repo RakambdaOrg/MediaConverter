@@ -9,33 +9,44 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
 @Slf4j
-public class Storage extends H2Manager{
-	private final Collection<String> useless = new ConcurrentSkipListSet<>();
+public class Storage implements AutoCloseable{
+	private final Collection<String> useless = new HashSet<>();
+	private final Collection<String> newUseless = new HashSet<>();
+	private final Path dbFile;
 	
 	public Storage(@NonNull final Path dbFile) throws IOException, SQLException{
-		super(dbFile);
-		log.debug("Marking {} as useless", dbFile);
-		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
+		this.dbFile = dbFile;
+		try(var db = new H2Manager(dbFile)){
+			db.sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
+			
+			useless.addAll(db.sendQueryRequest("SELECT * FROM Useless;", rs -> rs.getString("Filee")));
+		}
 	}
 	
 	public boolean isUseless(@NonNull final Path path) throws SQLException{
-		if(useless.isEmpty()){
-			useless.addAll(sendQueryRequest("SELECT * FROM Useless;", rs -> rs.getString("Filee")));
-		}
-		return useless.contains(path.toString().replace("\\", "/"));
+		var value = path.toString().replace("\\", "/");
+		return useless.contains(value);
 	}
 	
 	@Override
-	public void close(){
-		log.info("Closing SQL Connection...");
-		super.close();
+	public void close() throws IOException, SQLException{
+		try(var db = new H2Manager(dbFile)){
+			var statementFillers = newUseless.stream()
+					.map(path -> new PreparedStatementFiller(new SQLValue(STRING, path)))
+					.collect(Collectors.toList());
+			db.sendCompletablePreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
+		}
 	}
 	
 	public void setUseless(@NonNull final Path path){
-		sendCompletablePreparedUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)",
-				new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/"))));
+		log.debug("Marking {} as useless", dbFile);
+		var value = path.toString().replace("\\", "/");
+		useless.add(value);
+		newUseless.add(value);
 	}
 }

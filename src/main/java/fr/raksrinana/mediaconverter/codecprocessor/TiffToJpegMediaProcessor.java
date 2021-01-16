@@ -1,9 +1,9 @@
 package fr.raksrinana.mediaconverter.codecprocessor;
 
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.MediaProcessor;
 import fr.raksrinana.mediaconverter.itemprocessor.TiffConverter;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -11,14 +11,14 @@ public class TiffToJpegMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("tiff");
 	
 	@Override
-	public boolean canHandle(FFmpegProbeResult probeResult){
+	public boolean canHandle(FFprobeResult probeResult){
 		return probeResult.getStreams().stream()
-				.anyMatch(stream -> CODECS.contains(stream.codec_name));
+				.anyMatch(stream -> CODECS.contains(stream.getCodecName()));
 	}
 	
 	@Override
-	public Runnable createConvertTask(FFmpeg ffmpeg, FFmpegProbeResult probeResult, Path input, Path output, Path temporary){
-		return new TiffConverter(ffmpeg, probeResult, input, output, temporary);
+	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary){
+		return new TiffConverter(input, output);
 	}
 	
 	@Override

@@ -16,9 +16,9 @@ public class CLIParameters{
 	@Option(names = {"--output-folder"}, description = "The folder to put converted medias", required = true)
 	private Path output;
 	@Option(names = {"--ffprobe"}, description = "The path to ffprobe executable")
-	private String ffprobePath = "ffprobe";
+	private Path ffprobePath;
 	@Option(names = {"--ffmpeg"}, description = "The path to ffmpeg executable")
-	private String ffmpegPath = "ffmpeg";
+	private Path ffmpegPath;
 	@Option(names = {"--config-db"}, description = "The path to the db file")
 	private Path databasePath = Paths.get("MediaConverter.db");
 }

@@ -1,8 +1,8 @@
 package fr.raksrinana.mediaconverter.utils;
 
+import com.github.kokorin.jaffree.ffmpeg.FFmpegProgress;
+import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.progress.Progress;
-import net.bramp.ffmpeg.progress.ProgressListener;
 import java.time.Duration;
 
 @Slf4j
@@ -18,12 +18,12 @@ public class ProgressBarNotifier implements ProgressListener{
 	}
 	
 	@Override
-	public void progress(Progress progress){
-		final var processedDuration = Duration.ofNanos(progress.out_time_ns);
+	public void onProgress(FFmpegProgress progress){
+		var processedDuration = Duration.ofMillis(progress.getTimeMillis());
 		log.info("{} - {} / {} frames - {} fps - {}h{}m{}s / {}",
 				filename,
-				progress.frame, frameCount,
-				progress.fps.floatValue(),
+				progress.getFrame(), frameCount,
+				progress.getFps(),
 				processedDuration.toHours(), processedDuration.toMinutesPart(), processedDuration.toSecondsPart(), totalDuration);
 	}
 }

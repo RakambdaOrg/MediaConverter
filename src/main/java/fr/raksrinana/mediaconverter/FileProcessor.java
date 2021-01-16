@@ -1,12 +1,12 @@
 package fr.raksrinana.mediaconverter;
 
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import com.github.kokorin.jaffree.ffprobe.FFprobe;
+import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.codecprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.codecprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.utils.Storage;
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.FFprobe;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
@@ -34,18 +35,18 @@ public class FileProcessor implements FileVisitor<Path>{
 	);
 	private final ExecutorService executor;
 	private final Storage storage;
-	private final FFmpeg ffmpeg;
-	private final FFprobe ffprobe;
+	private final Supplier<FFmpeg> ffmpegSupplier;
+	private final Supplier<FFprobe> ffprobeSupplier;
 	private final Path tempDirectory;
 	private final Path baseInput;
 	private final Path baseOutput;
 	private final List<MediaProcessor> processors;
 	
-	public FileProcessor(ExecutorService executor, Storage storage, FFmpeg ffmpeg, FFprobe ffprobe, Path tempDirectory, Path baseInput, Path baseOutput){
+	public FileProcessor(ExecutorService executor, Storage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput){
 		this.executor = executor;
 		this.storage = storage;
-		this.ffmpeg = ffmpeg;
-		this.ffprobe = ffprobe;
+		this.ffmpegSupplier = ffmpegSupplier;
+		this.ffprobeSupplier = ffprobeSupplier;
 		this.tempDirectory = tempDirectory;
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
@@ -67,7 +68,7 @@ public class FileProcessor implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
 		try{
-			if(Files.isHidden(file) || storage.isUseless(file)){
+			if(storage.isUseless(file)){
 				return CONTINUE;
 			}
 		}
@@ -80,12 +81,16 @@ public class FileProcessor implements FileVisitor<Path>{
 			return CONTINUE;
 		}
 		
-		FFmpegProbeResult probeResult;
+		var ffprobe = ffprobeSupplier.get();
+		FFprobeResult probeResult;
 		try{
 			log.info("Scanning file {}", file);
-			probeResult = ffprobe.probe(file.toString());
+			probeResult = ffprobe.setShowStreams(true)
+					.setShowFormat(true)
+					.setInput(file.toString())
+					.execute();
 		}
-		catch(IOException e){
+		catch(RuntimeException e){
 			log.error("Failed to probe file", e);
 			return CONTINUE;
 		}
@@ -104,7 +109,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			}
 			
 			executor.submit(processor.createConvertTask(
-					ffmpeg,
+					ffmpegSupplier.get(),
 					probeResult,
 					file,
 					outfile,
@@ -127,7 +132,7 @@ public class FileProcessor implements FileVisitor<Path>{
 		return NON_MEDIA_EXTENSIONS.contains(extension);
 	}
 	
-	private Optional<MediaProcessor> getProcessor(FFmpegProbeResult probeResult){
+	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult){
 		if(Objects.isNull(probeResult)){
 			return Optional.empty();
 		}

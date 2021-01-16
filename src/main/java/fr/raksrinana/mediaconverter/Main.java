@@ -1,15 +1,16 @@
 package fr.raksrinana.mediaconverter;
 
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import fr.raksrinana.mediaconverter.utils.Storage;
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.FFprobe;
 import picocli.CommandLine;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 @Slf4j
 public class Main{
@@ -35,19 +36,17 @@ public class Main{
 				throw new IllegalArgumentException("Output path " + parameters.getOutput().toAbsolutePath().toString() + " doesn't exists");
 			}
 			
-			try(Storage storage = new Storage(parameters.getDatabasePath())){
-				var tempDirectory = Files.createTempDirectory("VideoConverter");
-				var ffmpeg = new FFmpeg(parameters.getFfmpegPath());
-				var ffprobe = new FFprobe(parameters.getFfprobePath());
-				var executor = Executors.newFixedThreadPool(3);
-				
-				var fileProcessor = new FileProcessor(executor, storage, ffmpeg, ffprobe, tempDirectory, parameters.getInput(), parameters.getOutput());
-				Files.walkFileTree(parameters.getInput(), fileProcessor);
-				executor.shutdown();
-			}
-			catch(Exception e){
-				log.error("Error running", e);
-			}
+			Storage storage = new Storage(parameters.getDatabasePath());
+			
+			Supplier<FFmpeg> ffmpegSupplier = () -> FFmpeg.atPath(parameters.getFfmpegPath());
+			Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
+			
+			var tempDirectory = Files.createTempDirectory("VideoConverter");
+			var executor = Executors.newFixedThreadPool(3);
+			
+			var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, parameters.getInput(), parameters.getOutput());
+			Files.walkFileTree(parameters.getInput(), fileProcessor);
+			executor.shutdown();
 		}
 		catch(Exception e){
 			log.error("Failed to start", e);

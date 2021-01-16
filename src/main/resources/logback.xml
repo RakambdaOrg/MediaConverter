@@ -15,7 +15,7 @@
         </encoder>
     </appender>
 
-    <logger name="net.bramp.ffmpeg" level="INFO" additivity="false">
+    <logger name="com.github.kokorin.jaffree" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>

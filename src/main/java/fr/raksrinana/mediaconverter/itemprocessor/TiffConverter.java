@@ -1,9 +1,6 @@
 package fr.raksrinana.mediaconverter.itemprocessor;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,55 +9,35 @@ import java.nio.file.Path;
  * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
  */
 @Slf4j
-public class TiffConverter implements Runnable{
-	private final Path input;
-	private final Path output;
-	
-	public TiffConverter(FFmpeg ffmpeg, FFmpegProbeResult probeResult, Path input, Path output, Path temporary){
-		this.input = input;
-		this.output = output;
+public class TiffConverter extends ConverterRunnable{
+	public TiffConverter(Path input, Path output){
+		super(input, output);
 	}
 	
 	@Override
 	public void run(){
-		log.info("Converting {} to {}", input, output);
+		log.info("Converting {} to {}", getInput(), getOutput());
 		try{
 			ProcessBuilder builder = new ProcessBuilder("magick",
 					"-quality", "85%",
 					"-sampling-factor", "4:2:0",
 					"-interlace", "JPEG",
 					"-colorspace", "sRGB",
-					input.toAbsolutePath().toString(), output.toAbsolutePath().toString());
+					getInput().toAbsolutePath().toString(), getOutput().toAbsolutePath().toString());
 			Process process = builder.start();
 			process.waitFor();
 			
-			if(Files.exists(output)){
-				trashInput();
+			if(Files.exists(getOutput())){
+				trashFile(getInput());
 				
-				log.info("Converted {} to {}", input, output);
+				log.info("Converted {} to {}", getInput(), getOutput());
 			}
 			else{
-				log.warn("Output file {} not found, something went wrong", output);
+				log.warn("Output file {} not found, something went wrong", getOutput());
 			}
 		}
 		catch(IOException | InterruptedException e){
-			log.error("Failed to run imagemagick on {}", input, e);
-		}
-	}
-	
-	private void trashInput() throws IOException{
-		if(Desktop.isDesktopSupported()){
-			var desktop = Desktop.getDesktop();
-			if(desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)){
-				if(desktop.moveToTrash(input.toFile())){
-					log.info("Moved input file {} to trash", input);
-					return;
-				}
-			}
-		}
-		
-		if(Files.deleteIfExists(input)){
-			log.info("Deleted input file {}", input);
+			log.error("Failed to run imagemagick on {}", getInput(), e);
 		}
 	}
 }

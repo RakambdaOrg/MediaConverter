@@ -1,98 +1,80 @@
 package fr.raksrinana.mediaconverter.itemprocessor;
 
+import com.github.kokorin.jaffree.StreamType;
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import com.github.kokorin.jaffree.ffmpeg.UrlInput;
+import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
+import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
+import com.github.kokorin.jaffree.ffprobe.Format;
+import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.raksrinana.mediaconverter.utils.ProgressBarNotifier;
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributeView;
 import java.time.Duration;
+import java.util.Optional;
 
 /**
  * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
  */
 @Slf4j
-public class HevcConverter implements Runnable{
+public class HevcConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
-	private final FFmpegProbeResult probeResult;
-	private final Path input;
-	private final Path output;
+	private final FFprobeResult probeResult;
 	private final Path temporary;
 	
-	public HevcConverter(FFmpeg ffmpeg, FFmpegProbeResult probeResult, Path input, Path output, Path temporary){
+	public HevcConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary){
+		super(input, output);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
-		this.input = input;
-		this.output = output;
-		this.temporary = temporary;
+		this.temporary = temporary.toAbsolutePath().normalize();
 	}
 	
 	@Override
 	public void run(){
-		var filename = output.getFileName().toString();
+		var filename = getOutput().getFileName().toString();
 		
-		var duration = Duration.ofSeconds((long) probeResult.format.duration);
+		var duration = Optional.ofNullable(probeResult.getFormat())
+				.map(Format::getDuration)
+				.map(Float::longValue)
+				.map(Duration::ofMillis)
+				.orElse(Duration.ZERO);
 		var durationStr = String.format("%dh%dm%s", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
+		var frameCount = probeResult.getStreams().stream().mapToLong(Stream::getNbFrames).max().orElse(0);
 		
-		log.info("Converting {} ({}) to {}", input, durationStr, output);
+		log.info("Converting {} ({}) to {}", getInput(), durationStr, getOutput());
 		try{
 			log.debug("Will convert to temp file {}", temporary);
-			var ffmpegOptions = ffmpeg.builder()
-					.addInput(probeResult)
-					.overrideOutputFiles(false)
-					.addOutput(temporary.toAbsolutePath().normalize().toString())
-					.setAudioBitRate(128000)
-					.setAudioCodec("aac")
-					.setVideoCodec("libx265")
-					.setPreset("medium")
-					.setConstantRateFactor(23d)
-					.setVideoMovFlags("use_metadata_tags")
-					.addExtraArgs("-map_metadata", "0")
-					.addExtraArgs("-max_muxing_queue_size", "512")
-					.done();
-			
-			var frameCount = probeResult.getStreams().stream().mapToLong(s -> s.nb_frames).max().orElse(0);
-			ffmpeg.run(ffmpegOptions, new ProgressBarNotifier(filename, frameCount, durationStr));
+			ffmpeg.addInput(UrlInput.fromPath(getInput()))
+					.addOutput(UrlOutput.toPath(temporary)
+							.setCodec(StreamType.AUDIO, "aac")
+							.addArguments("-b:a", "128000")
+							.setCodec(StreamType.VIDEO, "libx265")
+							.addArguments("-preset", "medium")
+							.addArguments("-crf", "23")
+							.addArguments("-movflags", "use_metadata_tags")
+							.addArguments("-map_metadata", "0")
+							.addArguments("-max_muxing_queue_size", "512")
+					)
+					.setOverwriteOutput(false)
+					.setProgressListener(new ProgressBarNotifier(filename, frameCount, durationStr))
+					.execute();
 			
 			if(Files.exists(temporary)){
-				Files.move(temporary, output);
+				Files.move(temporary, getOutput());
 				
-				copyFileAttributes();
-				trashInput();
+				copyFileAttributes(getInput(), getOutput());
+				trashFile(getInput());
 				
-				log.info("Converted {} to {}", input, output);
+				log.info("Converted {} to {}", getInput(), getOutput());
 			}
 			else{
-				log.warn("Output file {} not found, something went wrong", output);
+				log.warn("Output file {} not found, something went wrong", getOutput());
 			}
 		}
 		catch(IOException e){
-			log.error("Failed to run ffmpeg on {}", input, e);
-		}
-	}
-	
-	private void copyFileAttributes() throws IOException{
-		var baseAttributes = Files.getFileAttributeView(input, BasicFileAttributeView.class).readAttributes();
-		var attributes = Files.getFileAttributeView(output, BasicFileAttributeView.class);
-		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
-	}
-	
-	private void trashInput() throws IOException{
-		if(Desktop.isDesktopSupported()){
-			var desktop = Desktop.getDesktop();
-			if(desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)){
-				if(desktop.moveToTrash(input.toFile())){
-					log.info("Moved input file {} to trash", input);
-					return;
-				}
-			}
-		}
-		
-		if(Files.deleteIfExists(input)){
-			log.info("Deleted input file {}", input);
+			log.error("Failed to run ffmpeg on {}", getInput(), e);
 		}
 	}
 }
