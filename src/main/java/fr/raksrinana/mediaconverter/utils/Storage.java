@@ -20,6 +20,7 @@ public class Storage implements AutoCloseable{
 	private final Path dbFile;
 	
 	public Storage(@NonNull final Path dbFile) throws IOException, SQLException{
+		log.info("Loading useless files");
 		this.dbFile = dbFile;
 		try(var db = new H2Manager(dbFile)){
 			db.sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
@@ -28,19 +29,20 @@ public class Storage implements AutoCloseable{
 		}
 	}
 	
-	public boolean isUseless(@NonNull final Path path) throws SQLException{
-		var value = path.toString().replace("\\", "/");
-		return useless.contains(value);
-	}
-	
 	@Override
-	public void close() throws IOException, SQLException{
+	public void close() throws IOException{
+		log.info("Saving new useless files");
 		try(var db = new H2Manager(dbFile)){
 			var statementFillers = newUseless.stream()
 					.map(path -> new PreparedStatementFiller(new SQLValue(STRING, path)))
 					.collect(Collectors.toList());
 			db.sendCompletablePreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
 		}
+	}
+	
+	public boolean isUseless(@NonNull final Path path) throws SQLException{
+		var value = path.toString().replace("\\", "/");
+		return useless.contains(value);
 	}
 	
 	public void setUseless(@NonNull final Path path){
