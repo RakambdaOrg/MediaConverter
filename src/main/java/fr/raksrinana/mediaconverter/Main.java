@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -36,17 +37,19 @@ public class Main{
 				throw new IllegalArgumentException("Output path " + parameters.getOutput().toAbsolutePath().toString() + " doesn't exists");
 			}
 			
-			Storage storage = new Storage(parameters.getDatabasePath());
-			
-			Supplier<FFmpeg> ffmpegSupplier = () -> FFmpeg.atPath(parameters.getFfmpegPath());
-			Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
-			
-			var tempDirectory = Files.createTempDirectory("VideoConverter");
-			var executor = Executors.newFixedThreadPool(3);
-			
-			var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, parameters.getInput(), parameters.getOutput());
-			Files.walkFileTree(parameters.getInput(), fileProcessor);
-			executor.shutdown();
+			try(Storage storage = new Storage(parameters.getDatabasePath())){
+				
+				Supplier<FFmpeg> ffmpegSupplier = () -> FFmpeg.atPath(parameters.getFfmpegPath());
+				Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
+				
+				var tempDirectory = Files.createTempDirectory("VideoConverter");
+				var executor = Executors.newFixedThreadPool(3);
+				
+				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, parameters.getInput(), parameters.getOutput());
+				Files.walkFileTree(parameters.getInput(), fileProcessor);
+				executor.shutdown();
+				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			}
 		}
 		catch(Exception e){
 			log.error("Failed to start", e);

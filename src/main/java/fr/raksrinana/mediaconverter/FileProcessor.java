@@ -31,7 +31,9 @@ public class FileProcessor implements FileVisitor<Path>{
 			"loc",
 			"msg",
 			"pbf",
-			"txt"
+			"txt",
+			"xls",
+			"xlsm"
 	);
 	private final ExecutorService executor;
 	private final Storage storage;
