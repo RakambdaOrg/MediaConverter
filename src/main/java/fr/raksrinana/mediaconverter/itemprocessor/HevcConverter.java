@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -38,10 +39,15 @@ public class HevcConverter extends ConverterRunnable{
 		var duration = Optional.ofNullable(probeResult.getFormat())
 				.map(Format::getDuration)
 				.map(Float::longValue)
-				.map(Duration::ofMillis)
+				.map(Duration::ofSeconds)
 				.orElse(Duration.ZERO);
 		var durationStr = String.format("%dh%dm%s", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
-		var frameCount = probeResult.getStreams().stream().mapToLong(Stream::getNbFrames).max().orElse(0);
+		var frameCount = probeResult.getStreams().stream()
+				.map(Stream::getNbFrames)
+				.filter(Objects::nonNull)
+				.mapToInt(i -> i)
+				.max()
+				.orElse(0);
 		
 		log.info("Converting {} ({}) to {}", getInput(), durationStr, getOutput());
 		try{
