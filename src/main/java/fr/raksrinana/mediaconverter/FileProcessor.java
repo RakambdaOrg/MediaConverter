@@ -88,6 +88,7 @@ public class FileProcessor implements FileVisitor<Path>{
 		try{
 			log.info("Scanning file {}", file);
 			probeResult = ffprobe.setShowStreams(true)
+					.setCountFrames(true)
 					.setShowFormat(true)
 					.setInput(file.toString())
 					.execute();
