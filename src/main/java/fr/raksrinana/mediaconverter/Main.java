@@ -42,7 +42,7 @@ public class Main{
 				Supplier<FFmpeg> ffmpegSupplier = () -> FFmpeg.atPath(parameters.getFfmpegPath());
 				Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 				
-				var tempDirectory = Files.createTempDirectory("VideoConverter");
+				var tempDirectory = parameters.createTempDirectory();
 				var executor = Executors.newFixedThreadPool(3);
 				
 				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, parameters.getInput(), parameters.getOutput());
