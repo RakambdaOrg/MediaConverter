@@ -16,9 +16,6 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
- */
 @Slf4j
 public class HevcConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
@@ -33,7 +30,7 @@ public class HevcConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	public void run(){
+	protected void convert(){
 		var filename = getOutput().getFileName().toString();
 		
 		var duration = Optional.ofNullable(probeResult.getFormat())

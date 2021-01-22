@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Requires the Recycle module to be installed: https://www.powershellgallery.com/packages/Recycle/1.0.2
- */
 @Slf4j
 public class TiffConverter extends ConverterRunnable{
 	public TiffConverter(Path input, Path output){
@@ -15,7 +12,7 @@ public class TiffConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	public void run(){
+	protected void convert(){
 		log.info("Converting {} to {}", getInput(), getOutput());
 		try{
 			ProcessBuilder builder = new ProcessBuilder("magick",

@@ -40,4 +40,16 @@ public abstract class ConverterRunnable implements Runnable{
 		var attributes = Files.getFileAttributeView(to, BasicFileAttributeView.class);
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
+	
+	@Override
+	public void run(){
+		try{
+			convert();
+		}
+		catch(Exception e){
+			log.error("Error converting", e);
+		}
+	}
+	
+	protected abstract void convert();
 }
