@@ -28,6 +28,7 @@ public class CLIParameters{
 	private Path databasePath = Paths.get("MediaConverter.db");
 	
 	public Path createTempDirectory() throws IOException{
-		return Objects.isNull(temp) ? Files.createTempDirectory("VideoConverter") : Files.createTempDirectory(temp, "VideoConverter");
+		var prefix = "MediaConverter";
+		return Objects.isNull(temp) ? Files.createTempDirectory(prefix) : Files.createTempDirectory(temp, prefix);
 	}
 }

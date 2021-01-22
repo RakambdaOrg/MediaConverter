@@ -49,10 +49,12 @@ public class Main{
 				Files.walkFileTree(parameters.getInput(), fileProcessor);
 				executor.shutdown();
 				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+				
+				Files.deleteIfExists(tempDirectory);
 			}
 		}
 		catch(Exception e){
-			log.error("Failed to start", e);
+			log.error("Failed to convert files", e);
 		}
 	}
 }
