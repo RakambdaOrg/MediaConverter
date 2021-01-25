@@ -49,7 +49,7 @@ public class Storage implements AutoCloseable{
 	}
 	
 	public void setUseless(@NonNull final Path path){
-		log.debug("Marking {} as useless", dbFile);
+		log.debug("Marking {} as useless", path);
 		var value = path.toString().replace("\\", "/");
 		useless.add(value);
 		newUseless.add(value);

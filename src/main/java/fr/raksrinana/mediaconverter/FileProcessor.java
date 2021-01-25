@@ -25,16 +25,12 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 @Slf4j
 public class FileProcessor implements FileVisitor<Path>{
-	private static final Collection<String> NON_MEDIA_EXTENSIONS = List.of(
-			"aep",
-			"gpx",
-			"loc",
-			"msg",
-			"pbf",
-			"txt",
-			"xls",
-			"xlsm",
-			"db"
+	private static final Collection<String> MEDIA_EXTENSIONS = List.of(
+			"mp4",
+			"mov",
+			"mkv",
+			"avi",
+			"tiff"
 	);
 	private final ExecutorService executor;
 	private final Storage storage;
@@ -62,6 +58,10 @@ public class FileProcessor implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException{
 		if(Files.isHidden(dir) && Objects.nonNull(dir.getParent())){
+			return SKIP_SUBTREE;
+		}
+		var fileName = dir.getFileName();
+		if(fileName != null && fileName.toString().equals("Tha")){
 			return SKIP_SUBTREE;
 		}
 		log.info("Entering folder {}", dir);
@@ -132,8 +132,8 @@ public class FileProcessor implements FileVisitor<Path>{
 			return true;
 		}
 		
-		var extension = filename.substring(dotIndex + 1);
-		return NON_MEDIA_EXTENSIONS.contains(extension);
+		var extension = filename.substring(dotIndex + 1).toLowerCase();
+		return !MEDIA_EXTENSIONS.contains(extension);
 	}
 	
 	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult){

@@ -7,7 +7,7 @@ buildscript {
         commons_math3_version = '3.6.1'
         commons_lang3_version = '3.11'
         picocli_version = '4.6.1'
-        jaffree_version = '0.9.7'
+        jaffree_version = '0.9.8'
     }
 }
 
