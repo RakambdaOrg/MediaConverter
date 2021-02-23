@@ -1,4 +1,4 @@
-package fr.raksrinana.mediaconverter.utils;
+package fr.raksrinana.mediaconverter.storage;
 
 import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
 @Slf4j
-public class Storage implements AutoCloseable{
+public class Storage implements IStorage{
 	private final Collection<String> useless = new HashSet<>();
 	private final Collection<String> newUseless = new HashSet<>();
 	private final Path dbFile;

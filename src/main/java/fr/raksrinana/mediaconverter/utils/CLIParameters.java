@@ -7,7 +7,6 @@ import picocli.CommandLine.Option;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 @NoArgsConstructor
@@ -25,7 +24,7 @@ public class CLIParameters{
 	@Option(names = {"--ffmpeg"}, description = "The path to ffmpeg executable")
 	private Path ffmpegPath;
 	@Option(names = {"--config-db"}, description = "The path to the db file")
-	private Path databasePath = Paths.get("MediaConverter.db");
+	private Path databasePath;
 	
 	public Path createTempDirectory() throws IOException{
 		var prefix = "MediaConverter";

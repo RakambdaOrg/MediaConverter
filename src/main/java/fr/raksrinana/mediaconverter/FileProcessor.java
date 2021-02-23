@@ -5,7 +5,7 @@ import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.codecprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.codecprocessor.VideoToHevcMediaProcessor;
-import fr.raksrinana.mediaconverter.utils.Storage;
+import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -33,7 +33,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			"tiff"
 	);
 	private final ExecutorService executor;
-	private final Storage storage;
+	private final IStorage storage;
 	private final Supplier<FFmpeg> ffmpegSupplier;
 	private final Supplier<FFprobe> ffprobeSupplier;
 	private final Path tempDirectory;
@@ -41,7 +41,7 @@ public class FileProcessor implements FileVisitor<Path>{
 	private final Path baseOutput;
 	private final List<MediaProcessor> processors;
 	
-	public FileProcessor(ExecutorService executor, Storage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput){
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
