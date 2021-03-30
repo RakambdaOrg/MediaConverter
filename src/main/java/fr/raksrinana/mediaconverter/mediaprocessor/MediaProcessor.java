@@ -1,4 +1,4 @@
-package fr.raksrinana.mediaconverter;
+package fr.raksrinana.mediaconverter.mediaprocessor;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;

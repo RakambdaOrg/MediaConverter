@@ -1,8 +1,7 @@
-package fr.raksrinana.mediaconverter.codecprocessor;
+package fr.raksrinana.mediaconverter.mediaprocessor;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import fr.raksrinana.mediaconverter.MediaProcessor;
 import fr.raksrinana.mediaconverter.itemprocessor.HevcConverter;
 import java.nio.file.Path;
 import java.util.List;

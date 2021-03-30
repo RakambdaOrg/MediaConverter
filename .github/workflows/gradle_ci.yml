@@ -3,7 +3,7 @@ name: CI
 on: [ push ]
 
 env:
-  APP_JAVA_VERSION: 15
+  APP_JAVA_VERSION: 16
 
 jobs:
   build:
@@ -32,10 +32,15 @@ jobs:
       - name: Set gradle permissions
         run: chmod +x gradlew
       - name: Check project
-        run: ./gradlew check
+        run: ./gradlew check build -PgithubRepoUsername="${GITHUB_USER}" -PgithubRepoPassword="${GITHUB_TOKEN}"
         env:
           GITHUB_USER: RakSrinaNa
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v2
+        name: Upload artifact
+        with:
+          name: shadow-jar
+          path: build/libs/mediaconverter-shaded.jar
 
   dropbox:
     runs-on: ubuntu-latest
@@ -45,37 +50,14 @@ jobs:
       refs/heads/master
       ', github.ref)
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v2
-      - name: Set up JDK
-        uses: actions/setup-java@v1
+      - uses: actions/download-artifact@v2
+        name: Download artifact
         with:
-          java-version: ${{ env.APP_JAVA_VERSION }}
-      - uses: actions/cache@v2.1.4
-        name: Restore gradle cache
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: |
-            ${{ runner.OS }}-gradle-${{ env.cache-name }}-
-            ${{ runner.OS }}-gradle-
-            ${{ runner.OS }}-
-      - uses: actions/cache@v2.1.4
-        name: Cache gradle wrapper
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-      - name: Set gradle permissions
-        run: chmod +x gradlew
-      - name: Build app
-        run: ./gradlew build
-        env:
-          GITHUB_USER: RakSrinaNa
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: shadow-jar
       - name: Deploy on Dropbox
         uses: deka0106/upload-to-dropbox@v2
         with:
           dropbox_access_token: ${{ secrets.DROPBOX_DEPLOY_TOKEN }}
-          src: "build/libs/mediaconverter-shaded.jar"
+          src: "mediaconverter-shaded.jar"
           dest: "/Documents/JARs/MediaConverter.jar"
           mode: overwrite

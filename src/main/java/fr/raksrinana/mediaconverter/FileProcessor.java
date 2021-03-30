@@ -3,8 +3,9 @@ package fr.raksrinana.mediaconverter;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import fr.raksrinana.mediaconverter.codecprocessor.TiffToJpegMediaProcessor;
-import fr.raksrinana.mediaconverter.codecprocessor.VideoToHevcMediaProcessor;
+import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
+import fr.raksrinana.mediaconverter.mediaprocessor.TiffToJpegMediaProcessor;
+import fr.raksrinana.mediaconverter.mediaprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class FileProcessor implements FileVisitor<Path>{
 		this.tempDirectory = tempDirectory;
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
-		this.processors = List.of(
+		processors = List.of(
 				new VideoToHevcMediaProcessor(),
 				new TiffToJpegMediaProcessor()
 		);
@@ -58,10 +59,6 @@ public class FileProcessor implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException{
 		if(Files.isHidden(dir) && Objects.nonNull(dir.getParent())){
-			return SKIP_SUBTREE;
-		}
-		var fileName = dir.getFileName();
-		if(fileName != null && fileName.toString().equals("Tha")){
 			return SKIP_SUBTREE;
 		}
 		log.info("Entering folder {}", dir);
@@ -89,7 +86,6 @@ public class FileProcessor implements FileVisitor<Path>{
 		try{
 			log.info("Scanning file {}", file);
 			probeResult = ffprobe.setShowStreams(true)
-					.setCountFrames(true)
 					.setShowFormat(true)
 					.setInput(file.toString())
 					.execute();
@@ -100,6 +96,13 @@ public class FileProcessor implements FileVisitor<Path>{
 		}
 		
 		getProcessor(probeResult).ifPresentOrElse(processor -> {
+			var fullProbeResult = probeResult;
+			// var fullProbeResult = ffprobe.setShowStreams(true)
+			// 		.setCountFrames(true)
+			// 		.setShowFormat(true)
+			// 		.setInput(file.toString())
+			// 		.execute();
+			
 			var outfile = buildOutFile(file, processor.getDesiredExtension());
 			
 			if(!Files.exists(outfile.getParent())){
@@ -114,7 +117,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			
 			executor.submit(processor.createConvertTask(
 					ffmpegSupplier.get(),
-					probeResult,
+					fullProbeResult,
 					file,
 					outfile,
 					tempDirectory.resolve("" + file.hashCode() + file.getFileName())
