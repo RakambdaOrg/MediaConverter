@@ -15,4 +15,8 @@ public class NoOpStorage implements IStorage{
 	@Override
 	public void setUseless(Path path){
 	}
+	
+	@Override
+	public void save(){
+	}
 }

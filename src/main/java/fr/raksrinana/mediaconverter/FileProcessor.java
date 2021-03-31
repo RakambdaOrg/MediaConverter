@@ -177,6 +177,12 @@ public class FileProcessor implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult postVisitDirectory(Path dir, IOException exc){
 		log.trace("Leaving folder {}", dir);
+		try{
+			storage.save();
+		}
+		catch(SQLException | IOException e){
+			log.error("Failed to save useless files after folder", e);
+		}
 		return CONTINUE;
 	}
 }

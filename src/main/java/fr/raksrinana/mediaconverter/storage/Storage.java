@@ -19,7 +19,7 @@ public class Storage implements IStorage{
 	private final Collection<String> newUseless = new HashSet<>();
 	private final Path dbFile;
 	
-	public Storage(@NonNull final Path dbFile) throws IOException, SQLException{
+	public Storage(@NonNull Path dbFile) throws IOException, SQLException{
 		log.info("Loading useless files");
 		this.dbFile = dbFile;
 		try(var db = new H2Manager(dbFile)){
@@ -31,6 +31,22 @@ public class Storage implements IStorage{
 	
 	@Override
 	public void close() throws IOException, SQLException{
+		save();
+	}
+	
+	public boolean isUseless(@NonNull Path path) throws SQLException{
+		var value = path.toString().replace("\\", "/");
+		return useless.contains(value);
+	}
+	
+	public void setUseless(@NonNull Path path){
+		log.debug("Marking {} as useless", path);
+		var value = path.toString().replace("\\", "/");
+		useless.add(value);
+		newUseless.add(value);
+	}
+	
+	public void save() throws SQLException, IOException{
 		if(!newUseless.isEmpty()){
 			log.info("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
@@ -41,17 +57,5 @@ public class Storage implements IStorage{
 				log.info("Saved {}/{} useless files", result, newUseless.size());
 			}
 		}
-	}
-	
-	public boolean isUseless(@NonNull final Path path) throws SQLException{
-		var value = path.toString().replace("\\", "/");
-		return useless.contains(value);
-	}
-	
-	public void setUseless(@NonNull final Path path){
-		log.debug("Marking {} as useless", path);
-		var value = path.toString().replace("\\", "/");
-		useless.add(value);
-		newUseless.add(value);
 	}
 }
