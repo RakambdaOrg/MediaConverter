@@ -3,6 +3,7 @@ package fr.raksrinana.mediaconverter;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
+import fr.raksrinana.mediaconverter.mediaprocessor.AudioToAacMediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.VideoToHevcMediaProcessor;
@@ -31,7 +32,9 @@ public class FileProcessor implements FileVisitor<Path>{
 			"mov",
 			"mkv",
 			"avi",
-			"tiff"
+			"tiff",
+			"mp3",
+			"m4a"
 	);
 	private final ExecutorService executor;
 	private final IStorage storage;
@@ -52,6 +55,7 @@ public class FileProcessor implements FileVisitor<Path>{
 		this.baseOutput = baseOutput;
 		processors = List.of(
 				new VideoToHevcMediaProcessor(),
+				new AudioToAacMediaProcessor(),
 				new TiffToJpegMediaProcessor()
 		);
 	}
