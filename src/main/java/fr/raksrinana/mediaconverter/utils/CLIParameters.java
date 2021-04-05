@@ -20,7 +20,7 @@ public class CLIParameters{
 	private Path input;
 	@Option(names = {"--output-folder"}, description = "The folder to put converted medias", required = true)
 	private Path output;
-	@Option(names = {"--excluded-folder"}, description = "Folders to be excluded from scanning", required = true)
+	@Option(names = {"--excluded-folder"}, description = "Folders to be excluded from scanning")
 	private List<Path> excluded;
 	@Option(names = {"--temp-folder"}, description = "The folder to put medias that are being converted")
 	private Path temp;
