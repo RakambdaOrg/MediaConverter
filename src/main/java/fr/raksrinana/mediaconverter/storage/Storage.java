@@ -9,14 +9,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.stream.Collectors;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
 @Slf4j
 public class Storage implements IStorage{
-	private final Collection<String> useless = new HashSet<>();
-	private final Collection<String> newUseless = new HashSet<>();
+	private final Collection<String> useless = new LinkedList<>();
+	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
 	
 	public Storage(@NonNull Path dbFile) throws IOException, SQLException{
@@ -34,7 +35,7 @@ public class Storage implements IStorage{
 		save();
 	}
 	
-	public boolean isUseless(@NonNull Path path) throws SQLException{
+	public boolean isUseless(@NonNull Path path){
 		var value = path.toString().replace("\\", "/");
 		return useless.contains(value);
 	}
@@ -50,9 +51,11 @@ public class Storage implements IStorage{
 		if(!newUseless.isEmpty()){
 			log.info("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
-				var statementFillers = newUseless.stream()
-						.map(path -> new PreparedStatementFiller(new SQLValue(STRING, path)))
-						.collect(Collectors.toList());
+				var statementFillers = new LinkedList<PreparedStatementFiller>();
+				String path;
+				while((path = newUseless.poll()) != null){
+					statementFillers.add(new PreparedStatementFiller(new SQLValue(STRING, path)));
+				}
 				var result = db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
 				log.info("Saved {}/{} useless files", result, newUseless.size());
 			}
