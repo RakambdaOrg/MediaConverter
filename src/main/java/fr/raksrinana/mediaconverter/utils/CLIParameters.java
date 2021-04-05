@@ -7,7 +7,10 @@ import picocli.CommandLine.Option;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Getter
@@ -17,6 +20,8 @@ public class CLIParameters{
 	private Path input;
 	@Option(names = {"--output-folder"}, description = "The folder to put converted medias", required = true)
 	private Path output;
+	@Option(names = {"--excluded-folder"}, description = "Folders to be excluded from scanning", required = true)
+	private List<Path> excluded;
 	@Option(names = {"--temp-folder"}, description = "The folder to put medias that are being converted")
 	private Path temp;
 	@Option(names = {"--ffprobe"}, description = "The path to ffprobe executable")
@@ -29,5 +34,11 @@ public class CLIParameters{
 	public Path createTempDirectory() throws IOException{
 		var prefix = "MediaConverter";
 		return Objects.isNull(temp) ? Files.createTempDirectory(prefix) : Files.createTempDirectory(temp, prefix);
+	}
+	
+	public Set<Path> getAbsoluteExcluded(){
+		return getExcluded().stream()
+				.map(Path::toAbsolutePath)
+				.collect(Collectors.toSet());
 	}
 }

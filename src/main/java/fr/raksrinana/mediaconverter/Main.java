@@ -28,7 +28,7 @@ public class Main{
 		try{
 			cli.parseArgs(args);
 		}
-		catch(final CommandLine.ParameterException e){
+		catch(CommandLine.ParameterException e){
 			log.error("Failed to parse arguments", e);
 			cli.usage(System.out);
 			return;
@@ -50,7 +50,14 @@ public class Main{
 				var tempDirectory = parameters.createTempDirectory();
 				var executor = Executors.newFixedThreadPool(3);
 				
-				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, parameters.getInput(), parameters.getOutput());
+				var fileProcessor = new FileProcessor(executor,
+						storage,
+						ffmpegSupplier,
+						ffprobeSupplier,
+						tempDirectory,
+						parameters.getInput(),
+						parameters.getOutput(),
+						parameters.getAbsoluteExcluded());
 				Files.walkFileTree(parameters.getInput(), fileProcessor);
 				executor.shutdown();
 				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);

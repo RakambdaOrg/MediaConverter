@@ -43,9 +43,10 @@ public class FileProcessor implements FileVisitor<Path>{
 	private final Path tempDirectory;
 	private final Path baseInput;
 	private final Path baseOutput;
-	private final List<MediaProcessor> processors;
+	private final Collection<MediaProcessor> processors;
+	private final Collection<Path> excluded;
 	
-	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput){
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<Path> excluded){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -53,6 +54,7 @@ public class FileProcessor implements FileVisitor<Path>{
 		this.tempDirectory = tempDirectory;
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
+		this.excluded = excluded;
 		processors = List.of(
 				new VideoToHevcMediaProcessor(),
 				new AudioToAacMediaProcessor(),
@@ -63,6 +65,10 @@ public class FileProcessor implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException{
 		if(Files.isHidden(dir) && Objects.nonNull(dir.getParent())){
+			return SKIP_SUBTREE;
+		}
+		var isExcluded = excluded.stream().anyMatch(exclude -> Objects.equals(exclude, dir.toAbsolutePath()));
+		if(isExcluded){
 			return SKIP_SUBTREE;
 		}
 		log.info("Entering folder {}", dir);

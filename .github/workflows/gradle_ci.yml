@@ -47,7 +47,7 @@ jobs:
     needs: build
     if:
       contains('
-      refs/heads/master
+      refs/heads/main
       ', github.ref)
     steps:
       - uses: actions/download-artifact@v2
