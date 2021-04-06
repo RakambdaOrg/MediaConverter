@@ -37,6 +37,9 @@ public class CLIParameters{
 	}
 	
 	public Set<Path> getAbsoluteExcluded(){
+		if(Objects.isNull(getExcluded())){
+			return Set.of();
+		}
 		return getExcluded().stream()
 				.map(Path::toAbsolutePath)
 				.collect(Collectors.toSet());
