@@ -4,7 +4,7 @@ import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -14,7 +14,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
-@Slf4j
+@Log4j2
 public class Storage implements IStorage{
 	private final Collection<String> useless = new LinkedList<>();
 	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();

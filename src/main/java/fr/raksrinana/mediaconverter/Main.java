@@ -6,7 +6,7 @@ import fr.raksrinana.mediaconverter.storage.IStorage;
 import fr.raksrinana.mediaconverter.storage.NoOpStorage;
 import fr.raksrinana.mediaconverter.storage.Storage;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-@Slf4j
+@Log4j2
 public class Main{
 	public static void main(String[] args){
 		var parameters = new CLIParameters();

@@ -8,7 +8,7 @@ import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.storage.IStorage;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
-@Slf4j
+@Log4j2
 public class FileProcessor implements FileVisitor<Path>{
 	private static final Collection<String> MEDIA_EXTENSIONS = List.of(
 			"mp4",

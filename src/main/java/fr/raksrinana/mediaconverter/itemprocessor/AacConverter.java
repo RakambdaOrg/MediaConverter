@@ -8,7 +8,7 @@ import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.raksrinana.mediaconverter.utils.ProgressBarNotifier;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +16,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
-@Slf4j
+@Log4j2
 public class AacConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
 	private final FFprobeResult probeResult;

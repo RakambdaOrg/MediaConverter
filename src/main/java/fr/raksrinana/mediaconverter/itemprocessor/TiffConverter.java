@@ -1,11 +1,11 @@
 package fr.raksrinana.mediaconverter.itemprocessor;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Slf4j
+@Log4j2
 public class TiffConverter extends ConverterRunnable{
 	public TiffConverter(Path input, Path output){
 		super(input, output);

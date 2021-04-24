@@ -12,9 +12,7 @@ description = "MediaConverter"
 
 dependencies {
     implementation(libs.slf4j)
-    implementation(libs.logback) {
-        exclude(group = "edu.washington.cs.types.checker", module = "checker-framework")
-    }
+    implementation(libs.bundles.log4j2)
 
     implementation(libs.config)
 
@@ -63,6 +61,12 @@ tasks {
             compilerArgs.add("--module-path")
             compilerArgs.add(classpath.asPath)
             classpath = files()
+        }
+    }
+
+    jar {
+        manifest {
+            attributes["Multi-Release"] = "true"
         }
     }
 

@@ -1,14 +1,14 @@
 package fr.raksrinana.mediaconverter.itemprocessor;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
 
-@Slf4j
+@Log4j2
 @Getter
 public abstract class ConverterRunnable implements Runnable{
 	private final Path input;

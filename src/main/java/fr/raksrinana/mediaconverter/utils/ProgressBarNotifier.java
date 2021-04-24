@@ -2,10 +2,10 @@ package fr.raksrinana.mediaconverter.utils;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpegProgress;
 import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.time.Duration;
 
-@Slf4j
+@Log4j2
 public class ProgressBarNotifier implements ProgressListener{
 	private final String filename;
 	private final long frameCount;
