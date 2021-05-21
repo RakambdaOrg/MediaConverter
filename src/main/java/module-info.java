@@ -10,6 +10,7 @@ open module fr.raksrinana.mediaconverter {
 	requires info.picocli;
 	requires org.apache.commons.lang3;
 	requires commons.math3;
-	requires static lombok;
 	requires jaffree;
+	requires static lombok;
+	requires static annotations;
 }

@@ -2,7 +2,7 @@ plugins {
     idea
     java
     application
-    id("com.github.johnrengelman.shadow") version ("6.1.0")
+    id("com.github.johnrengelman.shadow") version ("7.0.0")
     id("com.github.ben-manes.versions") version ("0.38.0")
     id("io.freefair.lombok") version ("6.0.0-m2")
 }
@@ -27,7 +27,6 @@ dependencies {
 }
 
 repositories {
-
     maven {
         url = uri("https://maven.pkg.github.com/RakSrinaNa/JavaUtils/")
         credentials {
@@ -82,7 +81,6 @@ application {
     val moduleName: String by project
     val className: String by project
 
-    mainClassName = className
     mainModule.set(moduleName)
     mainClass.set(className)
 }

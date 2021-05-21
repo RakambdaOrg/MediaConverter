@@ -41,7 +41,7 @@ public class CLIParameters{
 			return Set.of();
 		}
 		return getExcluded().stream()
-				.map(Path::toAbsolutePath)
+				.map(getInput()::resolve)
 				.collect(Collectors.toSet());
 	}
 }
