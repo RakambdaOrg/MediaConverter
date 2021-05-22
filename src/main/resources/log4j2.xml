@@ -20,7 +20,7 @@
     </Appenders>
     <Loggers>
         <Logger name="com.github.kokorin.jaffree" level="warn" additivity="false">
-            <AppenderRef ref="Console"/>
+            <AppenderRef ref="console"/>
         </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console"/>

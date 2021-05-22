@@ -3,8 +3,8 @@ package fr.raksrinana.mediaconverter.storage;
 import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
-import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -20,7 +20,7 @@ public class H2Storage implements IStorage{
 	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
 	
-	public H2Storage(@NonNull Path dbFile) throws IOException, SQLException{
+	public H2Storage(@NotNull Path dbFile) throws IOException, SQLException{
 		log.info("Loading useless files");
 		this.dbFile = dbFile;
 		try(var db = new H2Manager(dbFile)){
@@ -35,12 +35,12 @@ public class H2Storage implements IStorage{
 		save();
 	}
 	
-	public boolean isUseless(@NonNull Path path){
+	public boolean isUseless(@NotNull Path path){
 		var value = path.toString().replace("\\", "/");
 		return useless.contains(value);
 	}
 	
-	public void setUseless(@NonNull Path path){
+	public void setUseless(@NotNull Path path){
 		log.debug("Marking {} as useless", path);
 		var value = path.toString().replace("\\", "/");
 		useless.add(value);
