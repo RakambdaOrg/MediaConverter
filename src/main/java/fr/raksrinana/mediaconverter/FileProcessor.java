@@ -34,7 +34,8 @@ public class FileProcessor implements FileVisitor<Path>{
 			"avi",
 			"tiff",
 			"mp3",
-			"m4a"
+			"m4a",
+			"ts"
 	);
 	private final ExecutorService executor;
 	private final IStorage storage;

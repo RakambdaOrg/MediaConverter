@@ -2,9 +2,9 @@ package fr.raksrinana.mediaconverter;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
+import fr.raksrinana.mediaconverter.storage.H2Storage;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import fr.raksrinana.mediaconverter.storage.NoOpStorage;
-import fr.raksrinana.mediaconverter.storage.Storage;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine;
@@ -74,6 +74,6 @@ public class Main{
 		if(Objects.isNull(parameters.getDatabasePath())){
 			return new NoOpStorage();
 		}
-		return new Storage(parameters.getDatabasePath());
+		return new H2Storage(parameters.getDatabasePath());
 	}
 }

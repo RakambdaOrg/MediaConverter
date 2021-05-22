@@ -15,12 +15,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
 @Log4j2
-public class Storage implements IStorage{
+public class H2Storage implements IStorage{
 	private final Collection<String> useless = new LinkedList<>();
 	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
 	
-	public Storage(@NonNull Path dbFile) throws IOException, SQLException{
+	public H2Storage(@NonNull Path dbFile) throws IOException, SQLException{
 		log.info("Loading useless files");
 		this.dbFile = dbFile;
 		try(var db = new H2Manager(dbFile)){
