@@ -19,6 +19,9 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="com.github.kokorin.jaffree" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
