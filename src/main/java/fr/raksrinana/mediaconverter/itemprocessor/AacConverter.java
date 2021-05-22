@@ -38,7 +38,6 @@ public class AacConverter extends ConverterRunnable{
 				.map(Float::longValue)
 				.map(Duration::ofSeconds)
 				.orElse(Duration.ZERO);
-		var durationStr = String.format("%dh%dm%s", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
 		var frameCount = probeResult.getStreams().stream()
 				.map(Stream::getNbFrames)
 				.filter(Objects::nonNull)
@@ -46,7 +45,7 @@ public class AacConverter extends ConverterRunnable{
 				.max()
 				.orElse(0);
 		
-		log.info("Converting {} ({}) to {}", getInput(), durationStr, getOutput());
+		log.info("Converting {} ({}) to {}", getInput(), duration, getOutput());
 		try{
 			log.debug("Will convert to temp file {}", temporary);
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
@@ -55,7 +54,7 @@ public class AacConverter extends ConverterRunnable{
 							.addArguments("-vbr", "4")
 					)
 					.setOverwriteOutput(false)
-					.setProgressListener(new ProgressBarNotifier(filename, frameCount, durationStr))
+					.setProgressListener(new ProgressBarNotifier(filename, frameCount, duration))
 					.execute();
 			
 			if(Files.exists(temporary)){
