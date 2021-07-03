@@ -87,6 +87,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
 		progressBar.step();
+		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
 		try{
 			if(storage.isUseless(file)){
 				return CONTINUE;
@@ -104,7 +105,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		var ffprobe = ffprobeSupplier.get();
 		FFprobeResult probeResult;
 		try{
-			log.info("Scanning file {}", file);
+			log.debug("Scanning file {}", file);
 			probeResult = ffprobe.setShowStreams(true)
 					.setShowFormat(true)
 					.setInput(file.toString())
