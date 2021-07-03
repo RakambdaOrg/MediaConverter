@@ -24,14 +24,14 @@ public abstract class ConverterRunnable implements Runnable{
 			var desktop = Desktop.getDesktop();
 			if(desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)){
 				if(desktop.moveToTrash(file.toFile())){
-					log.info("Moved file {} to trash", file);
+					log.debug("Moved file {} to trash", file);
 					return;
 				}
 			}
 		}
 		
 		if(Files.deleteIfExists(file)){
-			log.info("Deleted file {}", file);
+			log.debug("Deleted file {}", file);
 		}
 	}
 	

@@ -50,15 +50,16 @@ public class Main{
 				var tempDirectory = parameters.createTempDirectory();
 				var executor = Executors.newFixedThreadPool(3);
 				
-				var fileProcessor = new FileProcessor(executor,
+				try(var fileProcessor = new FileProcessor(executor,
 						storage,
 						ffmpegSupplier,
 						ffprobeSupplier,
 						tempDirectory,
 						parameters.getInput(),
 						parameters.getOutput(),
-						parameters.getAbsoluteExcluded());
-				Files.walkFileTree(parameters.getInput(), fileProcessor);
+						parameters.getAbsoluteExcluded())){
+					Files.walkFileTree(parameters.getInput(), fileProcessor);
+				}
 				executor.shutdown();
 				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 				

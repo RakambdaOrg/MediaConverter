@@ -9,6 +9,8 @@ import fr.raksrinana.mediaconverter.mediaprocessor.TiffToJpegMediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -26,7 +28,7 @@ import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 @Log4j2
-public class FileProcessor implements FileVisitor<Path>{
+public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 	private static final Collection<String> MEDIA_EXTENSIONS = List.of(
 			"mp4",
 			"mov",
@@ -46,6 +48,7 @@ public class FileProcessor implements FileVisitor<Path>{
 	private final Path baseOutput;
 	private final Collection<MediaProcessor> processors;
 	private final Collection<Path> excluded;
+	private final ProgressBar progressBar;
 	
 	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<Path> excluded){
 		this.executor = executor;
@@ -56,6 +59,10 @@ public class FileProcessor implements FileVisitor<Path>{
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
 		this.excluded = excluded;
+		progressBar = new ProgressBarBuilder()
+				.setTaskName("Scanning")
+				.setUnit("File", 1)
+				.build();
 		processors = List.of(
 				new VideoToHevcMediaProcessor(),
 				new AudioToAacMediaProcessor(),
@@ -72,12 +79,14 @@ public class FileProcessor implements FileVisitor<Path>{
 		if(isExcluded){
 			return SKIP_SUBTREE;
 		}
-		log.info("Entering folder {}", dir);
+		log.debug("Entering folder {}", dir);
+		progressBar.maxHint(progressBar.getMax() + Files.list(dir).count());
 		return CONTINUE;
 	}
 	
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
+		progressBar.step();
 		try{
 			if(storage.isUseless(file)){
 				return CONTINUE;
@@ -188,5 +197,10 @@ public class FileProcessor implements FileVisitor<Path>{
 			log.error("Failed to save useless files after folder", e);
 		}
 		return CONTINUE;
+	}
+	
+	@Override
+	public void close(){
+		progressBar.close();
 	}
 }

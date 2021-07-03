@@ -45,7 +45,7 @@ public class HevcConverter extends ConverterRunnable{
 				.max()
 				.orElse(0);
 		
-		log.info("Converting {} ({}) to {}", getInput(), duration, getOutput());
+		log.debug("Converting {} ({}) to {}", getInput(), duration, getOutput());
 		try(var progressListener = new ProgressBarNotifier(filename, frameCount, duration)){
 			log.debug("Will convert to temp file {}", temporary);
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
@@ -69,7 +69,7 @@ public class HevcConverter extends ConverterRunnable{
 				copyFileAttributes(getInput(), getOutput());
 				trashFile(getInput());
 				
-				log.info("Converted {} to {}", getInput(), getOutput());
+				log.debug("Converted {} to {}", getInput(), getOutput());
 			}
 			else{
 				log.warn("Output file {} not found, something went wrong", getOutput());
