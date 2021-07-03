@@ -46,15 +46,16 @@ public class AacConverter extends ConverterRunnable{
 				.orElse(0);
 		
 		log.info("Converting {} ({}) to {}", getInput(), duration, getOutput());
-		try{
+		try(var progressListener = new ProgressBarNotifier(filename, frameCount, duration)){
 			log.debug("Will convert to temp file {}", temporary);
+			
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
 					.addOutput(UrlOutput.toPath(temporary)
 							.setCodec(StreamType.AUDIO, "libfdk_aac")
 							.addArguments("-vbr", "4")
 					)
 					.setOverwriteOutput(false)
-					.setProgressListener(new ProgressBarNotifier(filename, frameCount, duration))
+					.setProgressListener(progressListener)
 					.execute();
 			
 			if(Files.exists(temporary)){

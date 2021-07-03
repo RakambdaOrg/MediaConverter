@@ -46,7 +46,7 @@ public class HevcConverter extends ConverterRunnable{
 				.orElse(0);
 		
 		log.info("Converting {} ({}) to {}", getInput(), duration, getOutput());
-		try{
+		try(var progressListener = new ProgressBarNotifier(filename, frameCount, duration)){
 			log.debug("Will convert to temp file {}", temporary);
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
 					.addOutput(UrlOutput.toPath(temporary)
@@ -60,7 +60,7 @@ public class HevcConverter extends ConverterRunnable{
 							.addArguments("-max_muxing_queue_size", "512")
 					)
 					.setOverwriteOutput(false)
-					.setProgressListener(new ProgressBarNotifier(filename, frameCount, duration))
+					.setProgressListener(progressListener)
 					.execute();
 			
 			if(Files.exists(temporary)){

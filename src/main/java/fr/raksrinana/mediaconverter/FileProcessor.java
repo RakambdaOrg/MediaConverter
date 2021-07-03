@@ -107,13 +107,6 @@ public class FileProcessor implements FileVisitor<Path>{
 		}
 		
 		getProcessor(probeResult).ifPresentOrElse(processor -> {
-			var fullProbeResult = probeResult;
-			// var fullProbeResult = ffprobe.setShowStreams(true)
-			// 		.setCountFrames(true)
-			// 		.setShowFormat(true)
-			// 		.setInput(file.toString())
-			// 		.execute();
-			
 			var outfile = buildOutFile(file, processor.getDesiredExtension());
 			
 			if(!Files.exists(outfile.getParent())){
@@ -128,7 +121,7 @@ public class FileProcessor implements FileVisitor<Path>{
 			
 			executor.submit(processor.createConvertTask(
 					ffmpegSupplier.get(),
-					fullProbeResult,
+					probeResult,
 					file,
 					outfile,
 					tempDirectory.resolve("" + file.hashCode() + file.getFileName())
