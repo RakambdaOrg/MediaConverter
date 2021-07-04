@@ -21,8 +21,8 @@ public class ProgressBarNotifier implements ProgressListener, AutoCloseable{
 		this.totalDuration = durationToStr(totalDuration);
 		progressBar = new ProgressBarBuilder()
 				.setTaskName(filename)
-				.setUnit("Frames", 1)
-				.setInitialMax(frameCount)
+				.setUnit("s", 1000)
+				.setInitialMax(totalDuration.toMillis())
 				.build();
 	}
 	
@@ -33,14 +33,13 @@ public class ProgressBarNotifier implements ProgressListener, AutoCloseable{
 	
 	@Override
 	public void onProgress(FFmpegProgress progress){
-		var processedDuration = Duration.ofMillis(progress.getTimeMillis());
-		progressBar.stepTo(progress.getFrame());
+		progressBar.stepTo(progress.getTimeMillis());
 		progressBar.setExtraMessage(progress.getFps() + " fps");
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
 				progress.getFrame(), frameCount,
 				progress.getFps(),
-				durationToStr(processedDuration), totalDuration);
+				durationToStr(Duration.ofMillis(progress.getTimeMillis())), totalDuration);
 	}
 	
 	@Override
