@@ -27,6 +27,10 @@
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
         </Logger>
+        <Logger name="fr.raksrinana.utils" level="warn" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console" level="warn"/>
             <AppenderRef ref="file"/>
