@@ -16,7 +16,7 @@ public class ProgressExecutor implements ExecutorService, AutoCloseable{
 		delegate = executorService;
 		progressBar = new ProgressBarBuilder()
 				.setTaskName("Conversion")
-				.setInitialMax(0)
+				.setInitialMax(-1)
 				.build();
 	}
 	
