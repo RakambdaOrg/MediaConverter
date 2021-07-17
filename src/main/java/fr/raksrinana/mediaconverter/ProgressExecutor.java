@@ -70,13 +70,21 @@ public class ProgressExecutor implements ExecutorService, AutoCloseable{
 	@NonNull
 	@Override
 	public <T> Future<T> submit(@NonNull Runnable task, T result){
-		throw new NotImplementedException();
+		progressBar.maxHint(progressBar.getMax() + 1);
+		return makeCompletableFuture(delegate.submit(task, result)).thenApply(val -> {
+			progressBar.step();
+			return val;
+		});
 	}
 	
 	@NonNull
 	@Override
 	public Future<?> submit(@NonNull Runnable task){
-		throw new NotImplementedException();
+		progressBar.maxHint(progressBar.getMax() + 1);
+		return makeCompletableFuture(delegate.submit(task)).thenApply(val -> {
+			progressBar.step();
+			return val;
+		});
 	}
 	
 	@NonNull
