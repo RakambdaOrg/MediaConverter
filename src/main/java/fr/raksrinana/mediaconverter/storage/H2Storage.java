@@ -21,7 +21,7 @@ public class H2Storage implements IStorage{
 	private final Path dbFile;
 	
 	public H2Storage(@NotNull Path dbFile) throws IOException, SQLException{
-		log.info("Loading useless files");
+		log.debug("Loading useless files");
 		this.dbFile = dbFile;
 		try(var db = new H2Manager(dbFile)){
 			db.sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
@@ -49,7 +49,7 @@ public class H2Storage implements IStorage{
 	
 	public void save() throws SQLException, IOException{
 		if(!newUseless.isEmpty()){
-			log.info("Saving new useless files");
+			log.debug("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
 				var statementFillers = new LinkedList<PreparedStatementFiller>();
 				String path;
@@ -57,7 +57,7 @@ public class H2Storage implements IStorage{
 					statementFillers.add(new PreparedStatementFiller(new SQLValue(STRING, path)));
 				}
 				var result = db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
-				log.info("Saved {}/{} useless files", result, newUseless.size());
+				log.debug("Saved {}/{} useless files", result, newUseless.size());
 			}
 		}
 	}
