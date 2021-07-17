@@ -11,6 +11,7 @@ group = "fr.raksrinana"
 description = "MediaConverter"
 
 dependencies {
+    implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
 
     implementation(libs.config)
@@ -33,9 +34,6 @@ repositories {
             username = project.findProperty("githubRepoUsername") as String?
             password = project.findProperty("githubRepoPassword") as String?
         }
-    }
-    maven {
-        url = uri("https://repository.apache.org/snapshots")
     }
     mavenCentral()
     jcenter()
