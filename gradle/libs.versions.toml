@@ -12,6 +12,7 @@ progressbar-version = "0.9.2"
 
 [libraries]
 log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j2-version" }
+log4j2-layout-jackson-xml = { group = "org.apache.logging.log4j", name = "log4j-layout-jackson-xml", version.ref = "log4j2-version" }
 log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j18-impl", version.ref = "log4j2-slf4j-version" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 config = { group = "fr.raksrinana", name = "utils.config", version.ref = "config-version" }
@@ -26,4 +27,4 @@ progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progr
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
-log4j2 = ["log4j2-core", "log4j2-slf4j"]
+log4j2 = ["log4j2-core", "log4j2-slf4j", "log4j2-layout-jackson-xml"]
