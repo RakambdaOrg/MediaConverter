@@ -2,6 +2,7 @@ package fr.raksrinana.mediaconverter.utils;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import java.io.IOException;
@@ -16,6 +17,11 @@ import java.util.stream.Collectors;
 @Getter
 @Command(name = "mediaconverter", mixinStandardHelpOptions = true)
 public class CLIParameters{
+	@CommandLine.Option(names = {
+			"-t",
+			"--threads"
+	}, description = "The number of threads to use (must be >= 1)")
+	private int threadCount = 1;
 	@Option(names = {"--input-folder"}, description = "The folder to scan media", required = true)
 	private Path input;
 	@Option(names = {"--output-folder"}, description = "The folder to put converted medias", required = true)

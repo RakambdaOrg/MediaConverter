@@ -48,7 +48,7 @@ public class Main{
 				Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 				
 				var tempDirectory = parameters.createTempDirectory();
-				try(var executor = ProgressExecutor.of(Executors.newFixedThreadPool(3))){
+				try(var executor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()))){
 					try(var fileProcessor = new FileProcessor(executor,
 							storage,
 							ffmpegSupplier,
