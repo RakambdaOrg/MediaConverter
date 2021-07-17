@@ -4,9 +4,6 @@ open module fr.raksrinana.mediaconverter {
 	requires org.slf4j;
 	requires org.apache.logging.log4j;
 	requires org.apache.logging.log4j.core;
-	requires org.apache.logging.log4j.plugins;
-	requires org.apache.logging.log4j.jackson;
-	requires org.apache.logging.log4j.jackson.xml;
 	requires org.apache.logging.log4j.slf4j;
 	requires java.scripting;
 	requires fr.raksrinana.utils.config;
