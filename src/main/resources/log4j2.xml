@@ -21,6 +21,11 @@
     <Loggers>
         <Logger name="com.github.kokorin.jaffree" level="warn" additivity="false">
             <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Logger>
+        <Logger name="com.zaxxer.hikari;" level="warn" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
         </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console"/>

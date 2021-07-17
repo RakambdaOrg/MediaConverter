@@ -34,7 +34,7 @@ public class ProgressBarNotifier implements ProgressListener, AutoCloseable{
 	@Override
 	public void onProgress(FFmpegProgress progress){
 		progressBar.stepTo(progress.getTimeMillis());
-		progressBar.setExtraMessage(progress.getFps() + " fps");
+		progressBar.setExtraMessage("%02ffps".formatted(progress.getFps()));
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
 				progress.getFrame(), frameCount,
