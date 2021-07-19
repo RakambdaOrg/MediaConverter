@@ -22,6 +22,11 @@ public class CLIParameters{
 			"--threads"
 	}, description = "The number of threads to use (must be >= 1)")
 	private int threadCount = 1;
+	@CommandLine.Option(names = {
+			"-ft",
+			"--ffmpegThreads"
+	}, description = "The number of threads to tell ffmpeg to use (per job) (must be >= 1)")
+	private Integer ffmpegThreadCount = null;
 	@Option(names = {"--input-folder"}, description = "The folder to scan media", required = true)
 	private Path input;
 	@Option(names = {"--output-folder"}, description = "The folder to put converted medias", required = true)

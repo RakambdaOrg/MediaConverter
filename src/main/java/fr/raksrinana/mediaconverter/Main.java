@@ -44,7 +44,13 @@ public class Main{
 			
 			try(var storage = getStorage(parameters)){
 				
-				Supplier<FFmpeg> ffmpegSupplier = () -> FFmpeg.atPath(parameters.getFfmpegPath());
+				Supplier<FFmpeg> ffmpegSupplier = () -> {
+					var ffmpeg = FFmpeg.atPath(parameters.getFfmpegPath());
+					if(Objects.nonNull(parameters.getFfmpegThreadCount())){
+						ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
+					}
+					return ffmpeg;
+				};
 				Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 				
 				var tempDirectory = parameters.createTempDirectory();
