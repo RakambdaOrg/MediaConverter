@@ -112,7 +112,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 					.execute();
 		}
 		catch(RuntimeException e){
-			log.error("Failed to probe file", e);
+			log.error("Failed to probe file {}", file, e);
 			return CONTINUE;
 		}
 		
