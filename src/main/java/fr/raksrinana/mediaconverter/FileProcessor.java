@@ -108,6 +108,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 			log.debug("Scanning file {}", file);
 			probeResult = ffprobe.setShowStreams(true)
 					.setShowFormat(true)
+					.addArguments("-err_detect", "ignore_err")
 					.setInput(file.toString())
 					.execute();
 		}
