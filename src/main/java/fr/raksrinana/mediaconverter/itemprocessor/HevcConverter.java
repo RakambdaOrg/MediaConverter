@@ -58,6 +58,7 @@ public class HevcConverter extends ConverterRunnable{
 							.addArguments("-movflags", "use_metadata_tags")
 							.addArguments("-map_metadata", "0")
 							.addArguments("-max_muxing_queue_size", "512")
+							.addArguments("-err_detect", "ignore_err")
 					)
 					.setOverwriteOutput(false)
 					.setProgressListener(progressListener)
