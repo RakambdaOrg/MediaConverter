@@ -3,10 +3,7 @@ package fr.raksrinana.mediaconverter;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import fr.raksrinana.mediaconverter.mediaprocessor.AudioToAacMediaProcessor;
 import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
-import fr.raksrinana.mediaconverter.mediaprocessor.TiffToJpegMediaProcessor;
-import fr.raksrinana.mediaconverter.mediaprocessor.VideoToHevcMediaProcessor;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
@@ -19,7 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -29,19 +25,6 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 @Log4j2
 public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
-	private static final Collection<String> MEDIA_EXTENSIONS = List.of(
-			"mp4",
-			"mov",
-			"mkv",
-			"avi",
-			"tiff",
-			"mp3",
-			"m4a",
-			"m4v",
-			"ts",
-			"m2ts",
-			"mts"
-	);
 	private final ExecutorService executor;
 	private final IStorage storage;
 	private final Supplier<FFmpeg> ffmpegSupplier;
@@ -52,8 +35,9 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 	private final Collection<MediaProcessor> processors;
 	private final Collection<Path> excluded;
 	private final ProgressBar progressBar;
+	private final Collection<String> extensionsToScan;
 	
-	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<Path> excluded){
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<Path> excluded, Collection<MediaProcessor> processors, Collection<String> extensionsToScan){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -62,15 +46,12 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
 		this.excluded = excluded;
+		this.processors = processors;
+		this.extensionsToScan = extensionsToScan;
 		progressBar = new ProgressBarBuilder()
 				.setTaskName("Scanning")
 				.setUnit("File", 1)
 				.build();
-		processors = List.of(
-				new VideoToHevcMediaProcessor(),
-				new AudioToAacMediaProcessor(),
-				new TiffToJpegMediaProcessor()
-		);
 	}
 	
 	@Override
@@ -153,7 +134,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		}
 		
 		var extension = filename.substring(dotIndex + 1).toLowerCase();
-		return !MEDIA_EXTENSIONS.contains(extension);
+		return !extensionsToScan.contains(extension);
 	}
 	
 	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult){
