@@ -1,0 +1,52 @@
+= MediaConverter
+
+Convert in batches some formats into another:
+
+- `TIFF` -> `JPEG`
+- `MP3` -> `AAC`
+- `H264`, `VP9`, `WV3` -> `HEVC`
+
+== CLI arguments
+
+[cols="3,1,3"]
+|===
+|Flag |Mendatory / Optional |Description
+
+|-t
+|O
+|How may conversions are performed in parallel
+
+|-ft
+|O
+|FFMPEG threads (-threads option)
+
+|--input-folder
+|M
+|The input folder containing medias to convert (search is recursive)
+
+|--output-folder
+|M
+|Where converted medias are saved (same structure as input will be kept)
+
+|--excluded-folder
+|O
+|Add an excluded folder (relative path).
+This option can be added several times to exclude several folders
+
+|--temp-folder
+|O
+|Where to put the temporary folder when converting files
+
+|--ffprobe
+|O
+|Path to ffprobe
+
+|--ffmpeg
+|O
+|Path to ffmpeg
+
+|--config-db
+|O
+|Path to a SQLite database file containing a list of already scanned medias (won't be scanned again on next run).
+If left empty no database is created and everything is scanned all the time.
+|===
