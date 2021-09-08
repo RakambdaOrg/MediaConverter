@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class VideoToHevcMediaProcessor implements MediaProcessor{
-	private static final List<String> CODECS = List.of("h264", "vp9", "wmv3");
+	private static final List<String> CODECS = List.of("h264", "vp9", "wmv3", "mpeg2video");
 	
 	@Override
 	public boolean canHandle(FFprobeResult probeResult){

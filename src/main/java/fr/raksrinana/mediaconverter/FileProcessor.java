@@ -38,7 +38,9 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 			"mp3",
 			"m4a",
 			"m4v",
-			"ts"
+			"ts",
+			"m2ts",
+			"mts"
 	);
 	private final ExecutorService executor;
 	private final IStorage storage;
