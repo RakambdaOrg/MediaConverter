@@ -14,4 +14,5 @@ open module fr.raksrinana.mediaconverter {
 	requires progressbar;
 	requires static lombok;
 	requires static org.jetbrains.annotations;
+	requires com.fasterxml.jackson.databind;
 }

@@ -2,18 +2,17 @@ package fr.raksrinana.mediaconverter;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
-import fr.raksrinana.mediaconverter.storage.H2Storage;
-import fr.raksrinana.mediaconverter.storage.IStorage;
-import fr.raksrinana.mediaconverter.storage.NoOpStorage;
+import fr.raksrinana.mediaconverter.config.Configuration;
+import fr.raksrinana.mediaconverter.config.Conversion;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -34,39 +33,54 @@ public class Main{
 			return;
 		}
 		
-		try{
-			if(!Files.exists(parameters.getInput())){
-				throw new IllegalArgumentException("Input path " + parameters.getInput().toAbsolutePath() + " doesn't exists");
+		Supplier<FFmpeg> ffmpegSupplier = () -> {
+			var ffmpeg = FFmpeg.atPath(parameters.getFfmpegPath());
+			if(Objects.nonNull(parameters.getFfmpegThreadCount())){
+				ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
 			}
-			if(!Files.exists(parameters.getOutput())){
-				throw new IllegalArgumentException("Output path " + parameters.getOutput().toAbsolutePath() + " doesn't exists");
+			return ffmpeg;
+		};
+		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
+		
+		var executor = Executors.newFixedThreadPool(parameters.getThreadCount());
+		
+		Configuration.loadConfiguration(parameters.getConfiguration()).ifPresentOrElse(
+				configuration -> configuration.getConversions().forEach(conv -> Main.convert(conv, ffmpegSupplier, ffprobeSupplier, executor)),
+				() -> log.error("Failed to load configuration"));
+		
+		executor.shutdown();
+		try{
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		}
+		catch(InterruptedException e){
+			log.error("Error while waiting for jobs to finish", e);
+		}
+	}
+	
+	private static void convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService executor){
+		try{
+			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
+				throw new IllegalArgumentException("Input path " + conversion.getInput().toAbsolutePath() + " doesn't exists");
+			}
+			if(Objects.isNull(conversion.getOutput()) || !Files.exists(conversion.getOutput())){
+				throw new IllegalArgumentException("Output path " + conversion.getOutput().toAbsolutePath() + " doesn't exists");
 			}
 			
-			try(var storage = getStorage(parameters)){
-				
-				Supplier<FFmpeg> ffmpegSupplier = () -> {
-					var ffmpeg = FFmpeg.atPath(parameters.getFfmpegPath());
-					if(Objects.nonNull(parameters.getFfmpegThreadCount())){
-						ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
-					}
-					return ffmpeg;
-				};
-				Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
-				
-				var tempDirectory = parameters.createTempDirectory();
-				try(var executor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()))){
-					try(var fileProcessor = new FileProcessor(executor,
+			try(var storage = conversion.getStorage()){
+				var tempDirectory = conversion.createTempDirectory();
+				try(var proxyExecutor = ProgressExecutor.of(executor)){
+					try(var fileProcessor = new FileProcessor(proxyExecutor,
 							storage,
 							ffmpegSupplier,
 							ffprobeSupplier,
 							tempDirectory,
-							parameters.getInput(),
-							parameters.getOutput(),
-							parameters.getAbsoluteExcluded())){
-						Files.walkFileTree(parameters.getInput(), fileProcessor);
+							conversion.getInput(),
+							conversion.getOutput(),
+							conversion.getAbsoluteExcluded(),
+							conversion.getProcessors(),
+							conversion.getExtensions())){
+						Files.walkFileTree(conversion.getInput(), fileProcessor);
 					}
-					executor.shutdown();
-					executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 				}
 				
 				Files.deleteIfExists(tempDirectory);
@@ -75,12 +89,5 @@ public class Main{
 		catch(Exception e){
 			log.error("Failed to convert files", e);
 		}
-	}
-	
-	private static IStorage getStorage(CLIParameters parameters) throws SQLException, IOException{
-		if(Objects.isNull(parameters.getDatabasePath())){
-			return new NoOpStorage();
-		}
-		return new H2Storage(parameters.getDatabasePath());
 	}
 }
