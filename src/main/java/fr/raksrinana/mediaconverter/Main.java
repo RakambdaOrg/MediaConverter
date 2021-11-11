@@ -8,13 +8,15 @@ import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Log4j2
@@ -42,22 +44,41 @@ public class Main{
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		
+		List<Path> tempPaths = new ArrayList<>();
 		var executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		
-		Configuration.loadConfiguration(parameters.getConfiguration()).ifPresentOrElse(
-				configuration -> configuration.getConversions().forEach(conv -> Main.convert(conv, ffmpegSupplier, ffprobeSupplier, executor)),
-				() -> log.error("Failed to load configuration"));
-		
-		executor.shutdown();
-		try{
-			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		try(var proxyExecutor = ProgressExecutor.of(executor)){
+			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration()).stream()
+					.flatMap(config -> config.getConversions().stream())
+					.map(conv -> {
+						try{
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, proxyExecutor);
+						}
+						catch(IOException e){
+							log.error("Failed to perform conversion", e);
+							return null;
+						}
+					})
+					.filter(Objects::nonNull)
+					.toList());
 		}
 		catch(InterruptedException e){
-			log.error("Error while waiting for jobs to finish", e);
+			log.error("Failed to process conversions", e);
 		}
+		
+		tempPaths.forEach(path -> {
+			try{
+				Files.deleteIfExists(path);
+			}
+			catch(IOException e){
+				log.error("Failed to delete temp directory", e);
+			}
+		});
 	}
 	
-	private static void convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService executor){
+	@NotNull
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService executor) throws IOException{
+		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
 				throw new IllegalArgumentException("Input path " + conversion.getInput().toAbsolutePath() + " doesn't exists");
@@ -67,27 +88,23 @@ public class Main{
 			}
 			
 			try(var storage = conversion.getStorage()){
-				var tempDirectory = conversion.createTempDirectory();
-				try(var proxyExecutor = ProgressExecutor.of(executor)){
-					try(var fileProcessor = new FileProcessor(proxyExecutor,
-							storage,
-							ffmpegSupplier,
-							ffprobeSupplier,
-							tempDirectory,
-							conversion.getInput(),
-							conversion.getOutput(),
-							conversion.getAbsoluteExcluded(),
-							conversion.getProcessors(),
-							conversion.getExtensions())){
-						Files.walkFileTree(conversion.getInput(), fileProcessor);
-					}
+				try(var fileProcessor = new FileProcessor(executor,
+						storage,
+						ffmpegSupplier,
+						ffprobeSupplier,
+						tempDirectory,
+						conversion.getInput(),
+						conversion.getOutput(),
+						conversion.getAbsoluteExcluded(),
+						conversion.getProcessors(),
+						conversion.getExtensions())){
+					Files.walkFileTree(conversion.getInput(), fileProcessor);
 				}
-				
-				Files.deleteIfExists(tempDirectory);
 			}
 		}
 		catch(Exception e){
 			log.error("Failed to convert files", e);
 		}
+		return tempDirectory;
 	}
 }

@@ -25,7 +25,9 @@ public class ProgressExecutor implements ExecutorService, AutoCloseable{
 	}
 	
 	@Override
-	public void close(){
+	public void close() throws InterruptedException{
+		shutdown();
+		awaitTermination(30, TimeUnit.DAYS);
 		progressBar.close();
 	}
 	
