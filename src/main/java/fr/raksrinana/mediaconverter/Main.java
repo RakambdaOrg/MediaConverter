@@ -6,6 +6,7 @@ import fr.raksrinana.mediaconverter.config.Configuration;
 import fr.raksrinana.mediaconverter.config.Conversion;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Supplier;
 
 @Log4j2
@@ -87,18 +89,35 @@ public class Main{
 				throw new IllegalArgumentException("Output path " + conversion.getOutput().toAbsolutePath() + " doesn't exists");
 			}
 			
-			try(var storage = conversion.getStorage()){
-				try(var fileProcessor = new FileProcessor(executor,
+			ExecutorService es = null;
+			try(var storage = conversion.getStorage();
+					var progressBar = new ProgressBarBuilder()
+							.setTaskName("Scanning")
+							.setUnit("File", 1)
+							.build()){
+				
+				es = Executors.newSingleThreadExecutor();
+				
+				var queue = new LinkedBlockingDeque<Path>();
+				var fileScanner = new FileScanner(progressBar, storage, queue, conversion.getAbsoluteExcluded(), conversion.getExtensions());
+				var fileProcessor = new FileProcessor(executor,
 						storage,
 						ffmpegSupplier,
 						ffprobeSupplier,
 						tempDirectory,
 						conversion.getInput(),
 						conversion.getOutput(),
-						conversion.getAbsoluteExcluded(),
 						conversion.getProcessors(),
-						conversion.getExtensions())){
-					Files.walkFileTree(conversion.getInput(), fileProcessor);
+						queue,
+						progressBar);
+				
+				es.submit(fileProcessor);
+				Files.walkFileTree(conversion.getInput(), fileScanner);
+				fileProcessor.shutdown();
+			}
+			finally{
+				if(Objects.nonNull(es)){
+					es.shutdownNow();
 				}
 			}
 		}

@@ -7,24 +7,20 @@ import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarBuilder;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 @Log4j2
-public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
+public class FileProcessor implements Runnable{
 	private final ExecutorService executor;
 	private final IStorage storage;
 	private final Supplier<FFmpeg> ffmpegSupplier;
@@ -33,11 +29,13 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 	private final Path baseInput;
 	private final Path baseOutput;
 	private final Collection<MediaProcessor> processors;
-	private final Collection<Path> excluded;
+	private final BlockingQueue<Path> queue;
 	private final ProgressBar progressBar;
-	private final Collection<String> extensionsToScan;
+	private final CountDownLatch countDownLatch;
 	
-	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<Path> excluded, Collection<MediaProcessor> processors, Collection<String> extensionsToScan){
+	private boolean shutdown;
+	
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<MediaProcessor> processors, BlockingQueue<Path> queue, ProgressBar progressBar){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -45,46 +43,36 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		this.tempDirectory = tempDirectory;
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
-		this.excluded = excluded;
 		this.processors = processors;
-		this.extensionsToScan = extensionsToScan;
-		progressBar = new ProgressBarBuilder()
-				.setTaskName("Scanning")
-				.setUnit("File", 1)
-				.build();
-	}
-	
-	@Override
-	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException{
-		if(Files.isHidden(dir) && Objects.nonNull(dir.getParent())){
-			return SKIP_SUBTREE;
-		}
-		var isExcluded = excluded.stream().anyMatch(exclude -> Objects.equals(exclude, dir.toAbsolutePath()));
-		if(isExcluded){
-			return SKIP_SUBTREE;
-		}
-		log.debug("Entering folder {}", dir);
-		progressBar.maxHint(progressBar.getMax() + Files.list(dir).count());
-		return CONTINUE;
-	}
-	
-	@Override
-	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
-		progressBar.step();
-		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
-		try{
-			if(storage.isUseless(file)){
-				return CONTINUE;
-			}
-		}
-		catch(SQLException e){
-			log.error("Failed to interact with storage", e);
-		}
+		this.queue = queue;
+		this.progressBar = progressBar;
 		
-		if(isNotMedia(file) || Files.isHidden(file)){
-			storage.setUseless(file);
-			return CONTINUE;
+		shutdown = false;
+		countDownLatch = new CountDownLatch(1);
+	}
+	
+	@Override
+	public void run(){
+		try{
+			do{
+				var file = queue.poll(5, TimeUnit.SECONDS);
+				if(Objects.nonNull(file)){
+					processFile(file);
+					progressBar.step();
+				}
+			}
+			while(!shutdown || !queue.isEmpty());
 		}
+		catch(InterruptedException e){
+			log.error("Error waiting for element", e);
+		}
+		finally{
+			countDownLatch.countDown();
+		}
+	}
+	
+	private void processFile(Path file){
+		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
 		
 		var ffprobe = ffprobeSupplier.get();
 		FFprobeResult probeResult;
@@ -97,7 +85,7 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		}
 		catch(RuntimeException e){
 			log.error("Failed to probe file {}", file, e);
-			return CONTINUE;
+			return;
 		}
 		
 		getProcessor(probeResult).ifPresentOrElse(processor -> {
@@ -121,20 +109,6 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 					tempDirectory.resolve("" + file.hashCode() + file.getFileName())
 			));
 		}, () -> storage.setUseless(file));
-		
-		return CONTINUE;
-	}
-	
-	private boolean isNotMedia(Path file){
-		var filename = file.getFileName().toString();
-		var dotIndex = filename.lastIndexOf('.');
-		
-		if(dotIndex <= 0){
-			return true;
-		}
-		
-		var extension = filename.substring(dotIndex + 1).toLowerCase();
-		return !extensionsToScan.contains(extension);
 	}
 	
 	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult){
@@ -167,25 +141,8 @@ public class FileProcessor implements FileVisitor<Path>, AutoCloseable{
 		return outFile;
 	}
 	
-	@Override
-	public FileVisitResult visitFileFailed(Path file, IOException exc){
-		return CONTINUE;
-	}
-	
-	@Override
-	public FileVisitResult postVisitDirectory(Path dir, IOException exc){
-		log.trace("Leaving folder {}", dir);
-		try{
-			storage.save();
-		}
-		catch(SQLException | IOException e){
-			log.error("Failed to save useless files after folder", e);
-		}
-		return CONTINUE;
-	}
-	
-	@Override
-	public void close(){
-		progressBar.close();
+	public void shutdown() throws InterruptedException{
+		shutdown = true;
+		countDownLatch.await();
 	}
 }

@@ -4,11 +4,17 @@ import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Log4j2
 public class TiffConverter extends ConverterRunnable{
 	public TiffConverter(Path input, Path output){
 		super(input, output);
+	}
+	
+	@Override
+	protected Optional<Path> getTempPath(){
+		return Optional.empty();
 	}
 	
 	@Override

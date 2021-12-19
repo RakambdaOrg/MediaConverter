@@ -30,6 +30,11 @@ public class HevcConverter extends ConverterRunnable{
 	}
 	
 	@Override
+	protected Optional<Path> getTempPath(){
+		return Optional.ofNullable(temporary);
+	}
+	
+	@Override
 	protected void convert(){
 		var filename = getOutput().getFileName().toString();
 		

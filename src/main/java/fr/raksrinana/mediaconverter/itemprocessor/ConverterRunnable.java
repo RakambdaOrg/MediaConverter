@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
+import java.util.Optional;
 
 @Log4j2
 @Getter
@@ -47,9 +48,18 @@ public abstract class ConverterRunnable implements Runnable{
 			convert();
 		}
 		catch(Exception e){
-			log.error("Error converting", e);
+			log.error("Error converting {}", input, e);
+			getTempPath().ifPresent(path -> {
+				try{
+					Files.deleteIfExists(path);
+				}
+				catch(IOException ignored){
+				}
+			});
 		}
 	}
+	
+	protected abstract Optional<Path> getTempPath();
 	
 	protected abstract void convert();
 }

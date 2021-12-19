@@ -12,11 +12,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
 
 @Log4j2
 public class H2Storage implements IStorage{
-	private final Collection<String> useless = new LinkedList<>();
+	private final Collection<String> useless = new ConcurrentSkipListSet<>();
 	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
 	
@@ -47,7 +48,7 @@ public class H2Storage implements IStorage{
 		newUseless.add(value);
 	}
 	
-	public void save() throws SQLException, IOException{
+	public synchronized void save() throws SQLException, IOException{
 		if(!newUseless.isEmpty()){
 			log.info("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
