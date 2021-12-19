@@ -51,7 +51,7 @@ public class AacConverter extends ConverterRunnable{
 			
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
 					.addOutput(UrlOutput.toPath(temporary)
-							.setCodec(StreamType.AUDIO, "libfdk_aac")
+							.setCodec(StreamType.AUDIO, "aac")
 							.addArguments("-vbr", "4")
 					)
 					.setOverwriteOutput(false)
