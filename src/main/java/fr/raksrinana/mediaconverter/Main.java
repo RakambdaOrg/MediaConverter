@@ -6,6 +6,7 @@ import fr.raksrinana.mediaconverter.config.Configuration;
 import fr.raksrinana.mediaconverter.config.Conversion;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
+import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
@@ -49,12 +50,10 @@ public class Main{
 		List<Path> tempPaths = new ArrayList<>();
 		var executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		
-		try(var proxyExecutor = ProgressExecutor.of(executor)){
-			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration()).stream()
-					.flatMap(config -> config.getConversions().stream())
-					.map(conv -> {
+		try(var proxyExecutor = ProgressExecutor.of(executor); var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build()){
+			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration()).stream().flatMap(config -> config.getConversions().stream()).parallel().map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, proxyExecutor);
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, proxyExecutor, scanningProgressBar);
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -79,7 +78,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService executor) throws IOException{
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService executor, @NotNull ProgressBar scanningProgressBar) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -90,26 +89,13 @@ public class Main{
 			}
 			
 			ExecutorService es = null;
-			try(var storage = conversion.getStorage();
-					var progressBar = new ProgressBarBuilder()
-							.setTaskName("Scanning")
-							.setUnit("File", 1)
-							.build()){
+			try(var storage = conversion.getStorage()){
 				
 				es = Executors.newSingleThreadExecutor();
 				
 				var queue = new LinkedBlockingDeque<Path>();
-				var fileScanner = new FileScanner(progressBar, storage, queue, conversion.getAbsoluteExcluded(), conversion.getExtensions());
-				var fileProcessor = new FileProcessor(executor,
-						storage,
-						ffmpegSupplier,
-						ffprobeSupplier,
-						tempDirectory,
-						conversion.getInput(),
-						conversion.getOutput(),
-						conversion.getProcessors(),
-						queue,
-						progressBar);
+				var fileScanner = new FileScanner(scanningProgressBar, storage, queue, conversion.getAbsoluteExcluded(), conversion.getExtensions());
+				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), conversion.getProcessors(), queue, scanningProgressBar);
 				
 				es.submit(fileProcessor);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
