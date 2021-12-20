@@ -106,7 +106,7 @@ public class FileProcessor implements Runnable{
 					probeResult,
 					file,
 					outfile,
-					tempDirectory.resolve("" + file.hashCode() + file.getFileName())
+					tempDirectory.resolve("" + file.hashCode() + outfile.getFileName())
 			));
 		}, () -> storage.setUseless(file));
 	}

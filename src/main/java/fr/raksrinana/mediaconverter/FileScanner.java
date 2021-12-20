@@ -29,6 +29,7 @@ public class FileScanner implements FileVisitor<Path>{
 		this.queue = queue;
 		this.excluded = excluded;
 		this.extensionsToScan = extensionsToScan;
+		progressBar.maxHint(progressBar.getMax() + 1);
 	}
 	
 	@Override
@@ -41,6 +42,7 @@ public class FileScanner implements FileVisitor<Path>{
 			return SKIP_SUBTREE;
 		}
 		log.debug("Entering folder {}", dir);
+		progressBar.maxHint(progressBar.getMax() + Files.list(dir).count());
 		return CONTINUE;
 	}
 	
@@ -48,6 +50,7 @@ public class FileScanner implements FileVisitor<Path>{
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
 		try{
 			if(storage.isUseless(file)){
+				progressBar.step();
 				return CONTINUE;
 			}
 		}
@@ -57,10 +60,10 @@ public class FileScanner implements FileVisitor<Path>{
 		
 		if(isNotMedia(file) || Files.isHidden(file)){
 			storage.setUseless(file);
+			progressBar.step();
 			return CONTINUE;
 		}
 		
-		progressBar.maxHint(progressBar.getMax() + 1);
 		queue.add(file);
 		return CONTINUE;
 	}
@@ -85,6 +88,7 @@ public class FileScanner implements FileVisitor<Path>{
 	@Override
 	public FileVisitResult postVisitDirectory(Path dir, IOException exc){
 		log.trace("Leaving folder {}", dir);
+		progressBar.step();
 		try{
 			storage.save();
 		}
