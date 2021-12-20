@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Supplier;
 
 @Log4j2
@@ -51,7 +50,11 @@ public class Main{
 		var executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		
 		try(var proxyExecutor = ProgressExecutor.of(executor); var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build()){
-			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration()).stream().flatMap(config -> config.getConversions().stream()).parallel().map(conv -> {
+			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration())
+					.stream()
+					.flatMap(config -> config.getConversions().stream())
+					.parallel()
+					.map(conv -> {
 						try{
 							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, proxyExecutor, scanningProgressBar);
 						}
@@ -93,12 +96,13 @@ public class Main{
 				
 				es = Executors.newSingleThreadExecutor();
 				
-				var queue = new LinkedBlockingDeque<Path>();
-				var fileScanner = new FileScanner(scanningProgressBar, storage, queue, conversion.getAbsoluteExcluded(), conversion.getExtensions());
-				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), conversion.getProcessors(), queue, scanningProgressBar);
+				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
+				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
+				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), conversion.getProcessors(), fileFilter.getOutputQueue(), scanningProgressBar);
 				
 				es.submit(fileProcessor);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
+				fileFilter.shutdown();
 				fileProcessor.shutdown();
 			}
 			finally{

@@ -1,6 +1,7 @@
 package fr.raksrinana.mediaconverter;
 
 import fr.raksrinana.mediaconverter.storage.IStorage;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
@@ -19,16 +22,16 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 public class FileScanner implements FileVisitor<Path>{
 	private final ProgressBar progressBar;
 	private final IStorage storage;
-	private final Collection<Path> queue;
+	@Getter
+	private final BlockingQueue<Path> queue;
 	private final Collection<Path> excluded;
-	private final Collection<String> extensionsToScan;
 	
-	public FileScanner(ProgressBar progressBar, IStorage storage, Collection<Path> queue, Collection<Path> excluded, Collection<String> extensionsToScan){
+	public FileScanner(ProgressBar progressBar, IStorage storage, Collection<Path> excluded){
 		this.progressBar = progressBar;
 		this.storage = storage;
-		this.queue = queue;
 		this.excluded = excluded;
-		this.extensionsToScan = extensionsToScan;
+		
+		queue = new LinkedBlockingQueue<>();
 		progressBar.maxHint(progressBar.getMax() + 1);
 	}
 	
@@ -47,37 +50,9 @@ public class FileScanner implements FileVisitor<Path>{
 	}
 	
 	@Override
-	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException{
-		try{
-			if(storage.isUseless(file)){
-				progressBar.step();
-				return CONTINUE;
-			}
-		}
-		catch(SQLException e){
-			log.error("Failed to interact with storage", e);
-		}
-		
-		if(isNotMedia(file) || Files.isHidden(file)){
-			storage.setUseless(file);
-			progressBar.step();
-			return CONTINUE;
-		}
-		
+	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs){
 		queue.add(file);
 		return CONTINUE;
-	}
-	
-	private boolean isNotMedia(Path file){
-		var filename = file.getFileName().toString();
-		var dotIndex = filename.lastIndexOf('.');
-		
-		if(dotIndex <= 0){
-			return true;
-		}
-		
-		var extension = filename.substring(dotIndex + 1).toLowerCase();
-		return !extensionsToScan.contains(extension);
 	}
 	
 	@Override
