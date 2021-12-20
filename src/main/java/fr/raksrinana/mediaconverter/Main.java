@@ -94,13 +94,14 @@ public class Main{
 			ExecutorService es = null;
 			try(var storage = conversion.getStorage()){
 				
-				es = Executors.newSingleThreadExecutor();
+				es = Executors.newCachedThreadPool();
 				
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProcessor = new FileProcessor(executor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), conversion.getProcessors(), fileFilter.getOutputQueue(), scanningProgressBar);
 				
 				es.submit(fileProcessor);
+				es.submit(fileFilter);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
 				fileFilter.shutdown();
 				fileProcessor.shutdown();

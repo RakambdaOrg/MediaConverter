@@ -51,7 +51,7 @@ public class FileScanner implements FileVisitor<Path>{
 	
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs){
-		queue.add(file);
+		queue.offer(file);
 		return CONTINUE;
 	}
 	
