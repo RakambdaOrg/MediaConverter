@@ -29,7 +29,6 @@ public class ProgressBarSupplier implements AutoCloseable{
 	public void close(){
 		try{
 			for(int i = 0; i < max; i++){
-				
 				get().close();
 			}
 		}

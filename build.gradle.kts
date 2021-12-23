@@ -14,10 +14,10 @@ dependencies {
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
 
-    implementation(libs.config)
+    implementation(libs.hikaricp)
+    implementation(libs.h2)
 
     implementation(libs.jaffree)
-    implementation(libs.commonsMath)
     implementation(libs.commonsLang)
     implementation(libs.progressbar)
 
@@ -52,8 +52,12 @@ tasks {
 
         doFirst {
             val compilerArgs = options.compilerArgs
+
+            val path = classpath.asPath.split(";")
+                .filter { it.endsWith(".jar") }
+                .joinToString(";")
             compilerArgs.add("--module-path")
-            compilerArgs.add(classpath.asPath)
+            compilerArgs.add(path)
             classpath = files()
         }
     }

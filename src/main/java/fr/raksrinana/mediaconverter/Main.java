@@ -59,11 +59,9 @@ public class Main{
 			return ffmpeg;
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
-		
 		List<Path> tempPaths = new ArrayList<>();
-		var executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		
-		try(var converterExecutor = ProgressExecutor.of(executor);
+		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
 				var converterProgressBarSupplier = new ProgressBarSupplier(parameters.getThreadCount(), PROGRESS_BAR_SUPPLIER)){
 			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration())

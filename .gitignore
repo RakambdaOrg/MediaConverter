@@ -4,6 +4,10 @@ build/
 out/
 target/
 
+/input
+/output
+/test.json
+
 *.iml
 *.db
 secrets.properties

@@ -1,8 +1,8 @@
 package fr.raksrinana.mediaconverter.storage;
 
-import fr.raksrinana.utils.config.H2Manager;
-import fr.raksrinana.utils.config.PreparedStatementFiller;
-import fr.raksrinana.utils.config.SQLValue;
+import fr.raksrinana.mediaconverter.storage.sql.H2Manager;
+import fr.raksrinana.mediaconverter.storage.sql.PreparedStatementFiller;
+import fr.raksrinana.mediaconverter.storage.sql.SQLValue;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
-import static fr.raksrinana.utils.config.SQLValue.Type.STRING;
+import static fr.raksrinana.mediaconverter.storage.sql.SQLValue.Type.STRING;
 
 @Log4j2
 public class H2Storage implements IStorage{
