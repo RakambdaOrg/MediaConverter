@@ -1,9 +1,10 @@
-package fr.raksrinana.mediaconverter;
+package fr.raksrinana.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessor;
+import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
@@ -31,11 +32,12 @@ public class FileProcessor implements Runnable{
 	private final Collection<MediaProcessor> processors;
 	private final BlockingQueue<Path> queue;
 	private final ProgressBar progressBar;
+	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final CountDownLatch countDownLatch;
 	
 	private boolean shutdown;
 	
-	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<MediaProcessor> processors, BlockingQueue<Path> queue, ProgressBar progressBar){
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<MediaProcessor> processors, BlockingQueue<Path> queue, ProgressBar progressBar, ProgressBarSupplier converterProgressBarSupplier){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -46,6 +48,7 @@ public class FileProcessor implements Runnable{
 		this.processors = processors;
 		this.queue = queue;
 		this.progressBar = progressBar;
+		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		
 		shutdown = false;
 		countDownLatch = new CountDownLatch(1);
@@ -106,7 +109,8 @@ public class FileProcessor implements Runnable{
 					probeResult,
 					file,
 					outfile,
-					tempDirectory.resolve("" + file.hashCode() + outfile.getFileName())
+					tempDirectory.resolve("" + file.hashCode() + outfile.getFileName()),
+					converterProgressBarSupplier
 			));
 		}, () -> storage.setUseless(file));
 	}

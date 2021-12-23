@@ -1,4 +1,4 @@
-package fr.raksrinana.mediaconverter;
+package fr.raksrinana.mediaconverter.file;
 
 import fr.raksrinana.mediaconverter.storage.IStorage;
 import lombok.Getter;

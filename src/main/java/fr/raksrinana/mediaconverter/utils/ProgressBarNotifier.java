@@ -4,26 +4,25 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpegProgress;
 import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 
 @Log4j2
-public class ProgressBarNotifier implements ProgressListener, AutoCloseable{
+public class ProgressBarNotifier implements ProgressListener{
 	private final String filename;
 	private final long frameCount;
 	private final String totalDuration;
 	private final ProgressBar progressBar;
 	
-	public ProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration){
+	public ProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, ProgressBar progressBar){
 		this.filename = filename;
 		this.frameCount = frameCount;
 		this.totalDuration = durationToStr(totalDuration);
-		progressBar = new ProgressBarBuilder()
-				.setTaskName(filename)
-				.setUnit("s", 1000)
-				.setInitialMax(totalDuration.toMillis())
-				.build();
+		this.progressBar = progressBar;
+		
+		progressBar.stepTo(0);
+		progressBar.setExtraMessage(filename);
+		progressBar.maxHint(frameCount);
 	}
 	
 	@NotNull
@@ -33,17 +32,13 @@ public class ProgressBarNotifier implements ProgressListener, AutoCloseable{
 	
 	@Override
 	public void onProgress(FFmpegProgress progress){
-		progressBar.stepTo(progress.getTimeMillis());
-		progressBar.setExtraMessage("%02ffps".formatted(progress.getFps()));
+		progressBar.stepTo(progress.getFrame());
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
-				progress.getFrame(), frameCount,
+				progress.getFrame(),
+				frameCount,
 				progress.getFps(),
-				durationToStr(Duration.ofMillis(progress.getTimeMillis())), totalDuration);
-	}
-	
-	@Override
-	public void close(){
-		progressBar.close();
+				durationToStr(Duration.ofMillis(progress.getTimeMillis())),
+				totalDuration);
 	}
 }

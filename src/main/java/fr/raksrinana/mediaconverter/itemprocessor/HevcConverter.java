@@ -7,6 +7,7 @@ import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
+import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import fr.raksrinana.mediaconverter.utils.ProgressBarNotifier;
 import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
@@ -21,12 +22,14 @@ public class HevcConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
 	private final FFprobeResult probeResult;
 	private final Path temporary;
+	private final ProgressBarSupplier converterProgressBarSupplier;
 	
-	public HevcConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary){
+	public HevcConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
 		super(input, output);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
 		this.temporary = temporary.toAbsolutePath().normalize();
+		this.converterProgressBarSupplier = converterProgressBarSupplier;
 	}
 	
 	@Override
@@ -51,7 +54,9 @@ public class HevcConverter extends ConverterRunnable{
 				.orElse(0);
 		
 		log.debug("Converting {} ({}) to {}", getInput(), duration, getOutput());
-		try(var progressListener = new ProgressBarNotifier(filename, frameCount, duration)){
+		try(var progressBar = converterProgressBarSupplier.get()){
+			var progressListener = new ProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
+			
 			log.debug("Will convert to temp file {}", temporary);
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
 					.addOutput(UrlOutput.toPath(temporary)
@@ -80,7 +85,7 @@ public class HevcConverter extends ConverterRunnable{
 				log.warn("Output file {} not found, something went wrong", getOutput());
 			}
 		}
-		catch(IOException e){
+		catch(IOException | InterruptedException e){
 			log.error("Failed to run ffmpeg on {}", getInput(), e);
 		}
 	}

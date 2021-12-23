@@ -3,6 +3,7 @@ package fr.raksrinana.mediaconverter.mediaprocessor;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.itemprocessor.HevcConverter;
+import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -16,8 +17,8 @@ public class VideoToHevcMediaProcessor implements MediaProcessor{
 	}
 	
 	@Override
-	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary){
-		return new HevcConverter(ffmpeg, probeResult, input, output, temporary);
+	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier progressBarSupplier){
+		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier);
 	}
 	
 	@Override

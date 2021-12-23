@@ -3,6 +3,7 @@ package fr.raksrinana.mediaconverter.mediaprocessor;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.raksrinana.mediaconverter.itemprocessor.AacConverter;
+import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -17,8 +18,8 @@ public class AudioToAacMediaProcessor implements MediaProcessor{
 	}
 	
 	@Override
-	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary){
-		return new AacConverter(ffmpeg, probeResult, input, output, temporary);
+	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
+		return new AacConverter(ffmpeg, probeResult, input, output, temporary, converterProgressBarSupplier);
 	}
 	
 	@Override

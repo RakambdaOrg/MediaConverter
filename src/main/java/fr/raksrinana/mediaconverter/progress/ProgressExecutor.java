@@ -1,4 +1,4 @@
-package fr.raksrinana.mediaconverter;
+package fr.raksrinana.mediaconverter.progress;
 
 import lombok.NonNull;
 import me.tongfei.progressbar.ProgressBar;
