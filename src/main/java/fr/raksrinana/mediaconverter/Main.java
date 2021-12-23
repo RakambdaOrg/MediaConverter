@@ -30,7 +30,12 @@ import java.util.function.Supplier;
 
 @Log4j2
 public class Main{
-	private static final Function<Integer, ProgressBar> PROGRESS_BAR_SUPPLIER = i -> new ProgressBarBuilder().setTaskName("Converter " + i).setUnit("frame", 1).setSpeedUnit(ChronoUnit.SECONDS).build();
+	private static final Function<Integer, ProgressBar> PROGRESS_BAR_SUPPLIER = i -> new ProgressBarBuilder()
+			.setTaskName("Converter " + (i + 1))
+			.setUnit("frame", 1)
+			.setSpeedUnit(ChronoUnit.SECONDS)
+			.showSpeed()
+			.build();
 	
 	public static void main(String[] args){
 		var parameters = new CLIParameters();
