@@ -1,4 +1,4 @@
-package fr.raksrinana.mediaconverter.utils;
+package fr.raksrinana.mediaconverter.progress;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpegProgress;
 import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
+import java.util.Objects;
 
 @Log4j2
 public class ProgressBarNotifier implements ProgressListener{
@@ -32,7 +33,9 @@ public class ProgressBarNotifier implements ProgressListener{
 	
 	@Override
 	public void onProgress(FFmpegProgress progress){
-		progressBar.stepTo(progress.getFrame());
+		if(Objects.nonNull(progress.getFrame())){
+			progressBar.stepTo(progress.getFrame());
+		}
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
 				progress.getFrame(),

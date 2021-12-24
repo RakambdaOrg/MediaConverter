@@ -63,7 +63,7 @@ public class Main{
 		
 		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
-				var converterProgressBarSupplier = new ProgressBarSupplier(parameters.getThreadCount(), PROGRESS_BAR_SUPPLIER)){
+				var converterProgressBarSupplier = new ProgressBarSupplier(PROGRESS_BAR_SUPPLIER)){
 			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())

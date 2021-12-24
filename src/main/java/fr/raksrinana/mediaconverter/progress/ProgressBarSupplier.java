@@ -2,42 +2,28 @@ package fr.raksrinana.mediaconverter.progress;
 
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 @Slf4j
 public class ProgressBarSupplier implements AutoCloseable{
-	private final int max;
-	private final BlockingQueue<ProgressBar> progressBars;
+	private final Function<Integer, ProgressBar> generator;
+	private final AtomicInteger counter;
 	
-	public ProgressBarSupplier(int max, Function<Integer, ProgressBar> generator){
-		this.max = max;
-		
-		progressBars = new LinkedBlockingQueue<>(max);
-		for(int i = 0; i < max; i++){
-			addBack(generator.apply(i));
-		}
+	public ProgressBarSupplier(Function<Integer, ProgressBar> generator){
+		this.generator = generator;
+		counter = new AtomicInteger(0);
 	}
 	
 	public void addBack(ProgressBar progressBar){
-		progressBars.offer(progressBar);
+		progressBar.close();
 	}
 	
 	@Override
 	public void close(){
-		try{
-			for(int i = 0; i < max; i++){
-				get().close();
-			}
-		}
-		catch(InterruptedException e){
-			log.error("Failed to close converter progress bars", e);
-		}
 	}
 	
 	public ProgressBarHandle get() throws InterruptedException{
-		return new ProgressBarHandle(progressBars.poll(365, TimeUnit.DAYS), this);
+		return new ProgressBarHandle(generator.apply(counter.incrementAndGet()), this);
 	}
 }
