@@ -67,6 +67,7 @@ public class HevcConverter extends ConverterRunnable{
 							.addArguments("-crf", "23")
 							.addArguments("-movflags", "use_metadata_tags")
 							.addArguments("-map_metadata", "0")
+							.addArguments("-map", "0")
 							.addArguments("-max_muxing_queue_size", "512")
 					)
 					.setOverwriteOutput(false)
