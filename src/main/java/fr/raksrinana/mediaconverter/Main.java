@@ -7,6 +7,7 @@ import fr.raksrinana.mediaconverter.config.Conversion;
 import fr.raksrinana.mediaconverter.file.FileFilter;
 import fr.raksrinana.mediaconverter.file.FileProcessor;
 import fr.raksrinana.mediaconverter.file.FileScanner;
+import fr.raksrinana.mediaconverter.progress.ProgressBarGenerator;
 import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import fr.raksrinana.mediaconverter.progress.ProgressExecutor;
 import fr.raksrinana.mediaconverter.utils.CLIParameters;
@@ -19,24 +20,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Log4j2
 public class Main{
-	private static final Function<Integer, ProgressBar> PROGRESS_BAR_SUPPLIER = i -> new ProgressBarBuilder()
-			.setTaskName("Converter " + (i + 1))
-			.setUnit("frame", 1)
-			.setSpeedUnit(ChronoUnit.SECONDS)
-			.showSpeed()
-			.build();
-	
 	public static void main(String[] args){
 		var parameters = new CLIParameters();
 		var cli = new CommandLine(parameters);
@@ -61,9 +53,10 @@ public class Main{
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths = new ArrayList<>();
 		
+		var progressBarGenerator = new ProgressBarGenerator(-1);
 		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
-				var converterProgressBarSupplier = new ProgressBarSupplier(PROGRESS_BAR_SUPPLIER)){
+				var converterProgressBarSupplier = new ProgressBarSupplier(progressBarGenerator)){
 			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())

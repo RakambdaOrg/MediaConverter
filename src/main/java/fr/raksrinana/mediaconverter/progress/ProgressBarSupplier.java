@@ -3,14 +3,13 @@ package fr.raksrinana.mediaconverter.progress;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 @Slf4j
 public class ProgressBarSupplier implements AutoCloseable{
-	private final Function<Integer, ProgressBar> generator;
+	private final ProgressBarGenerator generator;
 	private final AtomicInteger counter;
 	
-	public ProgressBarSupplier(Function<Integer, ProgressBar> generator){
+	public ProgressBarSupplier(ProgressBarGenerator generator){
 		this.generator = generator;
 		counter = new AtomicInteger(0);
 	}
@@ -24,6 +23,6 @@ public class ProgressBarSupplier implements AutoCloseable{
 	}
 	
 	public ProgressBarHandle get() throws InterruptedException{
-		return new ProgressBarHandle(generator.apply(counter.incrementAndGet()), this);
+		return new ProgressBarHandle(generator.generate(counter.incrementAndGet()), this);
 	}
 }
