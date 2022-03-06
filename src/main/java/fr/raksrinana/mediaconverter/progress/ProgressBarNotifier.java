@@ -23,7 +23,7 @@ public class ProgressBarNotifier implements ProgressListener{
 		
 		progressBar.stepTo(0);
 		progressBar.setExtraMessage(filename);
-		progressBar.maxHint(frameCount);
+		progressBar.maxHint(totalDuration.toMillis());
 	}
 	
 	@NotNull
@@ -33,8 +33,8 @@ public class ProgressBarNotifier implements ProgressListener{
 	
 	@Override
 	public void onProgress(FFmpegProgress progress){
-		if(Objects.nonNull(progress.getFrame())){
-			progressBar.stepTo(progress.getFrame());
+		if(Objects.nonNull(progress.getTimeMillis())){
+			progressBar.stepTo(progress.getTimeMillis());
 		}
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
