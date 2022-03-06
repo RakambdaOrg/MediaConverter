@@ -53,7 +53,7 @@ public class Main{
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths = new ArrayList<>();
 		
-		var progressBarGenerator = new ProgressBarGenerator(-1);
+		var progressBarGenerator = new ProgressBarGenerator();
 		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
 				var convertingProgressBar = new ProgressBarBuilder().setTaskName("Converting").setUnit("File", 1).build();
