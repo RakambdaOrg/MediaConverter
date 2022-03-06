@@ -13,11 +13,19 @@ public class VideoToHevcMediaProcessor implements MediaProcessor{
 	@Override
 	public boolean canHandle(FFprobeResult probeResult){
 		return probeResult.getStreams().stream()
-				.anyMatch(stream -> CODECS.contains(stream.getCodecName()));
+				.anyMatch(stream -> isWantedCodec(stream.getCodecName()) || isOtherHevc(stream.getCodecName(), stream.getCodecTagString()));
+	}
+	
+	private boolean isWantedCodec(String codecName){
+		return CODECS.contains(codecName);
+	}
+	
+	private boolean isOtherHevc(String codecName, String codecTagString){
+		return "hevc".equals(codecName) && "hvc1".equals(codecTagString);
 	}
 	
 	@Override
-	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier progressBarSupplier){
+	public MediaProcessorTask createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier progressBarSupplier){
 		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier);
 	}
 	

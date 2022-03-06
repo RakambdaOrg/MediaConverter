@@ -1,5 +1,6 @@
 package fr.raksrinana.mediaconverter.itemprocessor;
 
+import fr.raksrinana.mediaconverter.mediaprocessor.MediaProcessorTask;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import java.awt.Desktop;
@@ -7,17 +8,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
+import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Optional;
 
 @Log4j2
 @Getter
-public abstract class ConverterRunnable implements Runnable{
+public abstract class ConverterRunnable implements MediaProcessorTask{
 	private final Path input;
 	private final Path output;
+	private final Collection<Runnable> listeners;
 	
 	protected ConverterRunnable(Path input, Path output){
 		this.input = input.toAbsolutePath().normalize();
 		this.output = output.toAbsolutePath().normalize();
+		
+		listeners = new ArrayDeque<>();
+	}
+	
+	@Override
+	public void addCompletionListener(Runnable listener){
+		listeners.add(listener);
 	}
 	
 	protected void trashFile(Path file) throws IOException{
@@ -56,6 +67,9 @@ public abstract class ConverterRunnable implements Runnable{
 				catch(IOException ignored){
 				}
 			});
+		}
+		finally{
+			listeners.forEach(Runnable::run);
 		}
 	}
 	

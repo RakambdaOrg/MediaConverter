@@ -8,7 +8,7 @@ import java.nio.file.Path;
 public interface MediaProcessor{
 	boolean canHandle(FFprobeResult probeResult);
 	
-	Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier);
+	MediaProcessorTask createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier);
 	
 	String getDesiredExtension();
 }

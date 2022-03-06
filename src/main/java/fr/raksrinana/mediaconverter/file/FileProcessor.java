@@ -32,12 +32,14 @@ public class FileProcessor implements Runnable{
 	private final Collection<MediaProcessor> processors;
 	private final BlockingQueue<Path> queue;
 	private final ProgressBar progressBar;
+	private final ProgressBar convertingProgressBar;
+	private final Object convertingProgressBarLock;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final CountDownLatch countDownLatch;
 	
 	private boolean shutdown;
 	
-	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<MediaProcessor> processors, BlockingQueue<Path> queue, ProgressBar progressBar, ProgressBarSupplier converterProgressBarSupplier){
+	public FileProcessor(ExecutorService executor, IStorage storage, Supplier<FFmpeg> ffmpegSupplier, Supplier<FFprobe> ffprobeSupplier, Path tempDirectory, Path baseInput, Path baseOutput, Collection<MediaProcessor> processors, BlockingQueue<Path> queue, ProgressBar progressBar, ProgressBar convertingProgressBar, ProgressBarSupplier converterProgressBarSupplier){
 		this.executor = executor;
 		this.storage = storage;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -48,10 +50,12 @@ public class FileProcessor implements Runnable{
 		this.processors = processors;
 		this.queue = queue;
 		this.progressBar = progressBar;
+		this.convertingProgressBar = convertingProgressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		
 		shutdown = false;
 		countDownLatch = new CountDownLatch(1);
+		convertingProgressBarLock = new Object();
 	}
 	
 	@Override
@@ -104,14 +108,20 @@ public class FileProcessor implements Runnable{
 				}
 			}
 			
-			executor.submit(processor.createConvertTask(
+			var task = processor.createConvertTask(
 					ffmpegSupplier.get(),
 					probeResult,
 					file,
 					outfile,
 					tempDirectory.resolve("" + file.hashCode() + outfile.getFileName()),
 					converterProgressBarSupplier
-			));
+			);
+			
+			synchronized(convertingProgressBarLock){
+				convertingProgressBar.maxHint(convertingProgressBar.getMax() + 1);
+			}
+			task.addCompletionListener(convertingProgressBar::step);
+			executor.submit(task);
 		}, () -> storage.setUseless(file));
 	}
 	

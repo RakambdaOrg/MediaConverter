@@ -11,8 +11,6 @@ import java.time.temporal.ChronoUnit;
 
 @RequiredArgsConstructor
 public class ProgressBarGenerator{
-	private final int terminalWidth;
-	
 	public ProgressBar generate(int index){
 		return new ProgressBarBuilder()
 				.setTaskName("Converter " + (index + 1))

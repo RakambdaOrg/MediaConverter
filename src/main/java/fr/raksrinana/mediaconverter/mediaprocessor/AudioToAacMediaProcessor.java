@@ -18,7 +18,7 @@ public class AudioToAacMediaProcessor implements MediaProcessor{
 	}
 	
 	@Override
-	public Runnable createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
+	public MediaProcessorTask createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
 		return new AacConverter(ffmpeg, probeResult, input, output, temporary, converterProgressBarSupplier);
 	}
 	
