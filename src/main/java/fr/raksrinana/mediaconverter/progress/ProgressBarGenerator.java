@@ -14,9 +14,9 @@ public class ProgressBarGenerator{
 	public ProgressBar generate(int index){
 		return new ProgressBarBuilder()
 				.setTaskName("Converter " + (index + 1))
-				.setUnit("frame", 1)
+				.setUnit("s", 1000)
 				.setSpeedUnit(ChronoUnit.SECONDS)
-				.showSpeed()
+				// .showSpeed()
 				.setConsumer(new InteractiveConsoleProgressBarConsumer(new PrintStream(new FileOutputStream(FileDescriptor.err)), -1))
 				.build();
 	}
