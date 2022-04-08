@@ -51,7 +51,7 @@ jobs:
       refs/heads/main
       ', github.ref)
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         name: Download artifact
         with:
           name: shadow-jar
