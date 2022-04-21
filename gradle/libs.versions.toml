@@ -13,7 +13,7 @@ h2-version = "2.1.212"
 
 shadow-version = "7.1.2"
 names-version = "0.42.0"
-lombok-version = "6.4.2"
+lombok-version = "6.4.3"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
