@@ -9,7 +9,7 @@ lang3-version = "3.12.0"
 jackson-version = "2.13.3"
 progressbar-version = "0.9.3"
 hikari-cp-version = "5.0.1"
-h2-version = "2.1.212"
+h2-version = "2.1.214"
 
 shadow-version = "7.1.2"
 names-version = "0.42.0"
