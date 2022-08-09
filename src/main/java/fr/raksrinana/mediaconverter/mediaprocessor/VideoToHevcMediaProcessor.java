@@ -31,6 +31,6 @@ public class VideoToHevcMediaProcessor implements MediaProcessor{
 	
 	@Override
 	public String getDesiredExtension(){
-		return "mp4";
+		return "mkv";
 	}
 }
