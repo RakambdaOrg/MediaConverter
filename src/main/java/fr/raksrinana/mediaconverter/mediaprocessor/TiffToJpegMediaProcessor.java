@@ -18,7 +18,7 @@ public class TiffToJpegMediaProcessor implements MediaProcessor{
 	
 	@Override
 	public MediaProcessorTask createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
-		return new TiffConverter(input, output);
+		return new TiffConverter(input, output, temporary);
 	}
 	
 	@Override

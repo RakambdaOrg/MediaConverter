@@ -44,22 +44,8 @@ tasks {
     }
 
     compileJava {
-        val moduleName: String by project
-        inputs.property("moduleName", moduleName)
-
         options.encoding = "UTF-8"
         options.isDeprecation = true
-
-        doFirst {
-            val compilerArgs = options.compilerArgs
-
-            val path = classpath.asPath.split(";")
-                .filter { it.endsWith(".jar") }
-                .joinToString(";")
-            compilerArgs.add("--module-path")
-            compilerArgs.add(path)
-            classpath = files()
-        }
     }
 
     jar {
@@ -79,7 +65,6 @@ tasks {
         gradleVersion = wrapperVersion
     }
 }
-
 
 application {
     val moduleName: String by project

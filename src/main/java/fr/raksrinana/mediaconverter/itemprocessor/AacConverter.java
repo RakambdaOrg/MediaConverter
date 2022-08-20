@@ -10,8 +10,6 @@ import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.raksrinana.mediaconverter.progress.ProgressBarNotifier;
 import fr.raksrinana.mediaconverter.progress.ProgressBarSupplier;
 import lombok.extern.log4j.Log4j2;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -21,20 +19,13 @@ import java.util.Optional;
 public class AacConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
 	private final FFprobeResult probeResult;
-	private final Path temporary;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	
 	public AacConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
-		super(input, output);
+		super(input, output, temporary);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
-		this.temporary = temporary.toAbsolutePath().normalize();
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
-	}
-	
-	@Override
-	protected Optional<Path> getTempPath(){
-		return Optional.ofNullable(temporary);
 	}
 	
 	@Override
@@ -57,30 +48,18 @@ public class AacConverter extends ConverterRunnable{
 		try(var progressBar = converterProgressBarSupplier.get()){
 			var progressListener = new ProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
 			
-			log.debug("Will convert to temp file {}", temporary);
+			log.debug("Will convert to temp file {}", getTempPath());
 			
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
-					.addOutput(UrlOutput.toPath(temporary)
+					.addOutput(UrlOutput.toPath(getTempPath())
 							.setCodec(StreamType.AUDIO, "aac")
 							.addArguments("-b:a", "192k")
 					)
 					.setOverwriteOutput(false)
 					.setProgressListener(progressListener)
 					.execute();
-			
-			if(Files.exists(temporary)){
-				Files.move(temporary, getOutput());
-				
-				copyFileAttributes(getInput(), getOutput());
-				trashFile(getInput());
-				
-				log.debug("Converted {} to {}", getInput(), getOutput());
-			}
-			else{
-				log.warn("Output file {} not found, something went wrong", getOutput());
-			}
 		}
-		catch(IOException | InterruptedException e){
+		catch(InterruptedException e){
 			log.error("Failed to run ffmpeg on {}", getInput(), e);
 		}
 	}
