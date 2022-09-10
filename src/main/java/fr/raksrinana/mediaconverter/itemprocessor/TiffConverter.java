@@ -16,20 +16,15 @@ public class TiffConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	protected void convert(){
+	protected void convert() throws InterruptedException, IOException{
 		log.info("Converting {} to {}", getInput(), getOutput());
-		try{
-			ProcessBuilder builder = new ProcessBuilder("magick",
-					"-quality", "85%",
-					"-sampling-factor", "4:2:0",
-					"-interlace", "JPEG",
-					"-colorspace", "sRGB",
-					getInput().toAbsolutePath().toString(), getTempPath().toString());
-			Process process = builder.start();
-			process.waitFor();
-		}
-		catch(IOException | InterruptedException e){
-			log.error("Failed to run imagemagick on {}", getInput(), e);
-		}
+		ProcessBuilder builder = new ProcessBuilder("magick",
+				"-quality", "85%",
+				"-sampling-factor", "4:2:0",
+				"-interlace", "JPEG",
+				"-colorspace", "sRGB",
+				getInput().toAbsolutePath().toString(), getTemporary().toString());
+		Process process = builder.start();
+		process.waitFor();
 	}
 }

@@ -61,12 +61,12 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		try{
 			convert();
 			
-			if(Files.exists(getTempPath())){
+			if(Files.exists(getTemporary())){
 				var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
 				
-				var inputTemporary = temporary.getParent().resolve("original_" + getInput().getFileName().toString());
+				var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
 				Files.move(getInput(), inputTemporary);
-				Files.move(temporary, getOutput());
+				Files.move(getTemporary(), getOutput());
 				
 				if(isCopyAttributes()){
 					copyFileAttributes(inputAttributes, getOutput());
@@ -76,13 +76,13 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 				log.debug("Converted {} to {}", getInput(), getOutput());
 			}
 			else{
-				log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTempPath());
+				log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTemporary());
 			}
 		}
 		catch(Exception e){
-			log.error("Error converting {}", input, e);
+			log.error("Error converting {}", getInput(), e);
 			try{
-				var path = getTempPath();
+				var path = getTemporary();
 				if(Objects.nonNull(path)){
 					Files.deleteIfExists(path);
 				}
@@ -95,10 +95,6 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		}
 	}
 	
-	protected Path getTempPath(){
-		return temporary;
-	}
-	
 	protected boolean isCopyAttributes(){
 		return true;
 	}
@@ -108,5 +104,5 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
 	
-	protected abstract void convert();
+	protected abstract void convert() throws Exception;
 }

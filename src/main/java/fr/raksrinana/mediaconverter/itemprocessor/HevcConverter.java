@@ -29,7 +29,7 @@ public class HevcConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	protected void convert(){
+	protected void convert() throws InterruptedException{
 		var filename = getOutput().getFileName().toString();
 		
 		var duration = Optional.ofNullable(probeResult.getFormat())
@@ -48,9 +48,9 @@ public class HevcConverter extends ConverterRunnable{
 		try(var progressBar = converterProgressBarSupplier.get()){
 			var progressListener = new ProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
 			
-			log.debug("Will convert to temp file {}", getTempPath());
+			log.debug("Will convert to temp file {}", getTemporary());
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
-					.addOutput(UrlOutput.toPath(getTempPath())
+					.addOutput(UrlOutput.toPath(getTemporary())
 							.setCodec(StreamType.AUDIO, "aac")
 							.addArguments("-b:a", "128000")
 							.setCodec(StreamType.VIDEO, "libx265")
@@ -65,9 +65,6 @@ public class HevcConverter extends ConverterRunnable{
 					.setOverwriteOutput(false)
 					.setProgressListener(progressListener)
 					.execute();
-		}
-		catch(InterruptedException e){
-			log.error("Failed to run ffmpeg on {}", getInput(), e);
 		}
 	}
 }
