@@ -18,6 +18,7 @@ public class ProgressBarGenerator{
 				.setSpeedUnit(ChronoUnit.SECONDS)
 				// .showSpeed()
 				.setConsumer(new InteractiveConsoleProgressBarConsumer(new PrintStream(new FileOutputStream(FileDescriptor.err)), -1))
+				.clearDisplayOnFinish()
 				.build();
 	}
 }
