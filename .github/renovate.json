@@ -1,4 +1,7 @@
 {
+  "assignees": [
+    "RakSrinaNa"
+  ],
   "extends": [
     "config:base"
   ],
