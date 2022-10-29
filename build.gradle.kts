@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.lombok)
 }
 
-group = "fr.raksrinana"
+group = "fr.rakambda"
 description = "MediaConverter"
 
 dependencies {
@@ -29,7 +29,7 @@ dependencies {
 
 repositories {
     maven {
-        url = uri("https://maven.pkg.github.com/RakSrinaNa/JavaUtils/")
+        url = uri("https://maven.pkg.github.com/Rakambda/JavaUtils/")
         credentials {
             username = project.findProperty("githubRepoUsername") as String?
             password = project.findProperty("githubRepoPassword") as String?
