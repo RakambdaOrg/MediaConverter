@@ -12,7 +12,7 @@ hikari-cp-version = "5.0.1"
 h2-version = "2.1.214"
 
 shadow-version = "7.1.2"
-names-version = "0.43.0"
+names-version = "0.44.0"
 lombok-version = "6.5.1"
 
 [libraries]
