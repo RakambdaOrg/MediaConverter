@@ -10,10 +10,10 @@ jackson-version = "2.14.2"
 progressbar-version = "0.9.5"
 hikari-cp-version = "5.0.1"
 h2-version = "2.1.214"
+lombok-version = "1.18.26"
 
 shadow-version = "7.1.2"
 names-version = "0.45.0"
-lombok-version = "6.6.1"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
@@ -29,6 +29,7 @@ jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.
 progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok-version" }
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
@@ -37,4 +38,3 @@ log4j2 = ["log4j2-core", "log4j2-slf4j"]
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }
 names = { id = "com.github.ben-manes.versions", version.ref = "names-version" }
-lombok = { id = "io.freefair.lombok", version.ref = "lombok-version" }
