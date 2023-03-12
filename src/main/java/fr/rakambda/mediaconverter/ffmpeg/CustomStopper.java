@@ -28,7 +28,7 @@ public class CustomStopper implements Stopper{
 	public void setProcess(Process process){
 		stopper.setProcess(process);
 		
-		if(Objects.nonNull(affinityMask)){
+		if(Objects.nonNull(affinityMask) && affinityMask > 0){
 			setAffinityMask(affinityMask, process.pid());
 		}
 	}
