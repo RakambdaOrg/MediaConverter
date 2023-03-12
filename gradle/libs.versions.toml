@@ -11,6 +11,7 @@ progressbar-version = "0.9.5"
 hikari-cp-version = "5.0.1"
 h2-version = "2.1.214"
 lombok-version = "1.18.26"
+jna-version = "5.13.0"
 
 shadow-version = "8.1.0"
 names-version = "0.46.0"
@@ -30,10 +31,13 @@ progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progr
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok-version" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna-version" }
+jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna-version" }
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
 log4j2 = ["log4j2-core", "log4j2-slf4j"]
+jna = ["jna", "jna-platform"]
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }

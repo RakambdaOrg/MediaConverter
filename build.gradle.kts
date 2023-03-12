@@ -23,6 +23,8 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.bundles.jackson)
 
+    implementation(libs.bundles.jna)
+
     compileOnly(libs.jetbrainsAnnotations)
     compileOnly(libs.lombok)
 

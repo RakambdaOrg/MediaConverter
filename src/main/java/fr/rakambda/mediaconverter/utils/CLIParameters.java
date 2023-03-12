@@ -33,4 +33,9 @@ public class CLIParameters{
 	private Path ffprobePath;
 	@Option(names = {"--ffmpeg"}, description = "The path to ffmpeg executable")
 	private Path ffmpegPath;
+	
+	@Option(names = {
+			"--affinity"
+	}, description = "Set an affinity mask for windows users to defined on which cores to run on. THis consists on a number where bytes set to 1 activates the core. For ex 7 will run on cores 1, 2, 3.")
+	private Integer affinityMask = null;
 }

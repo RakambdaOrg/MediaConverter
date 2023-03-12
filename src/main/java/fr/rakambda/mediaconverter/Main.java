@@ -4,6 +4,7 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import fr.rakambda.mediaconverter.config.Configuration;
 import fr.rakambda.mediaconverter.config.Conversion;
+import fr.rakambda.mediaconverter.ffmpeg.CustomFFmpeg;
 import fr.rakambda.mediaconverter.file.FileFilter;
 import fr.rakambda.mediaconverter.file.FileProcessor;
 import fr.rakambda.mediaconverter.file.FileScanner;
@@ -44,7 +45,7 @@ public class Main{
 		}
 		
 		Supplier<FFmpeg> ffmpegSupplier = () -> {
-			var ffmpeg = FFmpeg.atPath(parameters.getFfmpegPath());
+			FFmpeg ffmpeg = new CustomFFmpeg(parameters.getFfmpegPath().resolve("ffmpeg"), parameters.getAffinityMask());
 			if(Objects.nonNull(parameters.getFfmpegThreadCount())){
 				ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
 			}
