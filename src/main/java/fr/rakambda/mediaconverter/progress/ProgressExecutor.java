@@ -1,6 +1,7 @@
 package fr.rakambda.mediaconverter.progress;
 
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.apache.commons.lang3.NotImplementedException;
@@ -14,6 +15,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+@Log4j2
 public class ProgressExecutor implements ExecutorService, AutoCloseable{
 	private final ExecutorService delegate;
 	private final ProgressBar progressBar;
@@ -31,10 +33,17 @@ public class ProgressExecutor implements ExecutorService, AutoCloseable{
 	}
 	
 	@Override
-	public void close() throws InterruptedException{
-		shutdown();
-		awaitTermination(30, TimeUnit.DAYS);
-		progressBar.close();
+	public void close(){
+		try{
+			shutdown();
+			awaitTermination(30, TimeUnit.DAYS);
+		}
+		catch(InterruptedException e){
+			log.error("Failed to wait for executor to close");
+		}
+		finally{
+			progressBar.close();
+		}
 	}
 	
 	@Override

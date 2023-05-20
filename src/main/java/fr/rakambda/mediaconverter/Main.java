@@ -75,9 +75,6 @@ public class Main{
 					.filter(Objects::nonNull)
 					.toList());
 		}
-		catch(InterruptedException e){
-			log.error("Failed to process conversions", e);
-		}
 		
 		tempPaths.forEach(path -> {
 			try{
