@@ -12,16 +12,17 @@ import fr.rakambda.mediaconverter.storage.IStorage;
 import fr.rakambda.mediaconverter.storage.NoOpStorage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import static java.util.Objects.isNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -86,7 +87,11 @@ public class Conversion{
 	
 	public List<MediaProcessor> getProcessors(){
 		if(processors.isEmpty()){
-			processors.addAll(Arrays.asList(Processor.values()));
+			processors.addAll(List.of(
+					Processor.VIDEO_HEVC,
+					Processor.AUDIO,
+					Processor.TIFF
+			));
 		}
 		
 		return processors.stream()
