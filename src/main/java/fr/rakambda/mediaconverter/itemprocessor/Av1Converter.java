@@ -55,7 +55,7 @@ public class Av1Converter extends ConverterRunnable {
 							.setCodec(StreamType.AUDIO, "libopus")
 							.addArguments("-b:a", "128000")
 							.setCodec(StreamType.VIDEO, "libsvtav1")
-							.addArguments("-crf", "20")
+							.addArguments("-crf", "26")
 							.addArguments("-preset", "6")
 							.addArguments("-g", "240")
 							.addArguments("-svtav1-params", "tune=0:enable-overlays=1:scd=1:scm=0")

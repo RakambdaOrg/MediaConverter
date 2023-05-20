@@ -17,6 +17,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
@@ -45,7 +47,10 @@ public class Main{
 		}
 		
 		Supplier<FFmpeg> ffmpegSupplier = () -> {
-			FFmpeg ffmpeg = new CustomFFmpeg(parameters.getFfmpegPath().resolve("ffmpeg"), parameters.getAffinityMask());
+			Path ffmpegPath = Optional.ofNullable(parameters.getFfmpegPath())
+					.map(p -> p.resolve("ffmpeg"))
+					.orElse(Paths.get("ffmpeg"));
+			FFmpeg ffmpeg = new CustomFFmpeg(ffmpegPath, parameters.getAffinityMask());
 			if(Objects.nonNull(parameters.getFfmpegThreadCount())){
 				ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
 			}
