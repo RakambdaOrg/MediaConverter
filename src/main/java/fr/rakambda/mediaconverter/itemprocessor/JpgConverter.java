@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Log4j2
-public class TiffConverter extends ConverterRunnable{
-	public TiffConverter(Path input, Path output, Path temporary){
+public class JpgConverter extends ConverterRunnable{
+	public JpgConverter(Path input, Path output, Path temporary){
 		super(input, output, temporary);
 	}
 	

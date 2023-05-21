@@ -7,7 +7,7 @@ import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
 
-public class AudioToAacMediaProcessor implements MediaProcessor{
+public class Mp3ToAacMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("mp3");
 	
 	@Override
