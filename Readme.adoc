@@ -112,7 +112,10 @@ If left empty the default one is used.
 
 === Processors
 
-- VIDEO_HEVC: `H264`, `VP9`, `WV3`, `MPEG2VIDEO` -> `HEVC` + `AAC`
-- VIDEO_AV1: `H264`, `HEVC`, `VP9`, `WV3`, `MPEG2VIDEO` -> `AV1` + `OPUS`
-- AUDIO: `MP3` -> `AAC`
-- TIFF: `TIFF` -> `JPEG`
+- VIDEO_TO_HEVC: `H264`, `VP9`, `WV3`, `MPEG2VIDEO` -> `HEVC` + `AAC`
+- VIDEO_TO_AV1: `H264`, `HEVC`, `VP9`, `WV3`, `MPEG2VIDEO` -> `AV1` + `OPUS`
+- MP3_TO_AAC: `MP3` -> `AAC`
+- AUDIO_TO_OPUS: `MP3`, `AAC` -> `OPUS`
+- TIFF_TO_JPG: `TIFF` -> `JPEG`
+- PHOTO_TO_AVIF: `JPEG` -> `AVIF`
+- PHOTO_TO_JXL: `JPEG` -> `JXL`
