@@ -4,6 +4,7 @@ import fr.rakambda.mediaconverter.storage.IStorage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,8 +32,8 @@ public class FileFilter implements Runnable{
 		this.storage = storage;
 		this.inputQueue = inputQueue;
 		this.extensionsToScan = extensionsToScan;
-		
-		outputQueue = new LinkedBlockingDeque<>();
+
+		outputQueue = new LinkedBlockingDeque<>(500);
 		shutdown = false;
 		countDownLatch = new CountDownLatch(1);
 	}
@@ -44,7 +45,7 @@ public class FileFilter implements Runnable{
 				var file = inputQueue.poll(5, TimeUnit.SECONDS);
 				if(Objects.nonNull(file)){
 					if(processFile(file)){
-						outputQueue.offer(file);
+						outputQueue.put(file);
 					}
 					else{
 						progressBar.step();

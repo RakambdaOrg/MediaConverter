@@ -6,6 +6,7 @@ import fr.rakambda.mediaconverter.config.Configuration;
 import fr.rakambda.mediaconverter.config.Conversion;
 import fr.rakambda.mediaconverter.ffmpeg.CustomFFmpeg;
 import fr.rakambda.mediaconverter.file.FileFilter;
+import fr.rakambda.mediaconverter.file.FileProber;
 import fr.rakambda.mediaconverter.file.FileProcessor;
 import fr.rakambda.mediaconverter.file.FileScanner;
 import fr.rakambda.mediaconverter.progress.ProgressBarGenerator;
@@ -108,12 +109,15 @@ public class Main{
 				
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
-				var fileProcessor = new FileProcessor(converterExecutor, storage, ffmpegSupplier, ffprobeSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), conversion.getProcessors(), fileFilter.getOutputQueue(), scanningProgressBar, convertingProgressBar, converterProgressBarSupplier);
+				var fileProber = new FileProber(scanningProgressBar, storage, fileScanner.getQueue(), ffprobeSupplier, conversion.getProcessors());
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, convertingProgressBar, converterProgressBarSupplier);
 				
 				es.submit(fileProcessor);
 				es.submit(fileFilter);
+				es.submit(fileProber);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
 				fileFilter.shutdown();
+				fileProber.shutdown();
 				fileProcessor.shutdown();
 			}
 			finally{
