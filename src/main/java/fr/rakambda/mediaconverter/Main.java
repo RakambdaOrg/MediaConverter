@@ -58,22 +58,21 @@ public class Main{
 			return ffmpeg;
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
-		List<Path> tempPaths = new ArrayList<>();
+		List<Path> tempPaths;
 		
 		var progressBarGenerator = new ProgressBarGenerator();
 		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
 				var convertingProgressBar = new ProgressBarBuilder().setTaskName("Converting").setUnit("File", 1).build();
 				var converterProgressBarSupplier = new ProgressBarSupplier(progressBarGenerator)){
-			tempPaths.addAll(Configuration.loadConfiguration(parameters.getConfiguration())
+			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())
 					.parallel()
 					.map(conv -> {
-						try{
+						try {
 							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, convertingProgressBar, converterProgressBarSupplier);
-						}
-						catch(IOException e){
+						} catch (IOException e) {
 							log.error("Failed to perform conversion", e);
 							return null;
 						}

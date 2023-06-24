@@ -75,18 +75,22 @@ public class FileProber implements Runnable {
 					.setShowFormat(true)
 					.setInput(file.toString())
 					.execute();
-		} catch (RuntimeException e) {
+		} catch (Exception e) {
 			log.error("Failed to probe file {}", file, e);
 			return null;
 		}
 	}
 
 	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult, Path file) {
-		for (var processor : processors) {
-			if (processor.canHandle(probeResult, file)) {
-				log.trace("Processor {} matched", processor.getClass().getSimpleName());
-				return Optional.of(processor);
+		try {
+			for (var processor : processors) {
+				if (processor.canHandle(probeResult, file)) {
+					log.trace("Processor {} matched", processor.getClass().getSimpleName());
+					return Optional.of(processor);
+				}
 			}
+		} catch (Exception e) {
+			log.error("Failed to get processor for file {}", file, e);
 		}
 		return Optional.empty();
 	}
