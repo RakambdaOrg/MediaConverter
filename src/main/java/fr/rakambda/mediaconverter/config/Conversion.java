@@ -40,7 +40,8 @@ public class Conversion{
 			"m4v",
 			"ts",
 			"m2ts",
-			"mts"
+			"mts",
+			"heic"
 	);
 	
 	@JsonProperty("input")

@@ -6,12 +6,16 @@ import fr.rakambda.mediaconverter.itemprocessor.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public class VideoToHevcMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("h264", "vp9", "wmv3", "mpeg2video");
 	
 	@Override
-	public boolean canHandle(FFprobeResult probeResult){
+	public boolean canHandle(FFprobeResult probeResult, Path file){
+		if(Objects.isNull(probeResult)){
+			return false;
+		}
 		return probeResult.getStreams().stream()
 				.anyMatch(stream -> isWantedCodec(stream.getCodecName()) || isOtherHevc(stream.getCodecName(), stream.getCodecTagString()));
 	}

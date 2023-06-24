@@ -6,12 +6,16 @@ import fr.rakambda.mediaconverter.itemprocessor.AacConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public class Mp3ToAacMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("mp3");
 	
 	@Override
-	public boolean canHandle(FFprobeResult probeResult){
+	public boolean canHandle(FFprobeResult probeResult, Path file){
+		if(Objects.isNull(probeResult)){
+			return false;
+		}
 		return probeResult.getStreams().size() == 1
 				&& probeResult.getStreams().stream()
 				.allMatch(stream -> CODECS.contains(stream.getCodecName()));

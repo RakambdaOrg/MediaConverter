@@ -4,15 +4,18 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.rakambda.mediaconverter.itemprocessor.Av1Converter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public class VideoToAv1MediaProcessor implements MediaProcessor {
 	private static final List<String> CODECS = List.of("h264", "vp9", "wmv3", "mpeg2video", "hevc", "h265");
 
 	@Override
-	public boolean canHandle(FFprobeResult probeResult) {
+	public boolean canHandle(FFprobeResult probeResult, Path file){
+		if(Objects.isNull(probeResult)){
+			return false;
+		}
 		return probeResult.getStreams().stream().anyMatch(stream -> isWantedCodec(stream.getCodecName()));
 	}
 

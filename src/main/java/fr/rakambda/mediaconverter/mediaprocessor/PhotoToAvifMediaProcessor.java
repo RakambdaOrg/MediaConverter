@@ -6,12 +6,16 @@ import fr.rakambda.mediaconverter.itemprocessor.AvifConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public class PhotoToAvifMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("jpeg");
 	
 	@Override
-	public boolean canHandle(FFprobeResult probeResult){
+	public boolean canHandle(FFprobeResult probeResult, Path file){
+		if(Objects.isNull(probeResult)){
+			return file.getFileName().toString().endsWith(".HEIC");
+		}
 		return probeResult.getStreams().stream()
 				.anyMatch(stream -> CODECS.contains(stream.getCodecName()));
 	}

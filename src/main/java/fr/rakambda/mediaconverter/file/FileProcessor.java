@@ -80,22 +80,9 @@ public class FileProcessor implements Runnable{
 	
 	private void processFile(Path file){
 		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
+		var probeResult = probeFile(file);
 		
-		var ffprobe = ffprobeSupplier.get();
-		FFprobeResult probeResult;
-		try{
-			log.debug("Scanning file {}", file);
-			probeResult = ffprobe.setShowStreams(true)
-					.setShowFormat(true)
-					.setInput(file.toString())
-					.execute();
-		}
-		catch(RuntimeException e){
-			log.error("Failed to probe file {}", file, e);
-			return;
-		}
-		
-		getProcessor(probeResult).ifPresentOrElse(processor -> {
+		getProcessor(probeResult, file).ifPresentOrElse(processor -> {
 			var outfile = buildOutFile(file, processor.getDesiredExtension());
 			
 			if(!Files.exists(outfile.getParent())){
@@ -125,13 +112,24 @@ public class FileProcessor implements Runnable{
 		}, () -> storage.setUseless(file));
 	}
 	
-	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult){
-		if(Objects.isNull(probeResult)){
-			return Optional.empty();
+	private FFprobeResult probeFile(Path file){
+		try{
+			log.debug("Scanning file {}", file);
+			var ffprobe = ffprobeSupplier.get();
+			return ffprobe.setShowStreams(true)
+					.setShowFormat(true)
+					.setInput(file.toString())
+					.execute();
 		}
-		
+		catch(RuntimeException e){
+			log.error("Failed to probe file {}", file, e);
+			return null;
+		}
+	}
+	
+	private Optional<MediaProcessor> getProcessor(FFprobeResult probeResult, Path file){
 		for(var processor : processors){
-			if(processor.canHandle(probeResult)){
+			if(processor.canHandle(probeResult, file)){
 				log.trace("Processor {} matched", processor.getClass().getSimpleName());
 				return Optional.of(processor);
 			}

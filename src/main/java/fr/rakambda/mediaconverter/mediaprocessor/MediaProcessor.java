@@ -6,7 +6,7 @@ import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import java.nio.file.Path;
 
 public interface MediaProcessor{
-	boolean canHandle(FFprobeResult probeResult);
+	boolean canHandle(FFprobeResult probeResult, Path file);
 	
 	MediaProcessorTask createConvertTask(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier);
 	
