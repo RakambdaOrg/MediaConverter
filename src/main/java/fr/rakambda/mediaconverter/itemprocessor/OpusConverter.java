@@ -7,9 +7,10 @@ import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
-import fr.rakambda.mediaconverter.progress.ProgressBarNotifier;
+import fr.rakambda.mediaconverter.progress.ConverterProgressBarNotifier;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.extern.log4j.Log4j2;
+
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -46,7 +47,7 @@ public class OpusConverter extends ConverterRunnable{
 		
 		log.debug("Converting {} ({}) to {}", getInput(), duration, getOutput());
 		try(var progressBar = converterProgressBarSupplier.get()){
-			var progressListener = new ProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
+			var progressListener = new ConverterProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
 			
 			log.debug("Will convert to temp file {}", getTemporary());
 			

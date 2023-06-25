@@ -5,17 +5,18 @@ import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
+
 import java.time.Duration;
 import java.util.Objects;
 
 @Log4j2
-public class ProgressBarNotifier implements ProgressListener{
+public class ConverterProgressBarNotifier implements ProgressListener {
 	private final String filename;
 	private final long frameCount;
 	private final String totalDuration;
 	private final ProgressBar progressBar;
-	
-	public ProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, ProgressBar progressBar){
+
+	public ConverterProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, @NotNull ProgressBar progressBar) {
 		this.filename = filename;
 		this.frameCount = frameCount;
 		this.totalDuration = durationToStr(totalDuration);

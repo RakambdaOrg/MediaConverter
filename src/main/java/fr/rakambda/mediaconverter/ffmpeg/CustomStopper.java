@@ -4,8 +4,10 @@ import com.github.kokorin.jaffree.process.Stopper;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinNT;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+
 import java.util.Objects;
 
 @Log4j2
@@ -25,7 +27,7 @@ public class CustomStopper implements Stopper{
 	}
 	
 	@Override
-	public void setProcess(Process process){
+	public void setProcess(@NonNull Process process) {
 		stopper.setProcess(process);
 		
 		if(Objects.nonNull(affinityMask) && affinityMask > 0){
@@ -35,7 +37,7 @@ public class CustomStopper implements Stopper{
 	
 	private void setAffinityMask(int affinityMask, long pid){
 		log.info("Setting affinity {} to pid {}", affinityMask, pid);
-		AffinityKernel instance = Native.load("Kernel32", AffinityKernel.class);
+		var instance = Native.load("Kernel32", AffinityKernel.class);
 		var result = instance.SetProcessAffinityMask(new WinNT.HANDLE(new Pointer(pid)), affinityMask);
 		log.info("Set affinity result: {}", result);
 	}

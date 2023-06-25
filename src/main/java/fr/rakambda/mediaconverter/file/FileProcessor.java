@@ -2,8 +2,10 @@ package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,14 +26,19 @@ public class FileProcessor implements Runnable {
 	private final Path baseOutput;
 	private final BlockingQueue<FileProber.ProbeResult> queue;
 	private final ProgressBar progressBar;
-	private final ProgressBar convertingProgressBar;
-	private final Object convertingProgressBarLock;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final CountDownLatch countDownLatch;
 
 	private boolean shutdown;
 
-	public FileProcessor(ExecutorService executor, Supplier<FFmpeg> ffmpegSupplier, Path tempDirectory, Path baseInput, Path baseOutput, BlockingQueue<FileProber.ProbeResult> queue, ProgressBar progressBar, ProgressBar convertingProgressBar, ProgressBarSupplier converterProgressBarSupplier) {
+	public FileProcessor(@NonNull ExecutorService executor,
+						 @NonNull Supplier<FFmpeg> ffmpegSupplier,
+						 @NonNull Path tempDirectory,
+						 @NonNull Path baseInput,
+						 @NonNull Path baseOutput,
+						 @NonNull BlockingQueue<FileProber.ProbeResult> queue,
+						 @NonNull ProgressBar progressBar,
+						 @NonNull ProgressBarSupplier converterProgressBarSupplier) {
 		this.executor = executor;
 		this.ffmpegSupplier = ffmpegSupplier;
 		this.tempDirectory = tempDirectory;
@@ -39,12 +46,10 @@ public class FileProcessor implements Runnable {
 		this.baseOutput = baseOutput;
 		this.queue = queue;
 		this.progressBar = progressBar;
-		this.convertingProgressBar = convertingProgressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 
 		shutdown = false;
 		countDownLatch = new CountDownLatch(1);
-		convertingProgressBarLock = new Object();
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class FileProcessor implements Runnable {
 		}
 	}
 
-	private void processFile(FileProber.ProbeResult probeResultt) {
+	private void processFile(@NonNull FileProber.ProbeResult probeResultt) {
 		var file = probeResultt.file();
 		var ffProbeResult = probeResultt.fFprobeResult();
 		var processor = probeResultt.processor();
@@ -92,14 +97,10 @@ public class FileProcessor implements Runnable {
 				converterProgressBarSupplier
 		);
 
-		synchronized (convertingProgressBarLock) {
-			convertingProgressBar.maxHint(convertingProgressBar.getMax() + 1);
-		}
-		task.addCompletionListener(convertingProgressBar::step);
 		executor.submit(task);
 	}
 
-	private Path buildOutFile(Path file, String desiredExtension) {
+	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension) {
 		var relative = baseInput.relativize(file);
 		var outFile = baseOutput.resolve(relative);
 

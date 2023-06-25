@@ -9,15 +9,16 @@ import fr.rakambda.mediaconverter.file.FileFilter;
 import fr.rakambda.mediaconverter.file.FileProber;
 import fr.rakambda.mediaconverter.file.FileProcessor;
 import fr.rakambda.mediaconverter.file.FileScanner;
-import fr.rakambda.mediaconverter.progress.ProgressBarGenerator;
+import fr.rakambda.mediaconverter.progress.ConversionProgressExecutor;
+import fr.rakambda.mediaconverter.progress.ConverterProgressBarGenerator;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import fr.rakambda.mediaconverter.progress.ProgressExecutor;
 import fr.rakambda.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,11 +59,10 @@ public class Main{
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths;
-		
-		var progressBarGenerator = new ProgressBarGenerator();
-		try(var converterExecutor = ProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
+
+		var progressBarGenerator = new ConverterProgressBarGenerator();
+		try (var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
-				var convertingProgressBar = new ProgressBarBuilder().setTaskName("Converting").setUnit("File", 1).build();
 				var converterProgressBarSupplier = new ProgressBarSupplier(progressBarGenerator)){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
@@ -70,7 +70,7 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try {
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, convertingProgressBar, converterProgressBarSupplier);
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier);
 						} catch (IOException e) {
 							log.error("Failed to perform conversion", e);
 							return null;
@@ -91,7 +91,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, ProgressBar convertingProgressBar, ProgressBarSupplier converterProgressBarSupplier) throws IOException{
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier) throws IOException {
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -108,7 +108,7 @@ public class Main{
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, convertingProgressBar, converterProgressBarSupplier);
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier);
 				
 				es.submit(fileProcessor);
 				es.submit(fileFilter);

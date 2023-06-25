@@ -1,5 +1,7 @@
 package fr.rakambda.mediaconverter.mediaprocessor;
 
+import lombok.NonNull;
+
 public interface MediaProcessorTask extends Runnable{
-	void addCompletionListener(Runnable listener);
+	void addCompletionListener(@NonNull Runnable listener);
 }

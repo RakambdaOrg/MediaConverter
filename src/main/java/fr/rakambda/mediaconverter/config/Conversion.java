@@ -12,6 +12,8 @@ import fr.rakambda.mediaconverter.storage.IStorage;
 import fr.rakambda.mediaconverter.storage.NoOpStorage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import static java.util.Objects.isNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -63,11 +66,13 @@ public class Conversion{
 	private List<Processor> processors = new LinkedList<>();
 	@JsonProperty("extensions")
 	private List<String> extensions = new LinkedList<>();
-	
+
+	@NonNull
 	public Path createTempDirectory() throws IOException{
 		return isNull(getTemp()) ? Files.createTempDirectory(TEMPORARY_DIRECTORY_PREFIX) : Files.createTempDirectory(getTemp(), TEMPORARY_DIRECTORY_PREFIX);
 	}
-	
+
+	@NonNull
 	public Set<Path> getAbsoluteExcluded(){
 		if(isNull(getExcluded())){
 			return Set.of();
@@ -76,14 +81,16 @@ public class Conversion{
 				.map(getInput()::resolve)
 				.collect(Collectors.toSet());
 	}
-	
+
+	@NonNull
 	public Collection<String> getExtensions(){
 		if(isNull(extensions) || extensions.isEmpty()){
 			return DEFAULT_EXTENSIONS_TO_SCAN;
 		}
 		return extensions;
 	}
-	
+
+	@NonNull
 	public List<MediaProcessor> getProcessors(){
 		if(processors.isEmpty()){
 			processors.addAll(List.of(
@@ -97,7 +104,8 @@ public class Conversion{
 				.map(MediaProcessorFactory::getMediaProcessor)
 				.collect(Collectors.toList());
 	}
-	
+
+	@NonNull
 	public IStorage getStorage() throws SQLException, IOException{
 		if(isNull(getDatabase())){
 			return new NoOpStorage();

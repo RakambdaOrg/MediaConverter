@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import me.tongfei.progressbar.InteractiveConsoleProgressBarConsumer;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.time.temporal.ChronoUnit;
 
 @RequiredArgsConstructor
-public class ProgressBarGenerator{
+public class ConverterProgressBarGenerator {
+	@NotNull
 	public ProgressBar generate(int index){
 		return new ProgressBarBuilder()
 				.setTaskName("Converter " + (index + 1))

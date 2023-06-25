@@ -7,9 +7,12 @@ import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
-import fr.rakambda.mediaconverter.progress.ProgressBarNotifier;
+import fr.rakambda.mediaconverter.progress.ConverterProgressBarNotifier;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -20,8 +23,8 @@ public class HevcConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
 	private final FFprobeResult probeResult;
 	private final ProgressBarSupplier converterProgressBarSupplier;
-	
-	public HevcConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
+
+	public HevcConverter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier) {
 		super(input, output, temporary);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
@@ -46,7 +49,7 @@ public class HevcConverter extends ConverterRunnable{
 		
 		log.debug("Converting {} ({}) to {}", getInput(), duration, getOutput());
 		try(var progressBar = converterProgressBarSupplier.get()){
-			var progressListener = new ProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
+			var progressListener = new ConverterProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
 			
 			log.debug("Will convert to temp file {}", getTemporary());
 			ffmpeg.addInput(UrlInput.fromPath(getInput()))
