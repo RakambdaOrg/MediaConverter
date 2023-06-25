@@ -54,6 +54,7 @@ public class FileProber implements Runnable {
             do {
                 var file = inputQueue.poll(5, TimeUnit.SECONDS);
                 if (Objects.nonNull(file)) {
+                    progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
                     var probeResult = probeFile(file);
                     var processor = getProcessor(probeResult, file);
                     if (processor.isPresent()) {
@@ -62,6 +63,7 @@ public class FileProber implements Runnable {
                         storage.setUseless(file);
                         progressBar.step();
                     }
+                    progressBar.setExtraMessage("");
                 }
             }
             while (!shutdown || !inputQueue.isEmpty());

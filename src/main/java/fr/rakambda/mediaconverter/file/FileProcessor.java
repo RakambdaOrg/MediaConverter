@@ -74,9 +74,6 @@ public class FileProcessor implements Runnable {
 		var file = probeResultt.file();
 		var ffProbeResult = probeResultt.fFprobeResult();
 		var processor = probeResultt.processor();
-
-		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
-
 		var outfile = buildOutFile(file, processor.getDesiredExtension());
 
 		if (!Files.exists(outfile.getParent())) {
