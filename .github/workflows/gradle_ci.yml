@@ -7,6 +7,7 @@ env:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -16,21 +17,26 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: ${{ env.APP_JAVA_VERSION }}
-          cache: 'gradle'
-      - name: Set gradle permissions
-        run: chmod +x gradlew
-      - name: Check project
-        run: ./gradlew check build -PgithubRepoUsername="${GITHUB_USER}" -PgithubRepoPassword="${GITHUB_TOKEN}"
-        env:
-          GITHUB_USER: RakSrinaNa
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v3
-        name: Upload artifact
+
+      - name: Build
+        uses: gradle/gradle-build-action@v2.6.1
+        with:
+          cache-disabled: true
+          arguments: |
+            check
+            build
+            -Dorg.gradle.project.githubRepoUsername="RakSrinaNa"
+            -Dorg.gradle.project.githubRepoPassword="${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
           name: shadow-jar
           path: build/libs/mediaconverter-shaded.jar
 
   dropbox:
+    name: Deploy on Dropbox
+    concurrency: dropbox
     runs-on: ubuntu-latest
     needs: build
     if: contains('refs/heads/main', github.ref)
