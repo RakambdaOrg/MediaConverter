@@ -32,13 +32,6 @@ dependencies {
 }
 
 repositories {
-    maven {
-        url = uri("https://maven.pkg.github.com/Rakambda/JavaUtils/")
-        credentials {
-            username = project.findProperty("githubRepoUsername") as String?
-            password = project.findProperty("githubRepoPassword") as String?
-        }
-    }
     mavenCentral()
 }
 
