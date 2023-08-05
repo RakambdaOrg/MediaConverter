@@ -10,20 +10,6 @@ jobs:
     with:
       java-version: ${{ vars.JAVA_VERSION }}
 
-  docker:
-    uses: Rakambda/rakambda-github-workflows/.github/workflows/gradle-jib-publish.yml@main
-    if: github.ref == ${{ github.event.repository.default_branch }}
-    needs:
-      - build
-    with:
-      java-version: ${{ vars.JAVA_VERSION }}
-      docker-image: ${{ vars.DOCKER_IMAGE }}
-      docker-tag: latest
-    secrets:
-      docker-repo: ${{ secrets.DOCKER_REPO }}
-      docker-username: ${{ secrets.DOCKER_USERNAME }}
-      docker-token: ${{ secrets.DOCKER_TOKEN }}
-
   dropbox:
     uses: Rakambda/rakambda-github-workflows/.github/workflows/dropbox-publish-artifact.yml@main
     if: github.ref == ${{ github.event.repository.default_branch }}
