@@ -9,6 +9,7 @@ jobs:
     uses: Rakambda/rakambda-github-workflows/.github/workflows/gradle-build.yml@main
     with:
       java-version: ${{ vars.JAVA_VERSION }}
+      artifact-name: Gradle-Libs
 
   dropbox:
     uses: Rakambda/rakambda-github-workflows/.github/workflows/dropbox-publish-artifact.yml@main
@@ -16,7 +17,7 @@ jobs:
     needs:
       - build
     with:
-      artifact: Gradle-Libs
+      artifact-name: Gradle-Libs
       source: "mediaconverter-shaded.jar"
       target: "/Documents/JARs/MediaConverter.jar"
     secrets:
