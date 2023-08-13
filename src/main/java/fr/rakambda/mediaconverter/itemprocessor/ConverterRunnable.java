@@ -38,9 +38,6 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	}
 	
 	protected void trashFile(@NonNull Path file) throws IOException{
-		if(!deleteInput){
-			return;
-		}
 		if(Desktop.isDesktopSupported()){
 			var desktop = Desktop.getDesktop();
 			if(desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)){
@@ -71,13 +68,20 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 				var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
 				
 				var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
-				Files.move(getInput(), inputTemporary);
-				Files.move(getTemporary(), getOutput());
+				if(deleteInput){
+					Files.move(getInput(), inputTemporary);
+					Files.move(getTemporary(), getOutput());
+				}
+				else{
+					Files.move(getTemporary(), getOutput());
+				}
 				
 				if(isCopyAttributes()){
 					copyFileAttributes(inputAttributes, getOutput());
 				}
-				trashFile(inputTemporary);
+				if(deleteInput){
+					trashFile(inputTemporary);
+				}
 				
 				log.debug("Converted {} to {}", getInput(), getOutput());
 			}

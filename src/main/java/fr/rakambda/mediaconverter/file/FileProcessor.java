@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Log4j2
-public class FileProcessor implements Runnable {
+public class FileProcessor implements Runnable{
 	private final ExecutorService executor;
 	private final Supplier<FFmpeg> ffmpegSupplier;
 	private final Path tempDirectory;
@@ -30,14 +30,14 @@ public class FileProcessor implements Runnable {
 	
 	private final CountDownLatch countDownLatch;
 	private boolean shutdown;
-
+	
 	public FileProcessor(@NonNull ExecutorService executor,
-						 @NonNull Supplier<FFmpeg> ffmpegSupplier,
-						 @NonNull Path tempDirectory,
-						 @NonNull Path baseInput,
-						 @NonNull Path baseOutput,
-						 @NonNull BlockingQueue<FileProber.ProbeResult> queue,
-						 @NonNull ProgressBar progressBar,
+			@NonNull Supplier<FFmpeg> ffmpegSupplier,
+			@NonNull Path tempDirectory,
+			@NonNull Path baseInput,
+			@NonNull Path baseOutput,
+			@NonNull BlockingQueue<FileProber.ProbeResult> queue,
+			@NonNull ProgressBar progressBar,
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean deleteInput){
 		this.executor = executor;
@@ -53,40 +53,47 @@ public class FileProcessor implements Runnable {
 		countDownLatch = new CountDownLatch(1);
 		shutdown = false;
 	}
-
+	
 	@Override
-	public void run() {
-		try {
-			do {
+	public void run(){
+		try{
+			do{
 				var file = queue.poll(5, TimeUnit.SECONDS);
-				if (Objects.nonNull(file)) {
+				if(Objects.nonNull(file)){
 					processFile(file);
 					progressBar.step();
 				}
 			}
-			while (!shutdown || !queue.isEmpty());
-		} catch (InterruptedException e) {
+			while(!shutdown || !queue.isEmpty());
+		}
+		catch(InterruptedException e){
 			log.error("Error waiting for element", e);
-		} finally {
+		}
+		finally{
 			countDownLatch.countDown();
 		}
 	}
-
-	private void processFile(@NonNull FileProber.ProbeResult probeResultt) {
+	
+	private void processFile(@NonNull FileProber.ProbeResult probeResultt){
 		var file = probeResultt.file();
 		var ffProbeResult = probeResultt.fFprobeResult();
 		var processor = probeResultt.processor();
 		var outfile = buildOutFile(file, processor.getDesiredExtension());
-
-		if (!Files.exists(outfile.getParent())) {
-			try {
+		
+		if(Files.exists(outfile)){
+			log.warn("Skipping {}, output already exists at {}", file, outfile);
+			return;
+		}
+		if(!Files.exists(outfile.getParent())){
+			try{
 				Files.createDirectories(outfile.getParent());
-			} catch (IOException e) {
+			}
+			catch(IOException e){
 				log.error("Failed to create output folder for {}", outfile, e);
 				return;
 			}
 		}
-
+		
 		var task = processor.createConvertTask(
 				ffmpegSupplier.get(),
 				ffProbeResult,
@@ -96,27 +103,27 @@ public class FileProcessor implements Runnable {
 				converterProgressBarSupplier,
 				deleteInput
 		);
-
+		
 		executor.submit(task);
 	}
-
-	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension) {
+	
+	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension){
 		var relative = baseInput.relativize(file);
 		var outFile = baseOutput.resolve(relative);
-
-		if (Objects.nonNull(desiredExtension)) {
+		
+		if(Objects.nonNull(desiredExtension)){
 			var filename = outFile.getFileName().toString();
 			var dotIndex = filename.lastIndexOf('.');
-			if (dotIndex > 0) {
+			if(dotIndex > 0){
 				filename = filename.substring(0, dotIndex);
 			}
 			outFile = outFile.resolveSibling(filename + '.' + desiredExtension);
 		}
-
+		
 		return outFile;
 	}
-
-	public void shutdown() throws InterruptedException {
+	
+	public void shutdown() throws InterruptedException{
 		shutdown = true;
 		countDownLatch.await();
 	}

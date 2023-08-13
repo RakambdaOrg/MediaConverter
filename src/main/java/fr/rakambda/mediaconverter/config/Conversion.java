@@ -42,7 +42,9 @@ public class Conversion{
 			"ts",
 			"m2ts",
 			"mts",
-			"heic"
+			"heic",
+			"jpg",
+			"raf"
 	);
 	
 	@JsonProperty("input")

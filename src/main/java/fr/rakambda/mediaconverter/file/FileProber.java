@@ -9,7 +9,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
@@ -84,7 +83,7 @@ public class FileProber implements Runnable {
                     .setInput(file.toString())
                     .execute();
         } catch (Exception e) {
-            log.error("Failed to probe file {}", file, e);
+	        log.warn("Failed to probe file {}", file, e);
             return null;
         }
     }
