@@ -13,7 +13,6 @@ import fr.rakambda.mediaconverter.storage.NoOpStorage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import static java.util.Objects.isNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -59,6 +57,8 @@ public class Conversion{
 	@JsonProperty("temp")
 	@JsonDeserialize(using = NioPathDeserializer.class)
 	private Path temp;
+	@JsonProperty("deleteInput")
+	private boolean deleteInput = true;
 	@JsonProperty("excluded")
 	@JsonDeserialize(contentUsing = NioPathDeserializer.class)
 	private List<Path> excluded = new LinkedList<>();

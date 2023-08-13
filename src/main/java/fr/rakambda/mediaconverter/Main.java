@@ -18,7 +18,6 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,7 +107,7 @@ public class Main{
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier);
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput());
 				
 				es.submit(fileProcessor);
 				es.submit(fileFilter);

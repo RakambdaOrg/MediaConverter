@@ -6,7 +6,6 @@ import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,8 +26,9 @@ public class FileProcessor implements Runnable {
 	private final BlockingQueue<FileProber.ProbeResult> queue;
 	private final ProgressBar progressBar;
 	private final ProgressBarSupplier converterProgressBarSupplier;
+	private final boolean deleteInput;
+	
 	private final CountDownLatch countDownLatch;
-
 	private boolean shutdown;
 
 	public FileProcessor(@NonNull ExecutorService executor,
@@ -38,7 +38,8 @@ public class FileProcessor implements Runnable {
 						 @NonNull Path baseOutput,
 						 @NonNull BlockingQueue<FileProber.ProbeResult> queue,
 						 @NonNull ProgressBar progressBar,
-						 @NonNull ProgressBarSupplier converterProgressBarSupplier) {
+			@NonNull ProgressBarSupplier converterProgressBarSupplier,
+			boolean deleteInput){
 		this.executor = executor;
 		this.ffmpegSupplier = ffmpegSupplier;
 		this.tempDirectory = tempDirectory;
@@ -47,9 +48,10 @@ public class FileProcessor implements Runnable {
 		this.queue = queue;
 		this.progressBar = progressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
-
-		shutdown = false;
+		this.deleteInput = deleteInput;
+		
 		countDownLatch = new CountDownLatch(1);
+		shutdown = false;
 	}
 
 	@Override
@@ -91,7 +93,8 @@ public class FileProcessor implements Runnable {
 				file,
 				outfile,
 				tempDirectory.resolve("" + file.hashCode() + outfile.getFileName()),
-				converterProgressBarSupplier
+				converterProgressBarSupplier,
+				deleteInput
 		);
 
 		executor.submit(task);

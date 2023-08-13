@@ -43,6 +43,7 @@ Configuration is now declared in a json file with the following format:
       "output": "/path/to/output",
       "database": "/path/to/database.db",
       "temp": "/path/to/temp",
+      "deleteInput": false,
       "excluded": [
         "subfolder/to/exclude",
         "another/too"
@@ -89,6 +90,10 @@ This is useful if input folder is large and converted files never move.
 |conversions.temp
 |O
 |Path to a directory where temporary files (conversions in progress) will be placed
+
+|conversions.deleteInput
+|O
+|Delete input file on success or not (default true)
 
 |conversions.excluded
 |O

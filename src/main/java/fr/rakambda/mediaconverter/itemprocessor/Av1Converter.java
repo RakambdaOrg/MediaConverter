@@ -12,7 +12,6 @@ import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -23,9 +22,9 @@ public class Av1Converter extends ConverterRunnable {
     private final FFmpeg ffmpeg;
     private final FFprobeResult probeResult;
     private final ProgressBarSupplier converterProgressBarSupplier;
-
-    public Av1Converter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier) {
-        super(input, output, temporary);
+	
+	public Av1Converter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput){
+		super(input, output, temporary, deleteInput);
         this.ffmpeg = ffmpeg;
         this.probeResult = probeResult;
         this.converterProgressBarSupplier = converterProgressBarSupplier;

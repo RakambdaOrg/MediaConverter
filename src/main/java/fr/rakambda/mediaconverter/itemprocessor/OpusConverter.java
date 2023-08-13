@@ -10,7 +10,6 @@ import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.progress.ConverterProgressBarNotifier;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.extern.log4j.Log4j2;
-
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -22,8 +21,8 @@ public class OpusConverter extends ConverterRunnable{
 	private final FFprobeResult probeResult;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	
-	public OpusConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier){
-		super(input, output, temporary);
+	public OpusConverter(FFmpeg ffmpeg, FFprobeResult probeResult, Path input, Path output, Path temporary, ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput){
+		super(input, output, temporary, deleteInput);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;

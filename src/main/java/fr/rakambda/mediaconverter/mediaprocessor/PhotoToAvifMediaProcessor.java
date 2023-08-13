@@ -6,7 +6,6 @@ import fr.rakambda.mediaconverter.itemprocessor.AvifConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -25,8 +24,8 @@ public class PhotoToAvifMediaProcessor implements MediaProcessor{
 	
 	@Override
 	@NonNull
-	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier) {
-		return new AvifConverter(input, output, temporary);
+	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput){
+		return new AvifConverter(input, output, temporary, deleteInput);
 	}
 	
 	@Override

@@ -6,7 +6,6 @@ import fr.rakambda.mediaconverter.itemprocessor.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -33,8 +32,8 @@ public class VideoToHevcMediaProcessor implements MediaProcessor{
 	
 	@Override
 	@NonNull
-	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier) {
-		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier);
+	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier, boolean deleteInput){
+		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput);
 	}
 	
 	@Override
