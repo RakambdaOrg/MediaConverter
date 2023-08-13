@@ -83,7 +83,7 @@ public class FileProber implements Runnable {
                     .setInput(file.toString())
                     .execute();
         } catch (Exception e) {
-	        log.warn("Failed to probe file {}", file, e);
+	        log.warn("Failed to probe file {}", file);
             return null;
         }
     }
