@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     uses: Rakambda/rakambda-github-workflows/.github/workflows/gradle-build.yml@main
