@@ -2,7 +2,7 @@ package fr.rakambda.mediaconverter.mediaprocessor;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import fr.rakambda.mediaconverter.itemprocessor.AacConverter;
+import fr.rakambda.mediaconverter.itemprocessor.ffmpeg.AacConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;

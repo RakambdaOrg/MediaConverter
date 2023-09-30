@@ -1,6 +1,7 @@
 package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
@@ -9,8 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +32,7 @@ public class FileProcessor implements Runnable{
 	private final boolean deleteInput;
 	
 	private final CountDownLatch countDownLatch;
+	private final Collection<MediaProcessorTask> tasks;
 	private boolean shutdown;
 	
 	public FileProcessor(@NonNull ExecutorService executor,
@@ -51,6 +55,7 @@ public class FileProcessor implements Runnable{
 		this.deleteInput = deleteInput;
 		
 		countDownLatch = new CountDownLatch(1);
+		tasks = new ConcurrentLinkedDeque<>();
 		shutdown = false;
 	}
 	
@@ -103,8 +108,8 @@ public class FileProcessor implements Runnable{
 				converterProgressBarSupplier,
 				deleteInput
 		);
-		
-		executor.submit(task);
+		tasks.add(task);
+		task.execute(executor);
 	}
 	
 	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension){
@@ -125,6 +130,7 @@ public class FileProcessor implements Runnable{
 	
 	public void shutdown() throws InterruptedException{
 		shutdown = true;
+		tasks.forEach(MediaProcessorTask::cancel);
 		countDownLatch.await();
 	}
 }

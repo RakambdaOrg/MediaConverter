@@ -13,6 +13,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 @Log4j2
 @Getter
@@ -60,9 +61,9 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	}
 	
 	@Override
-	public void run(){
+	public void execute(@NonNull ExecutorService executorService){
 		try{
-			convert();
+			convert(executorService);
 			
 			if(Files.exists(getTemporary())){
 				var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
@@ -114,5 +115,5 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
 	
-	protected abstract void convert() throws Exception;
+	protected abstract void convert(@NonNull ExecutorService executorService) throws Exception;
 }
