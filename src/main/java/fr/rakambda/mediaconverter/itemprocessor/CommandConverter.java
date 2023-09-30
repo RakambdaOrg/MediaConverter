@@ -26,7 +26,7 @@ public abstract class CommandConverter extends ConverterRunnable{
 		progressBar = converterProgressBarSupplier.get();
 		
 		ProcessBuilder builder = new ProcessBuilder(getCommand());
-		executorService.execute(() -> {
+		executorService.submit(() -> {
 			try{
 				progressBar.getProgressBar().stepTo(0);
 				progressBar.getProgressBar().setExtraMessage(getOutput().getFileName().toString());
