@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Log4j2
 public abstract class FfmpegVideoConverter extends ConverterRunnable{
@@ -38,7 +39,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	protected void convert(@NonNull ExecutorService executorService) throws InterruptedException{
+	protected Future<?> convert(@NonNull ExecutorService executorService) throws InterruptedException{
 		var filename = getOutput().getFileName().toString();
 		
 		var duration = Optional.ofNullable(probeResult.getFormat())
@@ -66,7 +67,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 				.setProgressListener(progressListener)
 				.executeAsync(executorService);
 		
-		ffmpegResult
+		return ffmpegResult
 				.toCompletableFuture()
 				.exceptionally(t -> null)
 				.thenAccept(r -> close());

@@ -1,5 +1,6 @@
 package fr.rakambda.mediaconverter.progress;
 
+import fr.rakambda.mediaconverter.utils.FutureHelper;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
@@ -10,9 +11,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -33,62 +32,6 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	
 	public static ConversionProgressExecutor of(@NonNull ExecutorService executorService){
 		return new ConversionProgressExecutor(executorService);
-	}
-	
-	@NonNull
-	public static <T> CompletableFuture<T> makeCompletableFuture(@NonNull Future<T> future){
-		if(future.isDone()){
-			return transformDoneFuture(future);
-		}
-		return CompletableFuture.supplyAsync(() -> {
-			try{
-				if(!future.isDone()){
-					awaitFutureIsDoneInForkJoinPool(future);
-				}
-				return future.get();
-			}
-			catch(ExecutionException e){
-				throw new RuntimeException(e);
-			}
-			catch(InterruptedException e){
-				Thread.currentThread().interrupt();
-				throw new RuntimeException(e);
-			}
-		});
-	}
-	
-	@NonNull
-	private static <T> CompletableFuture<T> transformDoneFuture(@NonNull Future<T> future){
-		var cf = new CompletableFuture<T>();
-		try{
-			var result = future.get();
-			cf.complete(result);
-			return cf;
-		}
-		catch(Throwable ex){
-			cf.completeExceptionally(ex);
-			return cf;
-		}
-	}
-	
-	private static void awaitFutureIsDoneInForkJoinPool(@NonNull Future<?> future) throws InterruptedException{
-		ForkJoinPool.managedBlock(new ForkJoinPool.ManagedBlocker(){
-			@Override
-			public boolean block() throws InterruptedException{
-				try{
-					future.get();
-				}
-				catch(ExecutionException e){
-					throw new RuntimeException(e);
-				}
-				return true;
-			}
-			
-			@Override
-			public boolean isReleasable(){
-				return future.isDone();
-			}
-		});
 	}
 	
 	@Override
@@ -137,7 +80,7 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	@Override
 	public <T> Future<T> submit(@NonNull Callable<T> task){
 		incrementProgressbarMax();
-		return makeCompletableFuture(delegate.submit(task)).thenApply(val -> {
+		return FutureHelper.makeCompletableFuture(delegate.submit(task)).thenApply(val -> {
 			stepProgressBar(1);
 			return val;
 		});
@@ -171,14 +114,14 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	@Override
 	public <T> Future<T> submit(@NonNull Runnable task, T result){
 		incrementProgressbarMax();
-		return handleReturn(makeCompletableFuture(delegate.submit(task, result)));
+		return handleReturn(FutureHelper.makeCompletableFuture(delegate.submit(task, result)));
 	}
 	
 	@NonNull
 	@Override
 	public Future<?> submit(@NonNull Runnable task){
 		incrementProgressbarMax();
-		return handleReturn(makeCompletableFuture(delegate.submit(task)));
+		return handleReturn(FutureHelper.makeCompletableFuture(delegate.submit(task)));
 	}
 	
 	@NonNull
@@ -207,6 +150,6 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	@Override
 	public void execute(@NonNull Runnable command){
 		incrementProgressbarMax();
-		handleReturn(makeCompletableFuture(delegate.submit(command)));
+		handleReturn(FutureHelper.makeCompletableFuture(delegate.submit(command)));
 	}
 }

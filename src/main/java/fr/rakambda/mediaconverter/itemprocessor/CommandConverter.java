@@ -7,6 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Log4j2
 public abstract class CommandConverter extends ConverterRunnable{
@@ -21,12 +22,12 @@ public abstract class CommandConverter extends ConverterRunnable{
 	}
 	
 	@Override
-	protected void convert(@NonNull ExecutorService executorService) throws Exception{
+	protected Future<?> convert(@NonNull ExecutorService executorService) throws Exception{
 		log.info("Converting {} to {}", getInput(), getOutput());
 		progressBar = converterProgressBarSupplier.get();
 		
 		ProcessBuilder builder = new ProcessBuilder(getCommand());
-		executorService.submit(() -> {
+		return executorService.submit(() -> {
 			try{
 				progressBar.getProgressBar().stepTo(0);
 				progressBar.getProgressBar().setExtraMessage(getOutput().getFileName().toString());

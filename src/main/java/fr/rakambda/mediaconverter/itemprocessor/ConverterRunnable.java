@@ -1,8 +1,10 @@
 package fr.rakambda.mediaconverter.itemprocessor;
 
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
+import fr.rakambda.mediaconverter.utils.FutureHelper;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import java.awt.*;
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Log4j2
 @Getter
@@ -63,47 +66,56 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	@Override
 	public void execute(@NonNull ExecutorService executorService){
 		try{
-			convert(executorService);
-			
-			if(Files.exists(getTemporary())){
-				var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
-				
-				var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
-				if(deleteInput){
-					Files.move(getInput(), inputTemporary);
-					Files.move(getTemporary(), getOutput());
-				}
-				else{
-					Files.move(getTemporary(), getOutput());
-				}
-				
-				if(isCopyAttributes()){
-					copyFileAttributes(inputAttributes, getOutput());
-				}
-				if(deleteInput){
-					trashFile(inputTemporary);
-				}
-				
-				log.debug("Converted {} to {}", getInput(), getOutput());
-			}
-			else{
-				log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTemporary());
-			}
+			FutureHelper.makeCompletableFuture(convert(executorService))
+					.thenAccept(this::handleSuccess)
+					.exceptionally(this::handleError)
+					.thenAccept(empty -> listeners.forEach(Runnable::run));
 		}
 		catch(Exception e){
-			log.error("Error converting {}", getInput(), e);
-			try{
-				var path = getTemporary();
-				if(Objects.nonNull(path)){
-					Files.deleteIfExists(path);
-				}
-			}
-			catch(IOException ignored){
-			}
-		}
-		finally{
+			handleError(e);
 			listeners.forEach(Runnable::run);
 		}
+	}
+	
+	@SneakyThrows(IOException.class)
+	private void handleSuccess(Object result){
+		if(Files.exists(getTemporary())){
+			var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
+			
+			var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
+			if(deleteInput){
+				Files.move(getInput(), inputTemporary);
+				Files.move(getTemporary(), getOutput());
+			}
+			else{
+				Files.move(getTemporary(), getOutput());
+			}
+			
+			if(isCopyAttributes()){
+				copyFileAttributes(inputAttributes, getOutput());
+			}
+			if(deleteInput){
+				trashFile(inputTemporary);
+			}
+			
+			log.debug("Converted {} to {}", getInput(), getOutput());
+		}
+		else{
+			log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTemporary());
+		}
+	}
+	
+	private Void handleError(Throwable error){
+		log.error("Error converting {}", getInput(), error);
+		try{
+			var path = getTemporary();
+			if(Objects.nonNull(path)){
+				Files.deleteIfExists(path);
+			}
+		}
+		catch(IOException ignored){
+		}
+		return null;
 	}
 	
 	protected boolean isCopyAttributes(){
@@ -115,5 +127,5 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
 	
-	protected abstract void convert(@NonNull ExecutorService executorService) throws Exception;
+	protected abstract Future<?> convert(@NonNull ExecutorService executorService) throws Exception;
 }
