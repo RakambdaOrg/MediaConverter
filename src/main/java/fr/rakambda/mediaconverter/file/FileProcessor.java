@@ -130,7 +130,6 @@ public class FileProcessor implements Runnable{
 	
 	public void shutdown() throws InterruptedException{
 		shutdown = true;
-		tasks.forEach(MediaProcessorTask::cancel);
 		countDownLatch.await();
 	}
 }
