@@ -34,7 +34,7 @@ public class ConverterProgressBarNotifier implements ProgressListener, Closeable
 	
 	@Override
 	public void onProgress(FFmpegProgress progress){
-		if(Objects.nonNull(progress.getTimeMillis())){
+		if(Objects.nonNull(progress.getTimeMillis()) && progress.getTimeMillis() >= 0){
 			try{
 				getProgressBar().stepTo(progress.getTimeMillis());
 			}
