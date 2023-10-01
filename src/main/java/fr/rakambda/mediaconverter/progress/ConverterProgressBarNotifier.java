@@ -5,26 +5,26 @@ import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
-
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.Objects;
 
 @Log4j2
-public class ConverterProgressBarNotifier implements ProgressListener {
+public class ConverterProgressBarNotifier implements ProgressListener, Closeable{
 	private final String filename;
 	private final long frameCount;
-	private final String totalDuration;
-	private final ProgressBar progressBar;
-
-	public ConverterProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, @NotNull ProgressBar progressBar) {
+	private final Duration totalDuration;
+	private final String totalDurationStr;
+	private final ProgressBarSupplier progressBarSupplier;
+	
+	private ProgressBarHandle progressBarHandle;
+	
+	public ConverterProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, ProgressBarSupplier progressBarSupplier){
 		this.filename = filename;
 		this.frameCount = frameCount;
-		this.totalDuration = durationToStr(totalDuration);
-		this.progressBar = progressBar;
-		
-		progressBar.stepTo(0);
-		progressBar.setExtraMessage(filename);
-		progressBar.maxHint(totalDuration.toMillis());
+		this.totalDuration = totalDuration;
+		totalDurationStr = durationToStr(totalDuration);
+		this.progressBarSupplier = progressBarSupplier;
 	}
 	
 	@NotNull
@@ -35,7 +35,12 @@ public class ConverterProgressBarNotifier implements ProgressListener {
 	@Override
 	public void onProgress(FFmpegProgress progress){
 		if(Objects.nonNull(progress.getTimeMillis())){
-			progressBar.stepTo(progress.getTimeMillis());
+			try{
+				getProgressBar().stepTo(progress.getTimeMillis());
+			}
+			catch(InterruptedException e){
+				log.error("Failed to update progress bar", e);
+			}
 		}
 		log.debug("{} - {} / {} frames - {} fps - {} / {}",
 				filename,
@@ -43,6 +48,23 @@ public class ConverterProgressBarNotifier implements ProgressListener {
 				frameCount,
 				progress.getFps(),
 				durationToStr(Duration.ofMillis(progress.getTimeMillis())),
-				totalDuration);
+				totalDurationStr);
+	}
+	
+	private ProgressBar getProgressBar() throws InterruptedException{
+		if(Objects.isNull(progressBarHandle)){
+			progressBarHandle = progressBarSupplier.get();
+			progressBarHandle.getProgressBar().stepTo(0);
+			progressBarHandle.getProgressBar().setExtraMessage(filename);
+			progressBarHandle.getProgressBar().maxHint(totalDuration.toMillis());
+		}
+		return progressBarHandle.getProgressBar();
+	}
+	
+	@Override
+	public void close(){
+		if(Objects.nonNull(progressBarHandle)){
+			progressBarHandle.close();
+		}
 	}
 }

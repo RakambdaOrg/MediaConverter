@@ -1,6 +1,5 @@
 package fr.rakambda.mediaconverter.itemprocessor;
 
-import fr.rakambda.mediaconverter.progress.ProgressBarHandle;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
@@ -13,7 +12,6 @@ import java.util.concurrent.Future;
 public abstract class CommandConverter extends ConverterRunnable{
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	
-	private ProgressBarHandle progressBar;
 	private Process process;
 	
 	protected CommandConverter(@NonNull Path input, @NonNull Path output, @NonNull Path temporary, boolean deleteInput, ProgressBarSupplier converterProgressBarSupplier){
@@ -21,14 +19,15 @@ public abstract class CommandConverter extends ConverterRunnable{
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 	}
 	
+	protected abstract String[] getCommand();
+	
 	@Override
-	protected Future<?> convert(@NonNull ExecutorService executorService) throws Exception{
+	protected Future<?> convert(@NonNull ExecutorService executorService){
 		log.info("Converting {} to {}", getInput(), getOutput());
-		progressBar = converterProgressBarSupplier.get();
 		
 		ProcessBuilder builder = new ProcessBuilder(getCommand());
 		return executorService.submit(() -> {
-			try{
+			try(var progressBar = converterProgressBarSupplier.get()){
 				progressBar.getProgressBar().stepTo(0);
 				progressBar.getProgressBar().setExtraMessage(getOutput().getFileName().toString());
 				progressBar.getProgressBar().maxHint(1);
@@ -54,10 +53,5 @@ public abstract class CommandConverter extends ConverterRunnable{
 	
 	@Override
 	public void close(){
-		if(Objects.nonNull(progressBar)){
-			progressBar.close();
-		}
 	}
-	
-	protected abstract String[] getCommand();
 }

@@ -10,7 +10,6 @@ import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.progress.ConverterProgressBarNotifier;
-import fr.rakambda.mediaconverter.progress.ProgressBarHandle;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
@@ -28,7 +27,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	private final FFprobeResult probeResult;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	
-	private ProgressBarHandle progressBar;
+	private ConverterProgressBarNotifier progressListener;
 	private FFmpegResultFuture ffmpegResult;
 	
 	public FfmpegVideoConverter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput){
@@ -38,8 +37,10 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 	}
 	
+	protected abstract Output buildOutput(BaseOutput<?> output);
+	
 	@Override
-	protected Future<?> convert(@NonNull ExecutorService executorService) throws InterruptedException{
+	protected Future<?> convert(@NonNull ExecutorService executorService){
 		var filename = getOutput().getFileName().toString();
 		
 		var duration = Optional.ofNullable(probeResult.getFormat())
@@ -55,9 +56,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 				.orElse(0);
 		
 		log.debug("Converting {} ({}) to {}", getInput(), duration, getOutput());
-		
-		progressBar = converterProgressBarSupplier.get();
-		var progressListener = new ConverterProgressBarNotifier(filename, frameCount, duration, progressBar.getProgressBar());
+		progressListener = new ConverterProgressBarNotifier(filename, frameCount, duration, converterProgressBarSupplier);
 		
 		log.debug("Will convert to temp file {}", getTemporary());
 		
@@ -73,8 +72,6 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 				.thenAccept(r -> close());
 	}
 	
-	protected abstract Output buildOutput(BaseOutput<?> output);
-	
 	@Override
 	public void cancel(){
 		if(Objects.nonNull(ffmpegResult) && !ffmpegResult.isCancelled() && !ffmpegResult.isDone()){
@@ -84,8 +81,8 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	
 	@Override
 	public void close(){
-		if(Objects.nonNull(progressBar)){
-			progressBar.close();
+		if(Objects.nonNull(progressListener)){
+			progressListener.close();
 		}
 	}
 }
