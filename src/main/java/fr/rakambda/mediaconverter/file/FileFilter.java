@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +17,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class FileFilter implements Runnable {
+public class FileFilter implements Runnable, AutoCloseable{
     private final ProgressBar progressBar;
     private final IStorage storage;
     private final BlockingQueue<Path> inputQueue;
@@ -88,9 +87,15 @@ public class FileFilter implements Runnable {
         var extension = filename.substring(dotIndex + 1).toLowerCase();
         return !extensionsToScan.contains(extension);
     }
-
-    public void shutdown() throws InterruptedException {
+	
+	@Override
+	public void close(){
         shutdown = true;
-        countDownLatch.await();
+		try{
+			countDownLatch.await();
+		}
+		catch(InterruptedException e){
+			log.info("Failed to wait for latch", e);
+		}
     }
 }

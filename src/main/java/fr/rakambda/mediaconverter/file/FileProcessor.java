@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Log4j2
-public class FileProcessor implements Runnable{
+public class FileProcessor implements Runnable, AutoCloseable{
 	private final ExecutorService executor;
 	private final Supplier<FFmpeg> ffmpegSupplier;
 	private final Path tempDirectory;
@@ -128,8 +128,18 @@ public class FileProcessor implements Runnable{
 		return outFile;
 	}
 	
-	public void shutdown() throws InterruptedException{
+	@Override
+	public void close(){
 		shutdown = true;
-		countDownLatch.await();
+		try{
+			countDownLatch.await();
+		}
+		catch(InterruptedException e){
+			log.info("Failed to wait for latch", e);
+		}
+	}
+	
+	public void cancel(){
+		tasks.forEach(MediaProcessorTask::cancel);
 	}
 }

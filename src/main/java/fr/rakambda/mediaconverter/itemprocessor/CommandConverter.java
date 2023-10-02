@@ -46,7 +46,7 @@ public abstract class CommandConverter extends ConverterRunnable{
 	
 	@Override
 	public void cancel(){
-		if(Objects.nonNull(process)){
+		if(Objects.nonNull(process) && process.isAlive()){
 			process.destroy();
 		}
 	}

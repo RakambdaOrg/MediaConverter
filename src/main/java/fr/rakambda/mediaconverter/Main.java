@@ -58,9 +58,9 @@ public class Main{
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths;
-
+		
 		var progressBarGenerator = new ConverterProgressBarGenerator();
-		try (var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
+		try(var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
 				var converterProgressBarSupplier = new ProgressBarSupplier(progressBarGenerator)){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
@@ -68,9 +68,10 @@ public class Main{
 					.flatMap(config -> config.getConversions().stream())
 					.parallel()
 					.map(conv -> {
-						try {
+						try{
 							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier);
-						} catch (IOException e) {
+						}
+						catch(IOException e){
 							log.error("Failed to perform conversion", e);
 							return null;
 						}
@@ -90,7 +91,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier) throws IOException {
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -109,13 +110,23 @@ public class Main{
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
 				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput());
 				
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+					fileScanner.close();
+					fileFilter.close();
+					fileProber.close();
+					fileProcessor.close();
+					
+					converterExecutor.shutdownNow();
+					fileProcessor.cancel();
+				}));
+				
 				es.submit(fileProcessor);
 				es.submit(fileFilter);
 				es.submit(fileProber);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
-				fileFilter.shutdown();
-				fileProber.shutdown();
-				fileProcessor.shutdown();
+				fileFilter.close();
+				fileProber.close();
+				fileProcessor.close();
 			}
 			finally{
 				if(Objects.nonNull(es)){
