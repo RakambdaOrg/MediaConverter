@@ -67,7 +67,7 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	public void execute(@NonNull ExecutorService executorService, boolean dryRun){
 		try{
 			FutureHelper.makeCompletableFuture(convert(executorService, dryRun))
-					.thenAccept(this::handleSuccess)
+					.thenAccept(r -> handleSuccess(r, dryRun))
 					.exceptionally(this::handleError)
 					.thenAccept(empty -> listeners.forEach(Runnable::run));
 		}
@@ -78,7 +78,10 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	}
 	
 	@SneakyThrows(IOException.class)
-	private void handleSuccess(Object result){
+	private void handleSuccess(Object result, boolean dryRun){
+		if(dryRun){
+			return;
+		}
 		if(Files.exists(getTemporary())){
 			var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
 			
