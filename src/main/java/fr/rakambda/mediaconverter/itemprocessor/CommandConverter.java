@@ -4,9 +4,11 @@ import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Log4j2
 public abstract class CommandConverter extends ConverterRunnable{
@@ -27,7 +29,7 @@ public abstract class CommandConverter extends ConverterRunnable{
 		
 		return executorService.submit(() -> {
 			if(dryRun){
-				log.info("Dry run: would have executed `{}`", String.join(" ", getCommand()));
+				log.info("Dry run: would have executed `{}`", Arrays.stream(getCommand()).map("\"%s\""::formatted).collect(Collectors.joining(" ")));
 				return;
 			}
 			try(var progressBar = converterProgressBarSupplier.get()){

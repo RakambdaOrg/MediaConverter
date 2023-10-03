@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Log4j2
 public abstract class FfmpegVideoConverter extends ConverterRunnable{
@@ -69,7 +70,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 		if(dryRun){
 			return executorService.submit(() -> {
 				if(ffmpeg instanceof CustomFFmpeg customFFmpeg){
-					log.info("Dry run: would have run ffmpeg with args `{}`", customFFmpeg.buildArguments());
+					log.info("Dry run: would have run ffmpeg with args `{}`", customFFmpeg.buildArguments().stream().map("\"%s\""::formatted).collect(Collectors.joining(" ")));
 				}
 				else{
 					log.info("Dry run: would have run ffmpeg for {}", getInput());
