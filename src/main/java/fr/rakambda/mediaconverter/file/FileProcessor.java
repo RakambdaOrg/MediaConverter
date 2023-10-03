@@ -30,6 +30,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 	private final ProgressBar progressBar;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final boolean deleteInput;
+	private final boolean dryRun;
 	
 	private final CountDownLatch countDownLatch;
 	private final Collection<MediaProcessorTask> tasks;
@@ -43,7 +44,8 @@ public class FileProcessor implements Runnable, AutoCloseable{
 			@NonNull BlockingQueue<FileProber.ProbeResult> queue,
 			@NonNull ProgressBar progressBar,
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
-			boolean deleteInput){
+			boolean deleteInput,
+			boolean dryRun){
 		this.executor = executor;
 		this.ffmpegSupplier = ffmpegSupplier;
 		this.tempDirectory = tempDirectory;
@@ -53,6 +55,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 		this.progressBar = progressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		this.deleteInput = deleteInput;
+		this.dryRun = dryRun;
 		
 		countDownLatch = new CountDownLatch(1);
 		tasks = new ConcurrentLinkedDeque<>();
@@ -109,7 +112,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 				deleteInput
 		);
 		tasks.add(task);
-		task.execute(executor);
+		task.execute(executor, dryRun);
 	}
 	
 	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension){

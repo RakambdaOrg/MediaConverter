@@ -38,4 +38,9 @@ public class CLIParameters{
 			"--affinity"
 	}, description = "Set an affinity mask for windows users to define on which cores to run on. THis consists on a number where bytes set to 1 activates the core. For ex 7 will run on cores 1, 2, 3.")
 	private Integer affinityMask = null;
+	
+	@Option(names = {
+			"--dry"
+	}, description = "Performs a dry run")
+	private boolean dryRun = false;
 }

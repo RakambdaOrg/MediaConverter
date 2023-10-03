@@ -22,16 +22,20 @@ public abstract class CommandConverter extends ConverterRunnable{
 	protected abstract String[] getCommand();
 	
 	@Override
-	protected Future<?> convert(@NonNull ExecutorService executorService){
+	protected Future<?> convert(@NonNull ExecutorService executorService, boolean dryRun){
 		log.info("Converting {} to {}", getInput(), getOutput());
 		
-		ProcessBuilder builder = new ProcessBuilder(getCommand());
 		return executorService.submit(() -> {
+			if(dryRun){
+				log.info("Dry run: would have executed `{}`", String.join(" ", getCommand()));
+				return;
+			}
 			try(var progressBar = converterProgressBarSupplier.get()){
 				progressBar.getProgressBar().stepTo(0);
 				progressBar.getProgressBar().setExtraMessage(getOutput().getFileName().toString());
 				progressBar.getProgressBar().maxHint(1);
 				
+				ProcessBuilder builder = new ProcessBuilder(getCommand());
 				process = builder.start();
 				process.onExit()
 						.thenAccept(p -> progressBar.getProgressBar().stepTo(1))

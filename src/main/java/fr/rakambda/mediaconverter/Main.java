@@ -69,7 +69,7 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier);
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun());
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -91,7 +91,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier) throws IOException{
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -108,7 +108,7 @@ public class Main{
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput());
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), dryRun);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					fileScanner.close();

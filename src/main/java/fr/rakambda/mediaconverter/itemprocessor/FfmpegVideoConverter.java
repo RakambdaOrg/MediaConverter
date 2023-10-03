@@ -9,6 +9,7 @@ import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
+import fr.rakambda.mediaconverter.ffmpeg.CustomFFmpeg;
 import fr.rakambda.mediaconverter.progress.ConverterProgressBarNotifier;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
@@ -40,7 +41,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	protected abstract Output buildOutput(BaseOutput<?> output);
 	
 	@Override
-	protected Future<?> convert(@NonNull ExecutorService executorService){
+	protected Future<?> convert(@NonNull ExecutorService executorService, boolean dryRun){
 		var filename = getOutput().getFileName().toString();
 		
 		var duration = Optional.ofNullable(probeResult.getFormat())
@@ -60,11 +61,23 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 		
 		log.debug("Will convert to temp file {}", getTemporary());
 		
-		ffmpegResult = ffmpeg.addInput(UrlInput.fromPath(getInput()))
+		var ffmpegAction = ffmpeg.addInput(UrlInput.fromPath(getInput()))
 				.addOutput(buildOutput(UrlOutput.toPath(getTemporary())))
 				.setOverwriteOutput(false)
-				.setProgressListener(progressListener)
-				.executeAsync(executorService);
+				.setProgressListener(progressListener);
+		
+		if(dryRun){
+			return executorService.submit(() -> {
+				if(ffmpeg instanceof CustomFFmpeg customFFmpeg){
+					log.info("Dry run: would have run ffmpeg with args `{}`", customFFmpeg.buildArguments());
+				}
+				else{
+					log.info("Dry run: would have run ffmpeg for {}", getInput());
+				}
+			});
+		}
+		
+		ffmpegResult = ffmpegAction.executeAsync(executorService);
 		
 		return ffmpegResult
 				.toCompletableFuture()

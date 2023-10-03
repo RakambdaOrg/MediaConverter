@@ -64,9 +64,9 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 	}
 	
 	@Override
-	public void execute(@NonNull ExecutorService executorService){
+	public void execute(@NonNull ExecutorService executorService, boolean dryRun){
 		try{
-			FutureHelper.makeCompletableFuture(convert(executorService))
+			FutureHelper.makeCompletableFuture(convert(executorService, dryRun))
 					.thenAccept(this::handleSuccess)
 					.exceptionally(this::handleError)
 					.thenAccept(empty -> listeners.forEach(Runnable::run));
@@ -127,5 +127,5 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
 	
-	protected abstract Future<?> convert(@NonNull ExecutorService executorService) throws Exception;
+	protected abstract Future<?> convert(@NonNull ExecutorService executorService, boolean dryRun) throws Exception;
 }

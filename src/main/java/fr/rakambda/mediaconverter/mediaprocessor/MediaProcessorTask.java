@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 public interface MediaProcessorTask extends Closeable{
 	void addCompletionListener(@NonNull Runnable listener);
 	
-	void execute(@NonNull ExecutorService executor);
+	void execute(@NonNull ExecutorService executor, boolean dryRun);
 	
 	void cancel();
 }
