@@ -82,30 +82,35 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		if(dryRun){
 			return;
 		}
-		if(Files.exists(getTemporary())){
-			var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
-			
-			var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
-			if(deleteInput){
-				Files.move(getInput(), inputTemporary);
-				Files.move(getTemporary(), getOutput());
-			}
-			else{
-				Files.move(getTemporary(), getOutput());
-			}
-			
-			if(isCopyAttributes()){
-				copyFileAttributes(inputAttributes, getOutput());
-			}
-			if(deleteInput){
-				trashFile(inputTemporary);
-			}
-			
-			log.debug("Converted {} to {}", getInput(), getOutput());
+		if(!Files.exists(getTemporary())){
+			log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTemporary());
+			return;
+		}
+		var size = Files.size(getTemporary());
+		if(size <= 0){
+			log.warn("Output file {} with an invalid size {}, something went wrong", getTemporary(), size);
+			return;
+		}
+		
+		var inputAttributes = Files.getFileAttributeView(getInput(), BasicFileAttributeView.class).readAttributes();
+		
+		var inputTemporary = getTemporary().getParent().resolve("original_" + getInput().getFileName().toString());
+		if(deleteInput){
+			Files.move(getInput(), inputTemporary);
+			Files.move(getTemporary(), getOutput());
 		}
 		else{
-			log.warn("Output file {} not found in temp dir {}, something went wrong", getOutput(), getTemporary());
+			Files.move(getTemporary(), getOutput());
 		}
+		
+		if(isCopyAttributes()){
+			copyFileAttributes(inputAttributes, getOutput());
+		}
+		if(deleteInput){
+			trashFile(inputTemporary);
+		}
+		
+		log.debug("Converted {} to {}", getInput(), getOutput());
 	}
 	
 	private Void handleError(Throwable error){
