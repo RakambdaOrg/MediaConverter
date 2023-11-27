@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Closeable;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.Optional;
 
 @Log4j2
 public class ConverterProgressBarNotifier implements ProgressListener, Closeable{
@@ -47,7 +48,7 @@ public class ConverterProgressBarNotifier implements ProgressListener, Closeable
 				progress.getFrame(),
 				frameCount,
 				progress.getFps(),
-				durationToStr(Duration.ofMillis(progress.getTimeMillis())),
+				Optional.ofNullable(progress.getTimeMillis()).map(Duration::ofMillis).map(this::durationToStr).orElse(null),
 				totalDurationStr);
 	}
 	

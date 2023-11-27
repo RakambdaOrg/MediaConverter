@@ -2,7 +2,6 @@ package fr.rakambda.mediaconverter.progress;
 
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -23,7 +22,7 @@ public class ProgressBarSupplier implements AutoCloseable{
 	public void close(){
 	}
 	
-	public ProgressBarHandle get() throws InterruptedException{
+	public ProgressBarHandle get(){
 		return new ProgressBarHandle(generator.generate(counter.incrementAndGet()), this);
 	}
 }
