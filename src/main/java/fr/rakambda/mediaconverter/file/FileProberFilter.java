@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 @Slf4j
 public class FileProberFilter implements Runnable, AutoCloseable{
@@ -19,7 +20,7 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 	private final BlockingQueue<ProbeResult> inputQueue;
 	@Getter
 	private final BlockingQueue<ProbeResult> outputQueue;
-	private final Collection<ProbeFilter> filters;
+	private final Predicate<ProbeResult> filters;
 	private final CountDownLatch countDownLatch;
 	private boolean shutdown;
 	
@@ -28,7 +29,7 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 			@NonNull Collection<ProbeFilter> filters){
 		this.progressBar = progressBar;
 		this.inputQueue = inputQueue;
-		this.filters = filters;
+		this.filters = filters.isEmpty() ? (e -> true) : (e -> filters.stream().allMatch(f -> f.test(e)));
 		
 		outputQueue = new LinkedBlockingDeque<>(50);
 		shutdown = false;
@@ -41,7 +42,7 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 			do{
 				var probeResult = inputQueue.poll(5, TimeUnit.SECONDS);
 				if(Objects.nonNull(probeResult)){
-					if(filters.stream().allMatch(f -> f.test(probeResult))){
+					if(filters.test(probeResult)){
 						outputQueue.put(probeResult);
 					}
 					else{
