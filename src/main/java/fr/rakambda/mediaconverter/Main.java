@@ -7,6 +7,7 @@ import fr.rakambda.mediaconverter.config.Conversion;
 import fr.rakambda.mediaconverter.ffmpeg.CustomFFmpeg;
 import fr.rakambda.mediaconverter.file.FileFilter;
 import fr.rakambda.mediaconverter.file.FileProber;
+import fr.rakambda.mediaconverter.file.FileProberFilter;
 import fr.rakambda.mediaconverter.file.FileProcessor;
 import fr.rakambda.mediaconverter.file.FileScanner;
 import fr.rakambda.mediaconverter.progress.ConversionProgressExecutor;
@@ -108,12 +109,14 @@ public class Main{
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProber.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), dryRun);
+				var fileProberFilter = new FileProberFilter(scanningProgressBar, fileProber.getOutputQueue(), conversion.getFilters());
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProberFilter.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), dryRun);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					fileScanner.close();
 					fileFilter.close();
 					fileProber.close();
+					fileProberFilter.close();
 					fileProcessor.close();
 					
 					converterExecutor.shutdownNow();
@@ -124,8 +127,10 @@ public class Main{
 				es.submit(fileFilter);
 				es.submit(fileProber);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
+				fileScanner.close();
 				fileFilter.close();
 				fileProber.close();
+				fileProberFilter.close();
 				fileProcessor.close();
 			}
 			finally{

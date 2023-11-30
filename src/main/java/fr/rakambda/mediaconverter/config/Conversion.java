@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ext.NioPathDeserializer;
+import fr.rakambda.mediaconverter.config.filter.ProbeFilter;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorFactory;
 import fr.rakambda.mediaconverter.storage.H2Storage;
@@ -68,6 +69,8 @@ public class Conversion{
 	private List<Processor> processors = new LinkedList<>();
 	@JsonProperty("extensions")
 	private List<String> extensions = new LinkedList<>();
+	@JsonProperty("filters")
+	private List<ProbeFilter> filters = new LinkedList<>();
 
 	@NonNull
 	public Path createTempDirectory() throws IOException{

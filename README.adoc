@@ -56,6 +56,9 @@ Configuration is now declared in a json file with the following format:
         "mp4",
         "mts",
         "mp3"
+      ],
+      "filters": [
+        {"name": "LengthMoreThan", "value": 50}
       ]
     }
   ]
@@ -113,6 +116,14 @@ If left empty, all of them will be applied.
 |O
 |List of file extensions to process.
 If left empty the default one is used.
+
+|conversion.filters
+|O
+|List of filters to apply after scanning files.
+Can be one of :
+
+- LengthMoreThan (`value` : seconds)
+- LengthLessThan (`value` : seconds)
 |===
 
 === Processors
