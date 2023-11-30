@@ -124,8 +124,9 @@ public class Main{
 				}));
 				
 				es.submit(fileProcessor);
-				es.submit(fileFilter);
+				es.submit(fileProberFilter);
 				es.submit(fileProber);
+				es.submit(fileFilter);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
 				fileScanner.close();
 				fileFilter.close();
