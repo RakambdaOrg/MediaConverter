@@ -27,7 +27,7 @@ jobs:
       dropbox-token: ${{ secrets.DROPBOX_TOKEN }}
 
   docker:
-    uses: Rakambda/rakambda-github-workflows/.github/workflows/gradle-jib-publish-from.yml@main
+    uses: Rakambda/rakambda-github-workflows/.github/workflows/gradle-jib-publish.yml@main
     if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     needs:
       - build
@@ -40,7 +40,7 @@ jobs:
       docker-username: ${{ secrets.DOCKER_USERNAME }}
       docker-token: ${{ secrets.DOCKER_TOKEN }}
       jib-extra-params: |
-        -Djib.from.image="${{ secrets.DOCKER_FROM_IMAGE }}:${{ vars.JAVA_VERSION }}"
+        -Djib.from.image="${{ secrets.DOCKER_REPO }}/rakambda/eclipse-temurin-ffmpeg:${{ vars.JAVA_VERSION }}"
         -Djib.from.auth.username=${{ secrets.DOCKER_USERNAME }}
         -Djib.from.auth.password=${{ secrets.DOCKER_TOKEN }}
         
