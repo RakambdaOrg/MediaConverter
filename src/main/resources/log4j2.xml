@@ -4,36 +4,19 @@
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout disableAnsi="false" pattern="%highlight{%date{ISO8601} %level [%thread] %logger{1.} - %message}%n"/>
         </Console>
-        <RollingFile
-                name="file"
-                fileName="\${sys:user.home}/logs/${project.name}.log"
-                filePattern="\${sys:user.home}/logs/${project.name}.log.%d{yyyy-MM-dd}.gz"
-                ignoreExceptions="false">
-            <PatternLayout>
-                <Pattern>%date{ISO8601} %level [%thread] %logger{1.} - %message%n</Pattern>
-            </PatternLayout>
-            <Policies>
-                <TimeBasedTriggeringPolicy interval="1"/>
-            </Policies>
-            <DefaultRolloverStrategy max="10"/>
-        </RollingFile>
     </Appenders>
     <Loggers>
         <Logger name="com.github.kokorin.jaffree" level="error" additivity="false">
             <AppenderRef ref="console"/>
-            <AppenderRef ref="file"/>
         </Logger>
         <Logger name="com.zaxxer.hikari" level="warn" additivity="false">
             <AppenderRef ref="console"/>
-            <AppenderRef ref="file"/>
         </Logger>
         <Logger name="fr.raksrinana.utils" level="warn" additivity="false">
             <AppenderRef ref="console"/>
-            <AppenderRef ref="file"/>
         </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console" level="warn"/>
-            <AppenderRef ref="file"/>
         </Root>
     </Loggers>
 </Configuration>
