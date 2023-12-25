@@ -36,7 +36,11 @@ jobs:
       docker-image: ${{ vars.DOCKER_IMAGE }}
       docker-tag: latest
     secrets:
-      docker-from-image: "${{ secrets.DOCKER_FROM_IMAGE }}:${{ vars.JAVA_VERSION }}"
       docker-repo: ${{ secrets.DOCKER_REPO }}
       docker-username: ${{ secrets.DOCKER_USERNAME }}
       docker-token: ${{ secrets.DOCKER_TOKEN }}
+      jib-extra-params: |
+        -Djib.from.image="${{ secrets.DOCKER_FROM_IMAGE }}:${{ vars.JAVA_VERSION }}"
+        -Djib.from.auth.username=${{ secrets.DOCKER_USERNAME }}
+        -Djib.from.auth.password=${{ secrets.DOCKER_TOKEN }}
+        
