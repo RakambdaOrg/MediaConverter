@@ -15,6 +15,7 @@ jna-version = "5.14.0"
 
 shadow-version = "8.1.1"
 names-version = "0.50.0"
+jib-version = "3.4.0"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
@@ -42,3 +43,4 @@ jna = ["jna", "jna-platform"]
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }
 names = { id = "com.github.ben-manes.versions", version.ref = "names-version" }
+jib = { id = "com.google.cloud.tools.jib", version.ref = "jib-version" }
