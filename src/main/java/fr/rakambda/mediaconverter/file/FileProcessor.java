@@ -82,13 +82,13 @@ public class FileProcessor implements Runnable, AutoCloseable{
 		}
 	}
 	
-	private void processFile(@NonNull FileProber.ProbeResult probeResultt){
-		var file = probeResultt.file();
-		var ffProbeResult = probeResultt.fFprobeResult();
-		var processor = probeResultt.processor();
+	private void processFile(@NonNull FileProber.ProbeResult probeResult){
+		var file = probeResult.file();
+		var ffProbeResult = probeResult.fFprobeResult();
+		var processor = probeResult.processor();
 		var outfile = buildOutFile(file, processor.getDesiredExtension());
 		
-		if(Files.exists(outfile)){
+		if(!deleteInput && Files.exists(outfile)){
 			log.warn("Skipping {}, output already exists at {}", file, outfile);
 			return;
 		}
