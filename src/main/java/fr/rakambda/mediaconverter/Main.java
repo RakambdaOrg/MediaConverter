@@ -52,7 +52,11 @@ public class Main{
 			Path ffmpegPath = Optional.ofNullable(parameters.getFfmpegPath())
 					.map(p -> p.resolve("ffmpeg"))
 					.orElse(Paths.get("ffmpeg"));
-			return (FFmpeg) new CustomFFmpeg(ffmpegPath, parameters.getAffinityMask());
+			FFmpeg ffmpeg = new CustomFFmpeg(ffmpegPath, parameters.getAffinityMask());
+			if(Objects.nonNull(parameters.getFfmpegThreadCount())){
+				ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
+			}
+			return ffmpeg;
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths;
