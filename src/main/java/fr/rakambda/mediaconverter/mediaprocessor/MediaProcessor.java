@@ -12,7 +12,7 @@ public interface MediaProcessor{
 	boolean canHandle(@Nullable FFprobeResult probeResult, @NotNull Path file);
 
 	@NotNull
-	MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NotNull Path input, @NotNull Path output, @NotNull Path temporary, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput);
+	MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NotNull Path input, @NotNull Path output, @NotNull Path temporary, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads);
 
 	@NotNull
 	String getDesiredExtension();

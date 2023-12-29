@@ -26,7 +26,7 @@ public class CLIParameters{
 	@Option(names = {
 			"-ft",
 			"--ffmpegThreads"
-	}, description = "The number of threads to tell ffmpeg to use (per job) (must be >= 1)")
+	}, description = "The number of threads to tell ffmpeg to use (per job) (must be >= 0)")
 	private Integer ffmpegThreadCount = null;
 	
 	@Option(names = {"--ffprobe"}, description = "The path to ffprobe executable")

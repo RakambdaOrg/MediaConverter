@@ -27,8 +27,8 @@ public class VideoToAv1MediaProcessor implements MediaProcessor {
 
     @Override
     @NonNull
-    public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier, boolean deleteInput){
-	    return new Av1Converter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput);
+    public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads){
+	    return new Av1Converter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput, ffmpegThreads);
     }
 
     @Override

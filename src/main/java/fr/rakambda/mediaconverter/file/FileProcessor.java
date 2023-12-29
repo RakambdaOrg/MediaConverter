@@ -30,6 +30,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 	private final ProgressBar progressBar;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final boolean deleteInput;
+	private final Integer ffmpegThreads;
 	private final boolean dryRun;
 	
 	private final CountDownLatch countDownLatch;
@@ -45,6 +46,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 			@NonNull ProgressBar progressBar,
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean deleteInput,
+			@Nullable Integer ffmpegThreads,
 			boolean dryRun){
 		this.executor = executor;
 		this.ffmpegSupplier = ffmpegSupplier;
@@ -55,6 +57,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 		this.progressBar = progressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		this.deleteInput = deleteInput;
+		this.ffmpegThreads = ffmpegThreads;
 		this.dryRun = dryRun;
 		
 		countDownLatch = new CountDownLatch(1);
@@ -109,7 +112,8 @@ public class FileProcessor implements Runnable, AutoCloseable{
 				outfile,
 				tempDirectory.resolve("" + file.hashCode() + outfile.getFileName()),
 				converterProgressBarSupplier,
-				deleteInput
+				deleteInput,
+				ffmpegThreads
 		);
 		tasks.add(task);
 		task.execute(executor, dryRun);

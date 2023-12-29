@@ -18,6 +18,7 @@ import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,11 +52,7 @@ public class Main{
 			Path ffmpegPath = Optional.ofNullable(parameters.getFfmpegPath())
 					.map(p -> p.resolve("ffmpeg"))
 					.orElse(Paths.get("ffmpeg"));
-			FFmpeg ffmpeg = new CustomFFmpeg(ffmpegPath, parameters.getAffinityMask());
-			if(Objects.nonNull(parameters.getFfmpegThreadCount())){
-				ffmpeg = ffmpeg.addArguments("-threads", Integer.toString(parameters.getFfmpegThreadCount()));
-			}
-			return ffmpeg;
+			return (FFmpeg) new CustomFFmpeg(ffmpegPath, parameters.getAffinityMask());
 		};
 		Supplier<FFprobe> ffprobeSupplier = () -> FFprobe.atPath(parameters.getFfprobePath());
 		List<Path> tempPaths;
@@ -70,7 +67,7 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun());
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount());
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -92,7 +89,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun) throws IOException{
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun, @Nullable Integer ffmpegThreads) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -110,7 +107,7 @@ public class Main{
 				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
 				var fileProberFilter = new FileProberFilter(scanningProgressBar, fileProber.getOutputQueue(), conversion.getFilters());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProberFilter.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), dryRun);
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProberFilter.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, dryRun);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					fileScanner.close();

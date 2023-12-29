@@ -3,7 +3,6 @@ package fr.rakambda.mediaconverter.itemprocessor;
 import com.github.kokorin.jaffree.ffmpeg.BaseOutput;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffmpeg.FFmpegResultFuture;
-import com.github.kokorin.jaffree.ffmpeg.Output;
 import com.github.kokorin.jaffree.ffmpeg.UrlInput;
 import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
@@ -28,18 +27,20 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	private final FFmpeg ffmpeg;
 	private final FFprobeResult probeResult;
 	private final ProgressBarSupplier converterProgressBarSupplier;
+	private final Integer ffmpegThreads;
 	
 	private ConverterProgressBarNotifier progressListener;
 	private FFmpegResultFuture ffmpegResult;
 	
-	public FfmpegVideoConverter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput){
+	public FfmpegVideoConverter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads){
 		super(input, output, temporary, deleteInput);
 		this.ffmpeg = ffmpeg;
 		this.probeResult = probeResult;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
+		this.ffmpegThreads = ffmpegThreads;
 	}
 	
-	protected abstract Output buildOutput(BaseOutput<?> output);
+	protected abstract BaseOutput<?> buildOutput(BaseOutput<?> output);
 	
 	@Override
 	protected Future<?> convert(@NonNull ExecutorService executorService, boolean dryRun){
@@ -62,8 +63,13 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 		
 		log.debug("Will convert to temp file {}", getTemporary());
 		
+		var output = buildOutput(UrlOutput.toPath(getTemporary()));
+		if(Objects.nonNull(ffmpegThreads) && ffmpegThreads >= 0){
+			output.addArguments("-threads", Integer.toString(ffmpegThreads));
+		}
+		
 		var ffmpegAction = ffmpeg.addInput(UrlInput.fromPath(getInput()))
-				.addOutput(buildOutput(UrlOutput.toPath(getTemporary())))
+				.addOutput(output)
 				.setOverwriteOutput(false)
 				.setProgressListener(progressListener);
 		
