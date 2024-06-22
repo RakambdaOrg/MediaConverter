@@ -3,6 +3,7 @@
 build/
 out/
 target/
+run/
 
 /input
 /output
