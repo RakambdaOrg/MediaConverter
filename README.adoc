@@ -49,7 +49,7 @@ Configuration is now declared in a json file with the following format:
         "another/too"
       ],
       "processors": [
-        "VIDEO_HEVC",
+        "VIDEO_HEVC_MKV",
         "AUDIO"
       ],
       "extensions": [
@@ -107,7 +107,7 @@ This is useful if input folder is large and converted files never move.
 |List of processors to apply.
 If left empty, all of them will be applied.
 
-- VIDEO_HEVC
+- VIDEO_HEVC_MKV
 - VIDEO_AV1
 - AUDIO
 - TIFF
@@ -128,7 +128,8 @@ Can be one of :
 
 === Processors
 
-- VIDEO_TO_HEVC: `H264`, `VP9`, `WV3`, `MPEG2VIDEO` -> `HEVC` + `AAC`
+- VIDEO_TO_HEVC_MKV: `H264`, `VP9`, `WV3`, `MPEG2VIDEO` -> `HEVC` + `AAC` in a `MKV` container
+- VIDEO_TO_HEVC_MP4: `H264`, `VP9`, `WV3`, `MPEG2VIDEO` -> `HEVC` + `AAC` in a `MP4` container
 - VIDEO_TO_AV1: `H264`, `HEVC`, `VP9`, `WV3`, `MPEG2VIDEO` -> `AV1` + `OPUS`
 - MP3_TO_AAC: `MP3` -> `AAC`
 - AUDIO_TO_OPUS: `MP3`, `AAC` -> `OPUS`

@@ -99,7 +99,7 @@ public class Conversion{
 	public List<MediaProcessor> getProcessors(){
 		if(processors.isEmpty()){
 			processors.addAll(List.of(
-					Processor.VIDEO_TO_HEVC,
+					Processor.VIDEO_TO_HEVC_MKV,
 					Processor.MP3_TO_AAC,
 					Processor.TIFF_TO_JPG
 			));

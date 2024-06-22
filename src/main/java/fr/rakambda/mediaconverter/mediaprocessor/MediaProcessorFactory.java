@@ -7,7 +7,8 @@ public class MediaProcessorFactory{
 	@NotNull
 	public static MediaProcessor getMediaProcessor(@NotNull Processor processor){
 		return switch(processor){
-			case VIDEO_TO_HEVC -> new VideoToHevcMediaProcessor();
+			case VIDEO_TO_HEVC_MP4 -> new VideoToHevcMp4MediaProcessor();
+			case VIDEO_TO_HEVC_MKV -> new VideoToHevcMkvMediaProcessor();
 			case VIDEO_TO_AV1 -> new VideoToAv1MediaProcessor();
 			case MP3_TO_AAC -> new Mp3ToAacMediaProcessor();
 			case AUDIO_TO_OPUS -> new AudioToOpusMediaProcessor();
