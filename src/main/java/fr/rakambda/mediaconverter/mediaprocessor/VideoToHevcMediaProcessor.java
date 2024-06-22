@@ -2,6 +2,7 @@ package fr.rakambda.mediaconverter.mediaprocessor;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
+import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.itemprocessor.ffmpeg.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
@@ -23,33 +24,37 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 			return false;
 		}
 		
-		if(isNotHevc(probeResult)){
+		if(isOtherVideoType(probeResult)){
+			return true;
+		}
+		if(isOtherHevcType(probeResult)){
 			return true;
 		}
 		
-		return isOtherContainer(probeResult);
+		return isTargetWithOtherContainer(probeResult);
 	}
 	
-	private boolean isOtherContainer(@NotNull FFprobeResult probeResult){
-		return !Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat());
+	private boolean isOtherVideoType(@NotNull FFprobeResult probeResult){
+		return probeResult.getStreams().stream().anyMatch(stream -> CODECS.contains(stream.getCodecName()));
 	}
 	
-	private boolean isNotHevc(@NotNull FFprobeResult probeResult){
+	private boolean isOtherHevcType(@NotNull FFprobeResult probeResult){
 		return probeResult.getStreams().stream()
-				.anyMatch(stream -> isWantedCodec(stream.getCodecName()) || isOtherHevc(stream.getCodecName(), stream.getCodecTagString()));
+				.anyMatch(stream -> isOtherHevcType(stream.getCodecName(), stream.getCodecTagString()));
 	}
 	
-	private boolean isWantedCodec(@NonNull String codecName){
-		return CODECS.contains(codecName);
-	}
-	
-	private boolean isOtherHevc(@NonNull String codecName, @NonNull String codecTagString){
+	private boolean isOtherHevcType(@NonNull String codecName, @NonNull String codecTagString){
 		return "hevc".equals(codecName) && "hvc1".equals(codecTagString);
+	}
+	
+	private boolean isTargetWithOtherContainer(@NotNull FFprobeResult probeResult){
+		return !Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat())
+				&& probeResult.getStreams().stream().map(Stream::getCodecName).anyMatch("hev1"::equals);
 	}
 	
 	@Override
 	@NonNull
 	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads){
-		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput, ffmpegThreads, !isNotHevc(probeResult));
+		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput, ffmpegThreads, isTargetWithOtherContainer(probeResult));
 	}
 }

@@ -13,7 +13,7 @@ import java.nio.file.Path;
 
 @Log4j2
 public class HevcConverter extends FfmpegVideoConverter{
-	private final boolean isAlreadyHevc;
+	private final boolean isTargetWithOtherContainer;
 	
 	public HevcConverter(@NonNull FFmpeg ffmpeg,
 			@Nullable FFprobeResult probeResult,
@@ -23,15 +23,15 @@ public class HevcConverter extends FfmpegVideoConverter{
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean deleteInput,
 			@Nullable Integer ffmpegThreads,
-			boolean isAlreadyHevc
+			boolean isTargetWithOtherContainer
 	){
 		super(ffmpeg, probeResult, input, output, temporary, converterProgressBarSupplier, deleteInput, ffmpegThreads);
-		this.isAlreadyHevc = isAlreadyHevc;
+		this.isTargetWithOtherContainer = isTargetWithOtherContainer;
 	}
 	
 	@Override
 	protected BaseOutput<?> buildOutput(BaseOutput<?> output){
-		if(isAlreadyHevc){
+		if(isTargetWithOtherContainer){
 			return output.copyAllCodecs();
 		}
 		
