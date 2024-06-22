@@ -13,6 +13,7 @@ import fr.rakambda.mediaconverter.file.FileScanner;
 import fr.rakambda.mediaconverter.progress.ConversionProgressExecutor;
 import fr.rakambda.mediaconverter.progress.ConverterProgressBarGenerator;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
+import fr.rakambda.mediaconverter.progress.ReuseProgressBarSupplier;
 import fr.rakambda.mediaconverter.utils.CLIParameters;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
@@ -64,7 +65,7 @@ public class Main{
 		var progressBarGenerator = new ConverterProgressBarGenerator();
 		try(var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
-				var converterProgressBarSupplier = new ProgressBarSupplier(progressBarGenerator)){
+				var converterProgressBarSupplier = new ReuseProgressBarSupplier(progressBarGenerator)){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())
