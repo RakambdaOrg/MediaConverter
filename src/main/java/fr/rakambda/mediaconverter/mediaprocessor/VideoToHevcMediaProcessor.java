@@ -2,7 +2,6 @@ package fr.rakambda.mediaconverter.mediaprocessor;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.itemprocessor.ffmpeg.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
@@ -49,7 +48,11 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	
 	private boolean isTargetWithOtherContainer(@NotNull FFprobeResult probeResult){
 		return !Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat())
-				&& probeResult.getStreams().stream().map(Stream::getCodecName).anyMatch("hev1"::equals);
+				&& probeResult.getStreams().stream().anyMatch(stream -> isTargetHevcType(stream.getCodecName(), stream.getCodecTagString()));
+	}
+	
+	private boolean isTargetHevcType(@NonNull String codecName, @NonNull String codecTagString){
+		return "hevc".equals(codecName) && "hev1".equals(codecTagString);
 	}
 	
 	@Override
