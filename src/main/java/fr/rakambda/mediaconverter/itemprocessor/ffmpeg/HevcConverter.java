@@ -13,6 +13,8 @@ import java.nio.file.Path;
 
 @Log4j2
 public class HevcConverter extends FfmpegVideoConverter{
+	private final boolean isAlreadyHevc;
+	
 	public HevcConverter(@NonNull FFmpeg ffmpeg,
 			@Nullable FFprobeResult probeResult,
 			@NonNull Path input,
@@ -20,13 +22,19 @@ public class HevcConverter extends FfmpegVideoConverter{
 			@NonNull Path temporary,
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean deleteInput,
-			@Nullable Integer ffmpegThreads
+			@Nullable Integer ffmpegThreads,
+			boolean isAlreadyHevc
 	){
 		super(ffmpeg, probeResult, input, output, temporary, converterProgressBarSupplier, deleteInput, ffmpegThreads);
+		this.isAlreadyHevc = isAlreadyHevc;
 	}
 	
 	@Override
 	protected BaseOutput<?> buildOutput(BaseOutput<?> output){
+		if(isAlreadyHevc){
+			return output.copyAllCodecs();
+		}
+		
 		return output
 				.setCodec(StreamType.AUDIO, "aac")
 				.addArguments("-b:a", "128000")

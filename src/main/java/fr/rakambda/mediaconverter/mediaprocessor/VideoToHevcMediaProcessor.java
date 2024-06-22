@@ -23,10 +23,18 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 			return false;
 		}
 		
-		if(!Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat())){
+		if(isNotHevc(probeResult)){
 			return true;
 		}
 		
+		return isOtherContainer(probeResult);
+	}
+	
+	private boolean isOtherContainer(@NotNull FFprobeResult probeResult){
+		return !Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat());
+	}
+	
+	private boolean isNotHevc(@NotNull FFprobeResult probeResult){
 		return probeResult.getStreams().stream()
 				.anyMatch(stream -> isWantedCodec(stream.getCodecName()) || isOtherHevc(stream.getCodecName(), stream.getCodecTagString()));
 	}
@@ -42,6 +50,6 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	@Override
 	@NonNull
 	public MediaProcessorTask createConvertTask(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier progressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads){
-		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput, ffmpegThreads);
+		return new HevcConverter(ffmpeg, probeResult, input, output, temporary, progressBarSupplier, deleteInput, ffmpegThreads, !isNotHevc(probeResult));
 	}
 }
