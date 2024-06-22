@@ -68,6 +68,7 @@ public class Main{
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())
+					.filter(Conversion::isEnabled)
 					.parallel()
 					.map(conv -> {
 						try{

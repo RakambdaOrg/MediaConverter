@@ -62,6 +62,8 @@ public class Conversion{
 	private Path temp;
 	@JsonProperty("deleteInput")
 	private boolean deleteInput = true;
+	@JsonProperty("enabled")
+	private boolean enabled = true;
 	@JsonProperty("excluded")
 	@JsonDeserialize(contentUsing = NioPathDeserializer.class)
 	private List<Path> excluded = new LinkedList<>();
