@@ -18,6 +18,11 @@ public class VideoToHevcMediaProcessor implements MediaProcessor{
 		if(Objects.isNull(probeResult)){
 			return false;
 		}
+		
+		if(!Objects.equals(probeResult.getFormat().getFormatName(), "matroska,webm")){
+			return true;
+		}
+		
 		return probeResult.getStreams().stream()
 				.anyMatch(stream -> isWantedCodec(stream.getCodecName()) || isOtherHevc(stream.getCodecName(), stream.getCodecTagString()));
 	}
