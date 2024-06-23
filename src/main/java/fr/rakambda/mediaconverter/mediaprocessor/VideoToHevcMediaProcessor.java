@@ -61,8 +61,9 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	
 	private boolean isHevcWithOtherContainer(@NotNull FFprobeResult probeResult){
 		var isCorrectContainer = Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat());
+		var isCorrectCodecTag = probeResult.getStreams().stream().anyMatch(this::isTargetCodecTag);
 		var isHevc = probeResult.getStreams().stream().anyMatch(this::isHevcCodec);
-		return !isCorrectContainer && isHevc;
+		return isHevc && (!isCorrectContainer || !isCorrectCodecTag);
 	}
 	
 	@Override
