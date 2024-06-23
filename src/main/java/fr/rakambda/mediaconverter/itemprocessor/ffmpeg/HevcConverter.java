@@ -32,7 +32,9 @@ public class HevcConverter extends FfmpegVideoConverter{
 	@Override
 	protected BaseOutput<?> buildOutput(BaseOutput<?> output){
 		if(isTargetWithOtherContainer){
-			return output.copyAllCodecs();
+			return output
+					.copyAllCodecs()
+					.addArguments("-tag:v", "hvc1");
 		}
 		
 		return output
@@ -46,6 +48,8 @@ public class HevcConverter extends FfmpegVideoConverter{
 				.addArguments("-map_metadata", "0")
 				.addArguments("-map", "0")
 				.addArguments("-map", "-0:d")
-				.addArguments("-max_muxing_queue_size", "512");
+				.addArguments("-max_muxing_queue_size", "512")
+				.addArguments("-tag:v", "hvc1")
+				;
 	}
 }
