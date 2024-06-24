@@ -110,7 +110,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 				ffProbeResult,
 				file,
 				outfile,
-				tempDirectory.resolve("" + file.hashCode() + outfile.getFileName()),
+				tempDirectory.resolve("%d-%d-%s".formatted(System.nanoTime(), file.hashCode(), outfile.getFileName())),
 				converterProgressBarSupplier,
 				deleteInput,
 				ffmpegThreads
