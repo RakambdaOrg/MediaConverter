@@ -1,5 +1,6 @@
 package fr.rakambda.mediaconverter.file;
 
+import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
 import lombok.Getter;
 import lombok.NonNull;
@@ -22,11 +23,11 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 
 @Slf4j
-public class FileScanner implements FileVisitor<Path>, AutoCloseable{
+public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor{
 	private final ProgressBar progressBar;
 	private final IStorage storage;
 	@Getter
-	private final BlockingQueue<Path> queue;
+	private final BlockingQueue<Path> outputQueue;
 	private final Collection<Path> excluded;
 	
 	private boolean shutdown;
@@ -37,7 +38,7 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable{
 		this.excluded = excluded;
 		shutdown = false;
 		
-		queue = new LinkedBlockingQueue<>(500);
+		outputQueue = new LinkedBlockingQueue<>(500);
 		progressBar.maxHint(progressBar.getMax() + 1);
 	}
 	
@@ -66,7 +67,7 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable{
 			return TERMINATE;
 		}
 		try{
-			queue.put(file);
+			outputQueue.put(file);
 		}
 		catch(InterruptedException e){
 			throw new RuntimeException(e);
@@ -96,6 +97,14 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable{
 			log.error("Failed to save useless files after folder", e);
 		}
 		return CONTINUE;
+	}
+	
+	@Override
+	public void resume(){
+	}
+	
+	@Override
+	public void pause(){
 	}
 	
 	@Override

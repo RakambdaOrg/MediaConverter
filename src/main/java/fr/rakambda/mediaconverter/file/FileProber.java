@@ -2,6 +2,7 @@ package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
+import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
-public class FileProber implements Runnable, AutoCloseable{
+public class FileProber implements Runnable, AutoCloseable, IProcessor{
 	private final ProgressBar progressBar;
 	private final BlockingQueue<Path> inputQueue;
 	@Getter
@@ -30,6 +31,7 @@ public class FileProber implements Runnable, AutoCloseable{
 	private final IStorage storage;
 	private final CountDownLatch countDownLatch;
 	private boolean shutdown;
+	private boolean pause;
 	
 	public FileProber(@NonNull ProgressBar progressBar,
 			@NonNull IStorage storage,
@@ -44,6 +46,7 @@ public class FileProber implements Runnable, AutoCloseable{
 		
 		outputQueue = new LinkedBlockingDeque<>(50);
 		shutdown = false;
+		pause = false;
 		countDownLatch = new CountDownLatch(1);
 	}
 	
@@ -64,6 +67,14 @@ public class FileProber implements Runnable, AutoCloseable{
 						progressBar.step();
 					}
 					progressBar.setExtraMessage("");
+				}
+				while(pause){
+					try{
+						Thread.sleep(10_000);
+					}
+					catch(InterruptedException e){
+						log.error("Error while sleeping", e);
+					}
 				}
 			}
 			while(!shutdown || !inputQueue.isEmpty());
@@ -106,6 +117,16 @@ public class FileProber implements Runnable, AutoCloseable{
 			log.error("Failed to get processor for file {}", file, e);
 		}
 		return Optional.empty();
+	}
+	
+	@Override
+	public void resume(){
+		pause = false;
+	}
+	
+	@Override
+	public void pause(){
+		pause = true;
 	}
 	
 	@Override

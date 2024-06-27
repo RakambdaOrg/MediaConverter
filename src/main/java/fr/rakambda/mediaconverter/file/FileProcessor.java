@@ -1,17 +1,21 @@
 package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
@@ -20,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Log4j2
-public class FileProcessor implements Runnable, AutoCloseable{
+public class FileProcessor implements Runnable, AutoCloseable, IProcessor{
 	private final ExecutorService executor;
 	private final Supplier<FFmpeg> ffmpegSupplier;
 	private final Path tempDirectory;
@@ -36,6 +40,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 	private final CountDownLatch countDownLatch;
 	private final Collection<MediaProcessorTask> tasks;
 	private boolean shutdown;
+	private boolean pause;
 	
 	public FileProcessor(@NonNull ExecutorService executor,
 			@NonNull Supplier<FFmpeg> ffmpegSupplier,
@@ -63,6 +68,7 @@ public class FileProcessor implements Runnable, AutoCloseable{
 		countDownLatch = new CountDownLatch(1);
 		tasks = new ConcurrentLinkedDeque<>();
 		shutdown = false;
+		pause = false;
 	}
 	
 	@Override
@@ -73,6 +79,14 @@ public class FileProcessor implements Runnable, AutoCloseable{
 				if(Objects.nonNull(file)){
 					processFile(file);
 					progressBar.step();
+				}
+				while(pause){
+					try{
+						Thread.sleep(10_000);
+					}
+					catch(InterruptedException e){
+						log.error("Error while sleeping", e);
+					}
 				}
 			}
 			while(!shutdown || !queue.isEmpty());
@@ -136,6 +150,16 @@ public class FileProcessor implements Runnable, AutoCloseable{
 	}
 	
 	@Override
+	public void resume(){
+		pause = false;
+	}
+	
+	@Override
+	public void pause(){
+		pause = true;
+	}
+	
+	@Override
 	public void close(){
 		shutdown = true;
 		try{
@@ -144,6 +168,12 @@ public class FileProcessor implements Runnable, AutoCloseable{
 		catch(InterruptedException e){
 			log.info("Failed to wait for latch", e);
 		}
+	}
+	
+	@Override
+	@NotNull
+	public Queue<?> getOutputQueue(){
+		return new LinkedList<>();
 	}
 	
 	public void cancel(){

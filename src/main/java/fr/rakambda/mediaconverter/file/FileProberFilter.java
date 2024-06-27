@@ -1,5 +1,6 @@
 package fr.rakambda.mediaconverter.file;
 
+import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.config.filter.ProbeFilter;
 import fr.rakambda.mediaconverter.file.FileProber.ProbeResult;
 import lombok.Getter;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 @Slf4j
-public class FileProberFilter implements Runnable, AutoCloseable{
+public class FileProberFilter implements Runnable, AutoCloseable, IProcessor{
 	private final ProgressBar progressBar;
 	private final BlockingQueue<ProbeResult> inputQueue;
 	@Getter
@@ -23,6 +24,7 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 	private final Predicate<ProbeResult> filters;
 	private final CountDownLatch countDownLatch;
 	private boolean shutdown;
+	private boolean pause;
 	
 	public FileProberFilter(@NonNull ProgressBar progressBar,
 			@NonNull BlockingQueue<ProbeResult> inputQueue,
@@ -33,6 +35,7 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 		
 		outputQueue = new LinkedBlockingDeque<>(50);
 		shutdown = false;
+		pause = false;
 		countDownLatch = new CountDownLatch(1);
 	}
 	
@@ -50,6 +53,14 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 						progressBar.step();
 					}
 				}
+				while(pause){
+					try{
+						Thread.sleep(10_000);
+					}
+					catch(InterruptedException e){
+						log.error("Error while sleeping", e);
+					}
+				}
 			}
 			while(!shutdown || !inputQueue.isEmpty());
 		}
@@ -59,6 +70,16 @@ public class FileProberFilter implements Runnable, AutoCloseable{
 		finally{
 			countDownLatch.countDown();
 		}
+	}
+	
+	@Override
+	public void resume(){
+		pause = false;
+	}
+	
+	@Override
+	public void pause(){
+		pause = true;
 	}
 	
 	@Override

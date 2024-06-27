@@ -65,7 +65,8 @@ public class Main{
 		var progressBarGenerator = new ConverterProgressBarGenerator();
 		try(var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
-				var converterProgressBarSupplier = new ReuseProgressBarSupplier(progressBarGenerator)){
+				var converterProgressBarSupplier = new ReuseProgressBarSupplier(progressBarGenerator);
+				var consoleHandler = new ConsoleHandler()){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())
@@ -73,7 +74,7 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount());
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount(), consoleHandler);
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -95,7 +96,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun, @Nullable Integer ffmpegThreads) throws IOException{
+	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun, @Nullable Integer ffmpegThreads, @NotNull ConsoleHandler consoleHandler) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -110,10 +111,16 @@ public class Main{
 				es = Executors.newCachedThreadPool();
 				
 				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
-				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getQueue(), conversion.getExtensions());
+				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getOutputQueue(), conversion.getExtensions());
 				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
 				var fileProberFilter = new FileProberFilter(scanningProgressBar, fileProber.getOutputQueue(), conversion.getFilters());
 				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProberFilter.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, dryRun);
+				
+				consoleHandler.add(fileScanner);
+				consoleHandler.add(fileFilter);
+				consoleHandler.add(fileProber);
+				consoleHandler.add(fileProberFilter);
+				consoleHandler.add(fileProcessor);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					fileScanner.close();

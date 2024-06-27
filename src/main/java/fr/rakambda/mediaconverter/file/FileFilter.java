@@ -1,5 +1,6 @@
 package fr.rakambda.mediaconverter.file;
 
+import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,7 +18,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class FileFilter implements Runnable, AutoCloseable{
+public class FileFilter implements Runnable, AutoCloseable, IProcessor{
     private final ProgressBar progressBar;
     private final IStorage storage;
     private final BlockingQueue<Path> inputQueue;
@@ -87,6 +88,14 @@ public class FileFilter implements Runnable, AutoCloseable{
         var extension = filename.substring(dotIndex + 1).toLowerCase();
         return !extensionsToScan.contains(extension);
     }
+	
+	@Override
+	public void resume(){
+	}
+	
+	@Override
+	public void pause(){
+	}
 	
 	@Override
 	public void close(){
