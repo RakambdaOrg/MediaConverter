@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -28,12 +27,13 @@ public class FileProberFilter implements Runnable, AutoCloseable, IProcessor{
 	
 	public FileProberFilter(@NonNull ProgressBar progressBar,
 			@NonNull BlockingQueue<ProbeResult> inputQueue,
+			@NonNull BlockingQueue<ProbeResult> outputQueue,
 			@NonNull Collection<ProbeFilter> filters){
 		this.progressBar = progressBar;
 		this.inputQueue = inputQueue;
+		this.outputQueue = outputQueue;
 		this.filters = filters.isEmpty() ? (e -> true) : (e -> filters.stream().allMatch(f -> f.test(e)));
 		
-		outputQueue = new LinkedBlockingDeque<>(50);
 		shutdown = false;
 		pause = false;
 		countDownLatch = new CountDownLatch(1);

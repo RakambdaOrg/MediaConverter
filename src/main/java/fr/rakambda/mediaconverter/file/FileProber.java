@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -36,15 +35,16 @@ public class FileProber implements Runnable, AutoCloseable, IProcessor{
 	public FileProber(@NonNull ProgressBar progressBar,
 			@NonNull IStorage storage,
 			@NonNull BlockingQueue<Path> inputQueue,
+			@NonNull BlockingQueue<ProbeResult> outputQueue,
 			@NonNull Supplier<FFprobe> ffprobeSupplier,
 			@NonNull Collection<MediaProcessor> processors){
 		this.progressBar = progressBar;
 		this.inputQueue = inputQueue;
+		this.outputQueue = outputQueue;
 		this.ffprobeSupplier = ffprobeSupplier;
 		this.processors = processors;
 		this.storage = storage;
 		
-		outputQueue = new LinkedBlockingDeque<>(50);
 		shutdown = false;
 		pause = false;
 		countDownLatch = new CountDownLatch(1);

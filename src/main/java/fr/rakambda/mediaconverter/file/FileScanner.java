@@ -17,7 +17,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.FileVisitResult.TERMINATE;
@@ -32,13 +31,13 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor
 	
 	private boolean shutdown;
 	
-	public FileScanner(@NonNull ProgressBar progressBar, @NonNull IStorage storage, @NonNull Collection<Path> excluded){
+	public FileScanner(@NonNull ProgressBar progressBar, @NonNull IStorage storage, @NonNull Collection<Path> excluded, @NonNull BlockingQueue<Path> outputQueue){
 		this.progressBar = progressBar;
 		this.storage = storage;
 		this.excluded = excluded;
+		this.outputQueue = outputQueue;
 		shutdown = false;
 		
-		outputQueue = new LinkedBlockingQueue<>(500);
 		progressBar.maxHint(progressBar.getMax() + 1);
 	}
 	

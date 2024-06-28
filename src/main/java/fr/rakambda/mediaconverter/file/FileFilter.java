@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -27,14 +26,18 @@ public class FileFilter implements Runnable, AutoCloseable, IProcessor{
     private final Collection<String> extensionsToScan;
     private final CountDownLatch countDownLatch;
     private boolean shutdown;
-
-    public FileFilter(@NonNull ProgressBar progressBar, @NonNull IStorage storage, @NonNull BlockingQueue<Path> inputQueue, @NonNull Collection<String> extensionsToScan) {
+	
+	public FileFilter(@NonNull ProgressBar progressBar,
+			@NonNull IStorage storage,
+			@NonNull BlockingQueue<Path> inputQueue,
+			@NonNull BlockingQueue<Path> outputQueue,
+			@NonNull Collection<String> extensionsToScan){
         this.progressBar = progressBar;
         this.storage = storage;
         this.inputQueue = inputQueue;
-        this.extensionsToScan = extensionsToScan;
+		this.outputQueue = outputQueue;
+		this.extensionsToScan = extensionsToScan;
 
-        outputQueue = new LinkedBlockingDeque<>(500);
         shutdown = false;
         countDownLatch = new CountDownLatch(1);
     }

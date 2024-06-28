@@ -26,11 +26,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
 @Log4j2
@@ -110,39 +112,37 @@ public class Main{
 			try(var storage = conversion.getStorage()){
 				es = Executors.newCachedThreadPool();
 				
-				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded());
-				var fileFilter = new FileFilter(scanningProgressBar, storage, fileScanner.getOutputQueue(), conversion.getExtensions());
-				var fileProber = new FileProber(scanningProgressBar, storage, fileFilter.getOutputQueue(), ffprobeSupplier, conversion.getProcessors());
-				var fileProberFilter = new FileProberFilter(scanningProgressBar, fileProber.getOutputQueue(), conversion.getFilters());
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), fileProberFilter.getOutputQueue(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, dryRun);
+				var scannerOutput = new LinkedBlockingQueue<Path>(500);
+				var fileFilterOutput = new LinkedBlockingQueue<Path>(500);
+				var proberOutput = new LinkedBlockingQueue<FileProber.ProbeResult>(50);
+				var proberFilterOutput = new LinkedBlockingQueue<FileProber.ProbeResult>(50);
 				
-				consoleHandler.add(fileScanner);
-				consoleHandler.add(fileFilter);
-				consoleHandler.add(fileProber);
-				consoleHandler.add(fileProberFilter);
-				consoleHandler.add(fileProcessor);
+				var processors = new LinkedList<IProcessor>();
+				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded(), scannerOutput);
+				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), proberFilterOutput, scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, dryRun);
+				
+				processors.add(fileScanner);
+				processors.add(new FileFilter(scanningProgressBar, storage, scannerOutput, fileFilterOutput, conversion.getExtensions()));
+				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				processors.add(new FileProberFilter(scanningProgressBar, proberOutput, proberFilterOutput, conversion.getFilters()));
+				processors.add(fileProcessor);
+				
+				processors.forEach(consoleHandler::add);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-					fileScanner.close();
-					fileFilter.close();
-					fileProber.close();
-					fileProberFilter.close();
-					fileProcessor.close();
+					processors.forEach(IProcessor::close);
 					
 					converterExecutor.shutdownNow();
 					fileProcessor.cancel();
 				}));
 				
 				es.submit(fileProcessor);
-				es.submit(fileProberFilter);
-				es.submit(fileProber);
-				es.submit(fileFilter);
+				processors.forEach(es::submit);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
-				fileScanner.close();
-				fileFilter.close();
-				fileProber.close();
-				fileProberFilter.close();
-				fileProcessor.close();
+				processors.forEach(IProcessor::close);
 			}
 			finally{
 				if(Objects.nonNull(es)){
