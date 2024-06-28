@@ -110,4 +110,8 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor
 	public void close(){
 		shutdown = true;
 	}
+	
+	@Override
+	public void run(){
+	}
 }
