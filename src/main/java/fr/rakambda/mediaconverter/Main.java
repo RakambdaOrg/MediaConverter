@@ -76,7 +76,7 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount(), consoleHandler);
+							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount(), parameters.getFfprobeThreadCount(), consoleHandler);
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -98,7 +98,18 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Path convert(@NotNull Conversion conversion, @NotNull Supplier<FFmpeg> ffmpegSupplier, @NotNull Supplier<FFprobe> ffprobeSupplier, @NotNull ExecutorService converterExecutor, @NotNull ProgressBar scanningProgressBar, @NotNull ProgressBarSupplier converterProgressBarSupplier, boolean dryRun, @Nullable Integer ffmpegThreads, @NotNull ConsoleHandler consoleHandler) throws IOException{
+	private static Path convert(
+			@NotNull Conversion conversion,
+			@NotNull Supplier<FFmpeg> ffmpegSupplier,
+			@NotNull Supplier<FFprobe> ffprobeSupplier,
+			@NotNull ExecutorService converterExecutor,
+			@NotNull ProgressBar scanningProgressBar,
+			@NotNull ProgressBarSupplier converterProgressBarSupplier,
+			boolean dryRun,
+			@Nullable Integer ffmpegThreads,
+			@NotNull Integer ffprobeThreadCount,
+			@NotNull ConsoleHandler consoleHandler
+	) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{
 			if(Objects.isNull(conversion.getInput()) || !Files.exists(conversion.getInput())){
@@ -123,10 +134,9 @@ public class Main{
 				
 				processors.add(fileScanner);
 				processors.add(new FileFilter(scanningProgressBar, storage, scannerOutput, fileFilterOutput, conversion.getExtensions()));
-				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
-				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
-				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
-				processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				for(int i = 0; i < ffprobeThreadCount; i++){
+					processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
+				}
 				processors.add(new FileProberFilter(scanningProgressBar, proberOutput, proberFilterOutput, conversion.getFilters()));
 				processors.add(fileProcessor);
 				
