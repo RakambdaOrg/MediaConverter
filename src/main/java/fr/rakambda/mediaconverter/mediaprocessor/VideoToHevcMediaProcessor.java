@@ -56,7 +56,7 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	}
 	
 	private boolean isTargetCodecTag(@NonNull Stream stream){
-		return "hvc1".equals(stream.getCodecTagString());
+		return "hvc1".equals(stream.getCodecTagString()) || "[0][0][0][0]".equals(stream.getCodecTagString());
 	}
 	
 	private boolean isHevcWithOtherContainer(@NotNull FFprobeResult probeResult){
