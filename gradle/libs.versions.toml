@@ -24,9 +24,10 @@ log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl",
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 jaffree = { group = "com.github.kokorin.jaffree", name = "jaffree", version.ref = "jaffree-version" }
 commonsLang = { group = "org.apache.commons", name = "commons-lang3", version.ref = "lang3-version" }
-jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson-version" }
-jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-version" }
-jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson-version" }
+jacksonBom = { group = "com.fasterxml.jackson", name = "jackson-bom", version.ref = "jackson-version" }
+jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind" }
 jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations-version" }
 progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }

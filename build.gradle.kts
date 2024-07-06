@@ -11,6 +11,8 @@ group = "fr.rakambda"
 description = "MediaConverter"
 
 dependencies {
+    implementation(platform(libs.jacksonBom))
+
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
 
