@@ -10,11 +10,14 @@ import fr.rakambda.mediaconverter.file.FileProber;
 import fr.rakambda.mediaconverter.file.FileProberFilter;
 import fr.rakambda.mediaconverter.file.FileProcessor;
 import fr.rakambda.mediaconverter.file.FileScanner;
+import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.progress.ConversionProgressExecutor;
 import fr.rakambda.mediaconverter.progress.ConverterProgressBarGenerator;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import fr.rakambda.mediaconverter.progress.ReuseProgressBarSupplier;
 import fr.rakambda.mediaconverter.utils.CLIParameters;
+import fr.rakambda.mediaconverter.utils.Continue;
+import fr.rakambda.mediaconverter.utils.PausableThreadPoolExecutor;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
@@ -26,13 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Log4j2
@@ -65,10 +68,11 @@ public class Main{
 		List<Path> tempPaths;
 		
 		var progressBarGenerator = new ConverterProgressBarGenerator();
-		try(var converterExecutor = ConversionProgressExecutor.of(Executors.newFixedThreadPool(parameters.getThreadCount()));
+		var aContinue = new Continue();
+		try(var converterExecutor = ConversionProgressExecutor.of(new PausableThreadPoolExecutor(parameters.getThreadCount(), aContinue));
 				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
 				var converterProgressBarSupplier = new ReuseProgressBarSupplier(progressBarGenerator);
-				var consoleHandler = new ConsoleHandler()){
+				var consoleHandler = new ConsoleHandler(aContinue)){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
 					.stream()
 					.flatMap(config -> config.getConversions().stream())
@@ -76,7 +80,17 @@ public class Main{
 					.parallel()
 					.map(conv -> {
 						try{
-							return Main.convert(conv, ffmpegSupplier, ffprobeSupplier, converterExecutor, scanningProgressBar, converterProgressBarSupplier, parameters.isDryRun(), parameters.getFfmpegThreadCount(), parameters.getFfprobeThreadCount(), consoleHandler);
+							return Main.convert(
+									conv,
+									ffmpegSupplier,
+									ffprobeSupplier,
+									converterExecutor,
+									scanningProgressBar,
+									converterProgressBarSupplier,
+									parameters.isDryRun(),
+									parameters.getFfmpegThreadCount(),
+									consoleHandler
+							);
 						}
 						catch(IOException e){
 							log.error("Failed to perform conversion", e);
@@ -107,7 +121,6 @@ public class Main{
 			@NotNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean dryRun,
 			@Nullable Integer ffmpegThreads,
-			@NotNull Integer ffprobeThreadCount,
 			@NotNull ConsoleHandler consoleHandler
 	) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
@@ -119,45 +132,32 @@ public class Main{
 				throw new IllegalArgumentException("Output path " + conversion.getOutput().toAbsolutePath() + " doesn't exists");
 			}
 			
-			ExecutorService es = null;
-			try(var storage = conversion.getStorage()){
-				es = Executors.newCachedThreadPool();
+			var converters = new ConcurrentLinkedDeque<MediaProcessorTask>();
+			consoleHandler.registerTasks(converters);
+			
+			try(var storage = conversion.getStorage();
+					var virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()){
+				consoleHandler.registerExecutor(virtualThreadExecutor);
 				
-				var scannerOutput = new LinkedBlockingQueue<Path>(500);
-				var fileFilterOutput = new LinkedBlockingQueue<Path>(500);
-				var proberOutput = new LinkedBlockingQueue<FileProber.ProbeResult>(50);
-				var proberFilterOutput = new LinkedBlockingQueue<FileProber.ProbeResult>(50);
+				Consumer<MediaProcessorTask> converterRunner = converter -> {
+					converters.add(converter);
+					converter.execute(converterExecutor, dryRun);
+				};
+				Consumer<FileProber.ProbeResult> fileProcessor = probeResult -> new FileProcessor(probeResult, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, converterRunner).run();
+				Consumer<FileProber.ProbeResult> fileProberFilter = probeResult -> new FileProberFilter(probeResult, scanningProgressBar, conversion.getFilters(), fileProcessor).run();
+				Consumer<Path> fileProber = file -> new FileProber(file, scanningProgressBar, storage, ffprobeSupplier, conversion.getProcessors(), fileProberFilter).run();
+				Consumer<Path> fileFilter = file -> virtualThreadExecutor.execute(new FileFilter(file, scanningProgressBar, storage, conversion.getExtensions(), fileProber));
 				
-				var processors = new LinkedList<IProcessor>();
-				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded(), scannerOutput);
-				var fileProcessor = new FileProcessor(converterExecutor, ffmpegSupplier, tempDirectory, conversion.getInput(), conversion.getOutput(), proberFilterOutput, scanningProgressBar, converterProgressBarSupplier, conversion.isDeleteInput(), ffmpegThreads, dryRun);
-				
-				processors.add(fileScanner);
-				processors.add(new FileFilter(scanningProgressBar, storage, scannerOutput, fileFilterOutput, conversion.getExtensions()));
-				for(int i = 0; i < ffprobeThreadCount; i++){
-					processors.add(new FileProber(scanningProgressBar, storage, fileFilterOutput, proberOutput, ffprobeSupplier, conversion.getProcessors()));
-				}
-				processors.add(new FileProberFilter(scanningProgressBar, proberOutput, proberFilterOutput, conversion.getFilters()));
-				processors.add(fileProcessor);
-				
-				processors.forEach(consoleHandler::add);
+				var fileScanner = new FileScanner(scanningProgressBar, storage, conversion.getAbsoluteExcluded(), fileFilter);
 				
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-					processors.forEach(IProcessor::close);
-					
+					virtualThreadExecutor.shutdownNow();
 					converterExecutor.shutdownNow();
-					fileProcessor.cancel();
+					
+					converters.forEach(MediaProcessorTask::cancel);
 				}));
 				
-				es.submit(fileProcessor);
-				processors.forEach(es::submit);
 				Files.walkFileTree(conversion.getInput(), fileScanner);
-				processors.forEach(IProcessor::close);
-			}
-			finally{
-				if(Objects.nonNull(es)){
-					es.shutdownNow();
-				}
 			}
 		}
 		catch(Exception e){

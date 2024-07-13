@@ -1,11 +1,14 @@
 package fr.rakambda.mediaconverter;
 
+import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
+import fr.rakambda.mediaconverter.utils.Continue;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Handles commands sent in the standard input.
@@ -13,11 +16,17 @@ import java.util.Scanner;
 @Log4j2
 class ConsoleHandler extends Thread implements AutoCloseable{
 	private static final int WAIT_DELAY = 10000;
-	private final Collection<IProcessor> processors = new LinkedList<>();
+	private final Continue aContinue;
+	private final Collection<ExecutorService> executorServices;
+	private final Collection<MediaProcessorTask> tasks;
 	private boolean stop;
 	
-	ConsoleHandler(){
+	ConsoleHandler(Continue aContinue){
 		super();
+		this.aContinue = aContinue;
+		this.executorServices = new LinkedList<>();
+		this.tasks = new LinkedList<>();
+		
 		stop = false;
 		setDaemon(true);
 		setName("Console watcher");
@@ -46,19 +55,16 @@ class ConsoleHandler extends Thread implements AutoCloseable{
 					var command = args.poll();
 					if("q".equals(command)){
 						log.info("Exiting");
-						processors.forEach(IProcessor::resume);
-						processors.forEach(IProcessor::close);
-						processors.stream()
-								.map(IProcessor::getOutputQueue)
-								.forEach(Collection::clear);
+						this.executorServices.forEach(ExecutorService::shutdownNow);
+						this.tasks.forEach(MediaProcessorTask::cancel);
 					}
 					else if("p".equals(command)){
 						log.info("Pausing");
-						processors.forEach(IProcessor::pause);
+						aContinue.pause();
 					}
 					else if("r".equals(command)){
 						log.info("Resuming");
-						processors.forEach(IProcessor::resume);
+						aContinue.resume();
 					}
 				}
 				catch(Exception e){
@@ -76,7 +82,11 @@ class ConsoleHandler extends Thread implements AutoCloseable{
 		stop = true;
 	}
 	
-	public void add(@NotNull IProcessor processor){
-		processors.add(processor);
+	public void registerExecutor(ExecutorService executor){
+		executorServices.add(executor);
+	}
+	
+	public void registerTasks(ConcurrentLinkedDeque<MediaProcessorTask> converters){
+		tasks.addAll(converters);
 	}
 }

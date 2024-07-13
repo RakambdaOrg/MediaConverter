@@ -15,10 +15,12 @@ public abstract class CommandConverter extends ConverterRunnable{
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	
 	private Process process;
+	private boolean cancelled;
 	
 	protected CommandConverter(@NonNull Path input, @NonNull Path output, @NonNull Path temporary, boolean deleteInput, ProgressBarSupplier converterProgressBarSupplier){
 		super(input, output, temporary, deleteInput);
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
+		this.cancelled = false;
 	}
 	
 	protected abstract String[] getCommand();
@@ -28,6 +30,9 @@ public abstract class CommandConverter extends ConverterRunnable{
 		log.info("Converting {} to {}", getInput(), getOutput());
 		
 		return executorService.submit(() -> {
+			if(cancelled){
+				return;
+			}
 			if(dryRun){
 				log.info("Dry run: would have executed `{}`", Arrays.stream(getCommand()).map("\"%s\""::formatted).collect(Collectors.joining(" ")));
 				return;
@@ -52,6 +57,7 @@ public abstract class CommandConverter extends ConverterRunnable{
 	
 	@Override
 	public void cancel(){
+		cancelled = true;
 		if(Objects.nonNull(process) && process.isAlive()){
 			process.destroy();
 		}
