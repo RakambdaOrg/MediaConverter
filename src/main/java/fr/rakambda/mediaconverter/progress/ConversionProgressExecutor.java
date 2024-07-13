@@ -14,12 +14,13 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Log4j2
 public class ConversionProgressExecutor implements ExecutorService, AutoCloseable{
 	private final ExecutorService delegate;
 	private final ProgressBar progressBar;
-	private final Object progressBarLock;
+	private final ReentrantLock progressBarLock;
 	
 	public ConversionProgressExecutor(@NonNull ExecutorService executorService){
 		delegate = executorService;
@@ -27,7 +28,7 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 				.setTaskName("Conversion")
 				.setInitialMax(-1)
 				.build();
-		progressBarLock = new Object();
+		progressBarLock = new ReentrantLock();
 	}
 	
 	public static ConversionProgressExecutor of(@NonNull ExecutorService executorService){
@@ -87,14 +88,22 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	}
 	
 	private void incrementProgressbarMax(){
-		synchronized(progressBarLock){
+		progressBarLock.lock();
+		try{
 			progressBar.maxHint(progressBar.getMax() + 1);
+		}
+		finally{
+			progressBarLock.unlock();
 		}
 	}
 	
 	private void stepProgressBar(long amount){
-		synchronized(progressBarLock){
+		progressBarLock.lock();
+		try{
 			progressBar.stepBy(amount);
+		}
+		finally{
+			progressBarLock.unlock();
 		}
 	}
 	

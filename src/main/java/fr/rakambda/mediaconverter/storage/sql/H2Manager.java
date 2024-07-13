@@ -3,6 +3,7 @@ package fr.rakambda.mediaconverter.storage.sql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.NonNull;
+import lombok.Setter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 public class H2Manager extends JDBCBase{
 	private final Path databaseURL;
 	private HikariDataSource datasource;
+	@Setter
 	private Consumer<HikariConfig> configurator;
 	
 	public H2Manager(@NonNull Path databaseURL) throws IOException{
@@ -36,9 +38,5 @@ public class H2Manager extends JDBCBase{
 			datasource = new HikariDataSource(config);
 		}
 		return datasource;
-	}
-	
-	public void setConfigurator(Consumer<HikariConfig> configurator){
-		this.configurator = configurator;
 	}
 }

@@ -13,16 +13,19 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Log4j2
 public class H2Storage implements IStorage{
 	private final Collection<String> useless = new ConcurrentSkipListSet<>();
 	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
+	private final ReentrantLock lock;
 	
 	public H2Storage(@NotNull Path dbFile) throws IOException, SQLException{
 		log.info("Loading useless files");
 		this.dbFile = dbFile;
+		this.lock = new ReentrantLock();
 		try(var db = new H2Manager(dbFile)){
 			db.sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
 			
@@ -47,8 +50,12 @@ public class H2Storage implements IStorage{
 		newUseless.add(value);
 	}
 	
-	public synchronized void save() throws SQLException, IOException{
-		if(!newUseless.isEmpty()){
+	public void save() throws SQLException, IOException{
+		lock.lock();
+		try{
+			if(newUseless.isEmpty()){
+				return;
+			}
 			log.info("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
 				var statementFillers = new LinkedList<PreparedStatementFiller>();
@@ -59,6 +66,9 @@ public class H2Storage implements IStorage{
 				var result = db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
 				log.info("Saved {}/{} useless files", result, newUseless.size());
 			}
+		}
+		finally{
+			lock.unlock();
 		}
 	}
 }
