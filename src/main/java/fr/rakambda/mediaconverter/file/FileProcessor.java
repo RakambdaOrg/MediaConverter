@@ -1,102 +1,59 @@
 package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
-import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Log4j2
-public class FileProcessor implements Runnable, AutoCloseable, IProcessor{
-	private final ExecutorService executor;
+public class FileProcessor implements Runnable{
+	private final FileProber.ProbeResult probeResult;
 	private final Supplier<FFmpeg> ffmpegSupplier;
 	private final Path tempDirectory;
 	private final Path baseInput;
 	private final Path baseOutput;
-	private final BlockingQueue<FileProber.ProbeResult> queue;
 	private final ProgressBar progressBar;
 	private final ProgressBarSupplier converterProgressBarSupplier;
 	private final boolean deleteInput;
 	private final Integer ffmpegThreads;
-	private final boolean dryRun;
+	private final Consumer<MediaProcessorTask> callback;
 	
-	private final CountDownLatch countDownLatch;
-	private final Collection<MediaProcessorTask> tasks;
-	private boolean shutdown;
-	private boolean pause;
-	
-	public FileProcessor(@NonNull ExecutorService executor,
+	public FileProcessor(@NonNull FileProber.ProbeResult probeResult,
 			@NonNull Supplier<FFmpeg> ffmpegSupplier,
 			@NonNull Path tempDirectory,
 			@NonNull Path baseInput,
 			@NonNull Path baseOutput,
-			@NonNull BlockingQueue<FileProber.ProbeResult> queue,
 			@NonNull ProgressBar progressBar,
 			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean deleteInput,
 			@Nullable Integer ffmpegThreads,
-			boolean dryRun){
-		this.executor = executor;
+			@NonNull Consumer<MediaProcessorTask> callback
+	){
+		this.probeResult = probeResult;
 		this.ffmpegSupplier = ffmpegSupplier;
 		this.tempDirectory = tempDirectory;
 		this.baseInput = baseInput;
 		this.baseOutput = baseOutput;
-		this.queue = queue;
 		this.progressBar = progressBar;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		this.deleteInput = deleteInput;
 		this.ffmpegThreads = ffmpegThreads;
-		this.dryRun = dryRun;
-		
-		countDownLatch = new CountDownLatch(1);
-		tasks = new ConcurrentLinkedDeque<>();
-		shutdown = false;
-		pause = false;
+		this.callback = callback;
 	}
 	
 	@Override
 	public void run(){
-		try{
-			do{
-				var file = queue.poll(5, TimeUnit.SECONDS);
-				if(Objects.nonNull(file)){
-					processFile(file);
-					progressBar.step();
-				}
-				while(pause){
-					try{
-						Thread.sleep(10_000);
-					}
-					catch(InterruptedException e){
-						log.error("Error while sleeping", e);
-					}
-				}
-			}
-			while(!shutdown || !queue.isEmpty());
-		}
-		catch(InterruptedException e){
-			log.error("Error waiting for element", e);
-		}
-		finally{
-			countDownLatch.countDown();
-		}
+		processFile(probeResult);
+		progressBar.step();
 	}
 	
 	private void processFile(@NonNull FileProber.ProbeResult probeResult){
@@ -129,8 +86,7 @@ public class FileProcessor implements Runnable, AutoCloseable, IProcessor{
 				deleteInput,
 				ffmpegThreads
 		);
-		tasks.add(task);
-		task.execute(executor, dryRun);
+		callback.accept(task);
 	}
 	
 	private Path buildOutFile(@NonNull Path file, @Nullable String desiredExtension){
@@ -147,36 +103,5 @@ public class FileProcessor implements Runnable, AutoCloseable, IProcessor{
 		}
 		
 		return outFile;
-	}
-	
-	@Override
-	public void resume(){
-		pause = false;
-	}
-	
-	@Override
-	public void pause(){
-		pause = true;
-	}
-	
-	@Override
-	public void close(){
-		shutdown = true;
-		try{
-			countDownLatch.await();
-		}
-		catch(InterruptedException e){
-			log.info("Failed to wait for latch", e);
-		}
-	}
-	
-	@Override
-	@NotNull
-	public Queue<?> getOutputQueue(){
-		return new LinkedList<>();
-	}
-	
-	public void cancel(){
-		tasks.forEach(MediaProcessorTask::cancel);
 	}
 }

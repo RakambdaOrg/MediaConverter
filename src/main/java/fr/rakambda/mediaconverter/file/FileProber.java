@@ -2,89 +2,55 @@ package fr.rakambda.mediaconverter.file;
 
 import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
-public class FileProber implements Runnable, AutoCloseable, IProcessor{
+public class FileProber implements Runnable{
+	private final Path file;
 	private final ProgressBar progressBar;
-	private final BlockingQueue<Path> inputQueue;
-	@Getter
-	private final BlockingQueue<ProbeResult> outputQueue;
 	private final Supplier<FFprobe> ffprobeSupplier;
 	private final Collection<MediaProcessor> processors;
 	private final IStorage storage;
-	private final CountDownLatch countDownLatch;
-	private boolean shutdown;
-	private boolean pause;
+	private final Consumer<ProbeResult> callback;
 	
-	public FileProber(@NonNull ProgressBar progressBar,
+	public FileProber(@NonNull Path file,
+			@NonNull ProgressBar progressBar,
 			@NonNull IStorage storage,
-			@NonNull BlockingQueue<Path> inputQueue,
-			@NonNull BlockingQueue<ProbeResult> outputQueue,
 			@NonNull Supplier<FFprobe> ffprobeSupplier,
-			@NonNull Collection<MediaProcessor> processors){
+			@NonNull Collection<MediaProcessor> processors,
+			@NonNull Consumer<ProbeResult> callback
+	){
+		this.file = file;
 		this.progressBar = progressBar;
-		this.inputQueue = inputQueue;
-		this.outputQueue = outputQueue;
 		this.ffprobeSupplier = ffprobeSupplier;
 		this.processors = processors;
 		this.storage = storage;
-		
-		shutdown = false;
-		pause = false;
-		countDownLatch = new CountDownLatch(1);
+		this.callback = callback;
 	}
 	
 	@Override
 	public void run(){
-		try{
-			do{
-				var file = inputQueue.poll(5, TimeUnit.SECONDS);
-				if(Objects.nonNull(file)){
-					progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
-					var probeResult = probeFile(file);
-					var processor = getProcessor(probeResult, file);
-					if(processor.isPresent()){
-						outputQueue.put(new ProbeResult(file, probeResult, processor.get()));
-					}
-					else{
-						storage.setUseless(file);
-						progressBar.step();
-					}
-					progressBar.setExtraMessage("");
-				}
-				while(pause){
-					try{
-						Thread.sleep(10_000);
-					}
-					catch(InterruptedException e){
-						log.error("Error while sleeping", e);
-					}
-				}
-			}
-			while(!shutdown || !inputQueue.isEmpty());
+		progressBar.setExtraMessage(file.subpath(file.getNameCount() - 2, file.getNameCount()).toString());
+		var probeResult = probeFile(file);
+		var processor = getProcessor(probeResult, file);
+		if(processor.isPresent()){
+			callback.accept(new ProbeResult(file, probeResult, processor.get()));
 		}
-		catch(InterruptedException e){
-			log.error("Error waiting for element", e);
+		else{
+			storage.setUseless(file);
+			progressBar.step();
 		}
-		finally{
-			countDownLatch.countDown();
-		}
+		progressBar.setExtraMessage("");
 	}
 	
 	@Nullable
@@ -117,27 +83,6 @@ public class FileProber implements Runnable, AutoCloseable, IProcessor{
 			log.error("Failed to get processor for file {}", file, e);
 		}
 		return Optional.empty();
-	}
-	
-	@Override
-	public void resume(){
-		pause = false;
-	}
-	
-	@Override
-	public void pause(){
-		pause = true;
-	}
-	
-	@Override
-	public void close(){
-		shutdown = true;
-		try{
-			countDownLatch.await();
-		}
-		catch(InterruptedException e){
-			log.info("Failed to wait for latch", e);
-		}
 	}
 	
 	public record ProbeResult(

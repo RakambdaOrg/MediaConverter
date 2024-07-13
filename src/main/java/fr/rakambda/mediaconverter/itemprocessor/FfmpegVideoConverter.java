@@ -31,6 +31,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	
 	private ConverterProgressBarNotifier progressListener;
 	private FFmpegResultFuture ffmpegResult;
+	private boolean cancelled;
 	
 	public FfmpegVideoConverter(@NonNull FFmpeg ffmpeg, @Nullable FFprobeResult probeResult, @NonNull Path input, @NonNull Path output, @NonNull Path temporary, @NonNull ProgressBarSupplier converterProgressBarSupplier, boolean deleteInput, @Nullable Integer ffmpegThreads){
 		super(input, output, temporary, deleteInput);
@@ -38,6 +39,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 		this.probeResult = probeResult;
 		this.converterProgressBarSupplier = converterProgressBarSupplier;
 		this.ffmpegThreads = ffmpegThreads;
+		this.cancelled = false;
 	}
 	
 	protected abstract BaseOutput<?> buildOutput(BaseOutput<?> output);
@@ -73,6 +75,9 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 				.setOverwriteOutput(false)
 				.setProgressListener(progressListener);
 		
+		if(cancelled){
+			return executorService.submit(() -> {});
+		}
 		if(dryRun){
 			return executorService.submit(() -> {
 				if(ffmpeg instanceof CustomFFmpeg customFFmpeg){
@@ -94,6 +99,7 @@ public abstract class FfmpegVideoConverter extends ConverterRunnable{
 	
 	@Override
 	public void cancel(){
+		cancelled = true;
 		if(Objects.nonNull(ffmpegResult) && !ffmpegResult.isCancelled() && !ffmpegResult.isDone()){
 			ffmpegResult.forceStop();
 		}

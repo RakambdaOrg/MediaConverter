@@ -1,8 +1,6 @@
 package fr.rakambda.mediaconverter.file;
 
-import fr.rakambda.mediaconverter.IProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -16,26 +14,25 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
+import java.util.function.Consumer;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 
 @Slf4j
-public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor{
+public class FileScanner implements FileVisitor<Path>, AutoCloseable{
 	private final ProgressBar progressBar;
 	private final IStorage storage;
-	@Getter
-	private final BlockingQueue<Path> outputQueue;
 	private final Collection<Path> excluded;
+	private final Consumer<Path> callback;
 	
 	private boolean shutdown;
 	
-	public FileScanner(@NonNull ProgressBar progressBar, @NonNull IStorage storage, @NonNull Collection<Path> excluded, @NonNull BlockingQueue<Path> outputQueue){
+	public FileScanner(@NonNull ProgressBar progressBar, @NonNull IStorage storage, @NonNull Collection<Path> excluded, Consumer<Path> callback){
 		this.progressBar = progressBar;
 		this.storage = storage;
 		this.excluded = excluded;
-		this.outputQueue = outputQueue;
+		this.callback = callback;
 		shutdown = false;
 		
 		progressBar.maxHint(progressBar.getMax() + 1);
@@ -65,12 +62,7 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor
 		if(shutdown){
 			return TERMINATE;
 		}
-		try{
-			outputQueue.put(file);
-		}
-		catch(InterruptedException e){
-			throw new RuntimeException(e);
-		}
+		callback.accept(file);
 		return CONTINUE;
 	}
 	
@@ -99,19 +91,7 @@ public class FileScanner implements FileVisitor<Path>, AutoCloseable, IProcessor
 	}
 	
 	@Override
-	public void resume(){
-	}
-	
-	@Override
-	public void pause(){
-	}
-	
-	@Override
 	public void close(){
 		shutdown = true;
-	}
-	
-	@Override
-	public void run(){
 	}
 }
