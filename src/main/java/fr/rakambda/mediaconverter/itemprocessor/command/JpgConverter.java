@@ -13,11 +13,6 @@ public class JpgConverter extends CommandConverter{
 	}
 	
 	@Override
-	protected boolean isCopyAttributes(){
-		return false;
-	}
-	
-	@Override
 	protected String[] getCommand(){
 		return new String[]{
 				"magick",
