@@ -70,7 +70,12 @@ public class Main{
 		var progressBarGenerator = new ConverterProgressBarGenerator();
 		var aContinue = new Continue();
 		try(var converterExecutor = ConversionProgressExecutor.of(new PausableThreadPoolExecutor(parameters.getThreadCount(), aContinue));
-				var scanningProgressBar = new ProgressBarBuilder().setTaskName("Scanning").setUnit("File", 1).build();
+				var scanningProgressBar = new ProgressBarBuilder()
+						.setTaskName("Scanning")
+						.setUnit("File", 1)
+						.hideEta()
+						.showSpeed()
+						.build();
 				var converterProgressBarSupplier = new ReuseProgressBarSupplier(progressBarGenerator);
 				var consoleHandler = new ConsoleHandler(aContinue)){
 			tempPaths = new ArrayList<>(Configuration.loadConfiguration(parameters.getConfiguration())
