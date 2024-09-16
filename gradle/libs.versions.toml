@@ -11,7 +11,7 @@ progressbar-version = "0.10.1"
 hikari-cp-version = "5.1.0"
 h2-version = "2.3.232"
 lombok-version = "1.18.34"
-jna-version = "5.14.0"
+jna-version = "5.15.0"
 
 shadow-version = "8.1.1"
 names-version = "0.51.0"
