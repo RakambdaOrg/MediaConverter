@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
+
 plugins {
     idea
     java
@@ -58,6 +60,8 @@ tasks {
         archiveBaseName.set(project.name)
         archiveClassifier.set("shaded")
         archiveVersion.set("")
+
+        transform(Log4j2PluginsCacheFileTransformer::class.java)
     }
 
     wrapper {
