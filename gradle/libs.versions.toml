@@ -10,7 +10,7 @@ jackson-version = "2.18.1"
 progressbar-version = "0.10.1"
 hikari-cp-version = "6.1.0"
 h2-version = "2.3.232"
-lombok-version = "1.18.34"
+lombok-version = "1.18.36"
 jna-version = "5.15.0"
 
 shadow-version = "8.1.1"
