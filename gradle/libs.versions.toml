@@ -1,7 +1,6 @@
 [versions]
 slf4j-version = "2.0.16"
-log4j2-version = "2.24.2"
-log4j2-slf4j-version = "2.24.2"
+log4j2-version = "2.24.3"
 picocli-version = "4.7.6"
 jetbrains-annotations-version = "26.0.1"
 jaffree-version = "2024.08.29"
@@ -19,8 +18,9 @@ jib-version = "3.4.4"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
-log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j2-version" }
-log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j2-slf4j-version" }
+log4j2Bom = { group = "org.apache.logging.log4j", name = "log4j-bom", version.ref = "log4j2-version" }
+log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core" }
+log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 jaffree = { group = "com.github.kokorin.jaffree", name = "jaffree", version.ref = "jaffree-version" }
 commonsLang = { group = "org.apache.commons", name = "commons-lang3", version.ref = "lang3-version" }
