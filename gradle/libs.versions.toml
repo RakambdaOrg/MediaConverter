@@ -14,7 +14,7 @@ jna-version = "5.17.0"
 
 shadow-version = "8.1.1"
 names-version = "0.52.0"
-jib-version = "3.4.4"
+jib-version = "3.4.5"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
