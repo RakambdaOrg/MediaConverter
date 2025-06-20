@@ -13,14 +13,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Log4j2
 public class ConversionProgressExecutor implements ExecutorService, AutoCloseable{
 	private final ExecutorService delegate;
 	private final ProgressBar progressBar;
-	private final ReentrantLock progressBarLock;
+	private final Semaphore progressBarLock;
 	
 	public ConversionProgressExecutor(@NonNull ExecutorService executorService){
 		delegate = executorService;
@@ -28,7 +28,7 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 				.setTaskName("Conversion")
 				.setInitialMax(-1)
 				.build();
-		progressBarLock = new ReentrantLock();
+		progressBarLock = new Semaphore(1);
 	}
 	
 	public static ConversionProgressExecutor of(@NonNull ExecutorService executorService){
@@ -88,22 +88,28 @@ public class ConversionProgressExecutor implements ExecutorService, AutoCloseabl
 	}
 	
 	private void incrementProgressbarMax(){
-		progressBarLock.lock();
 		try{
+			progressBarLock.acquire();
 			progressBar.maxHint(progressBar.getMax() + 1);
 		}
+		catch(InterruptedException e){
+			throw new RuntimeException(e);
+		}
 		finally{
-			progressBarLock.unlock();
+			progressBarLock.release();
 		}
 	}
 	
 	private void stepProgressBar(long amount){
-		progressBarLock.lock();
 		try{
+			progressBarLock.acquire();
 			progressBar.stepBy(amount);
 		}
+		catch(InterruptedException e){
+			throw new RuntimeException(e);
+		}
 		finally{
-			progressBarLock.unlock();
+			progressBarLock.release();
 		}
 	}
 	
