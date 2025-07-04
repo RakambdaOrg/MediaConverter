@@ -40,6 +40,6 @@ jobs:
       docker-username: ${{ secrets.DOCKER_USERNAME }}
       docker-token: ${{ secrets.DOCKER_TOKEN }}
       jib-extra-params: |
-        -Djib.from.image=${{ secrets.DOCKER_REPO }}/rakambda/eclipse-temurin-ffmpeg:${{ vars.FFMPEG_VERSION }}-${{ vars.JAVA_VERSION }} \
+        -Djib.from.image=${{ secrets.DOCKER_REPO }}/rakambda/eclipse-temurin-ffmpeg:${{ vars.FFMPEG_VERSION }}-${{ vars.JAVA_VERSION }}-jre \
         -Djib.from.auth.username=${{ secrets.DOCKER_USERNAME }} \
         -Djib.from.auth.password=${{ secrets.DOCKER_TOKEN }}
