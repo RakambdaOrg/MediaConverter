@@ -38,6 +38,7 @@ public class HevcConverter extends FfmpegVideoConverter{
 		}
 		
 		return output
+				.setCodec(StreamType.SUBTITLE, "copy")
 				.setCodec(StreamType.AUDIO, "aac")
 				.addArguments("-b:a", "128000")
 				.setCodec(StreamType.VIDEO, "libx265")

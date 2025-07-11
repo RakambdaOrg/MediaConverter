@@ -28,13 +28,14 @@ public class Av1Converter extends FfmpegVideoConverter{
 	@Override
 	protected BaseOutput<?> buildOutput(BaseOutput<?> output){
 		return output
+				.setCodec(StreamType.SUBTITLE, "copy")
 				.setCodec(StreamType.AUDIO, "libopus")
 				.addArguments("-b:a", "128000")
 				.setCodec(StreamType.VIDEO, "libsvtav1")
+				.addArguments("-preset", "4")
 				.addArguments("-crf", "26")
-				.addArguments("-preset", "6")
 				.addArguments("-g", "240")
-				.addArguments("-svtav1-params", "tune=0:enable-overlays=1:scd=1:scm=0")
+				.addArguments("-svtav1-params", "tune=0:enable-overlays=1:scd=1:scm=2")
 				.addArguments("-pix_fmt", "yuv420p10le")
 				.addArguments("-movflags", "use_metadata_tags")
 				.addArguments("-map_metadata", "0")
