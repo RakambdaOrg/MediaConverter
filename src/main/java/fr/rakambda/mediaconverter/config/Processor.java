@@ -3,7 +3,7 @@ package fr.rakambda.mediaconverter.config;
 public enum Processor{
 	VIDEO_TO_HEVC_MP4,
 	VIDEO_TO_HEVC_MKV,
-	VIDEO_TO_AV1,
+	VIDEO_TO_AV1_MKV,
 	MP3_TO_AAC,
 	AUDIO_TO_OPUS,
 	TIFF_TO_JPG,
