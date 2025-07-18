@@ -33,7 +33,7 @@ public class Av1Converter extends FfmpegVideoConverter{
 				.addArguments("-b:a", "128000")
 				.setCodec(StreamType.VIDEO, "libsvtav1")
 				.addArguments("-preset", "4")
-				.addArguments("-crf", "26")
+				.addArguments("-crf", "32")
 				.addArguments("-g", "240")
 				.addArguments("-svtav1-params", "tune=0:enable-overlays=1:scd=1:scm=2")
 				.addArguments("-pix_fmt", "yuv420p10le")
