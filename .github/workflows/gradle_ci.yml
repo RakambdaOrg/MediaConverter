@@ -23,6 +23,7 @@ jobs:
       artifact-name: Gradle-Libs
       source: "mediaconverter-shaded.jar"
       target: "/Documents/JARs/MediaConverter.jar"
+      environment: DropboxPersonal
     secrets:
       dropbox-token: ${{ secrets.DROPBOX_TOKEN }}
 
@@ -35,6 +36,7 @@ jobs:
       java-version: ${{ vars.JAVA_VERSION }}
       docker-image: ${{ vars.DOCKER_IMAGE }}
       docker-tag: latest
+      environment: DockerSelfHosted
     secrets:
       docker-repo: ${{ secrets.DOCKER_REPO }}
       docker-username: ${{ secrets.DOCKER_USERNAME }}
