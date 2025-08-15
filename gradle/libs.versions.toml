@@ -12,8 +12,7 @@ h2-version = "2.3.232"
 lombok-version = "1.18.38"
 jna-version = "5.17.0"
 
-shadow-version = "8.1.1"
-names-version = "0.52.0"
+shadow-version = "9.0.2"
 jib-version = "3.4.5"
 
 [libraries]
@@ -42,6 +41,5 @@ log4j2 = ["log4j2-core", "log4j2-slf4j"]
 jna = ["jna", "jna-platform"]
 
 [plugins]
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }
-names = { id = "com.github.ben-manes.versions", version.ref = "names-version" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow-version" }
 jib = { id = "com.google.cloud.tools.jib", version.ref = "jib-version" }
