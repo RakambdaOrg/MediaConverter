@@ -1,7 +1,7 @@
 package fr.rakambda.mediaconverter.mediaprocessor;
 
-import lombok.NonNull;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public class VideoToHevcMkvMediaProcessor extends VideoToHevcMediaProcessor{
 	@Override
@@ -11,7 +11,7 @@ public class VideoToHevcMkvMediaProcessor extends VideoToHevcMediaProcessor{
 	}
 	
 	@Override
-	@NotNull
+	@NonNull
 	protected String getDesiredFormat(){
 		return "matroska,webm";
 	}

@@ -1,6 +1,6 @@
 package fr.rakambda.mediaconverter.mediaprocessor;
 
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import java.io.Closeable;
 import java.util.concurrent.ExecutorService;
 

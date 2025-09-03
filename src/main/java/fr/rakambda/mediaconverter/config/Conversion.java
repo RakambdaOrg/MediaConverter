@@ -13,7 +13,7 @@ import fr.rakambda.mediaconverter.storage.IStorage;
 import fr.rakambda.mediaconverter.storage.NoOpStorage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

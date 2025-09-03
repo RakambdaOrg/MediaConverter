@@ -1,6 +1,6 @@
 package fr.rakambda.mediaconverter.utils;
 
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;

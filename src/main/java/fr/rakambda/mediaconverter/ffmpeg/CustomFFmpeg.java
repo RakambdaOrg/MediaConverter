@@ -2,9 +2,9 @@ package fr.rakambda.mediaconverter.ffmpeg;
 
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.process.Stopper;
-import lombok.NonNull;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +34,7 @@ public class CustomFFmpeg extends FFmpeg{
 		return super.buildArguments();
 	}
 	
-	@NotNull
+	@NonNull
 	public String getCommand(){
 		return "%s %s".formatted(
 				executable.toString(),

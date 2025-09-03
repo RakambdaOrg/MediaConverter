@@ -1,7 +1,7 @@
 package fr.rakambda.mediaconverter.itemprocessor;
 
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.log4j.Log4j2;
 import java.nio.file.Path;
 import java.util.Arrays;

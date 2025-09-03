@@ -8,7 +8,7 @@ import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import fr.rakambda.mediaconverter.file.FileProber;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import java.util.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

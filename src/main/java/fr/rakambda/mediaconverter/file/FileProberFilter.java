@@ -2,7 +2,7 @@ package fr.rakambda.mediaconverter.file;
 
 import fr.rakambda.mediaconverter.config.filter.ProbeFilter;
 import fr.rakambda.mediaconverter.file.FileProber.ProbeResult;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import java.util.Collection;

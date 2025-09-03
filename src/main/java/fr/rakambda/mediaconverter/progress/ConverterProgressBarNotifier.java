@@ -4,7 +4,7 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpegProgress;
 import com.github.kokorin.jaffree.ffmpeg.ProgressListener;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.io.Closeable;
 import java.time.Duration;
 import java.util.Objects;
@@ -20,7 +20,7 @@ public class ConverterProgressBarNotifier implements ProgressListener, Closeable
 	
 	private ProgressBarHandle progressBarHandle;
 	
-	public ConverterProgressBarNotifier(@NotNull String filename, long frameCount, @NotNull Duration totalDuration, ProgressBarSupplier progressBarSupplier){
+	public ConverterProgressBarNotifier(@NonNull String filename, long frameCount, @NonNull Duration totalDuration, ProgressBarSupplier progressBarSupplier){
 		this.filename = filename;
 		this.frameCount = frameCount;
 		this.totalDuration = totalDuration;
@@ -28,8 +28,8 @@ public class ConverterProgressBarNotifier implements ProgressListener, Closeable
 		this.progressBarSupplier = progressBarSupplier;
 	}
 	
-	@NotNull
-	private String durationToStr(@NotNull Duration duration){
+	@NonNull
+	private String durationToStr(@NonNull Duration duration){
 		return String.format("%02dh%02dm%02ds", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
 	}
 	

@@ -4,8 +4,8 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.rakambda.mediaconverter.itemprocessor.command.JxlConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import lombok.NonNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 
 public class PhotoToJxlMediaProcessor extends PhotoMediaProcessor{

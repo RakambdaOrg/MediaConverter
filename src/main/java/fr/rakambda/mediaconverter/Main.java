@@ -21,8 +21,8 @@ import fr.rakambda.mediaconverter.utils.PausableThreadPoolExecutor;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -116,17 +116,17 @@ public class Main{
 		});
 	}
 	
-	@NotNull
+	@NonNull
 	private static Path convert(
-			@NotNull Conversion conversion,
-			@NotNull Supplier<FFmpeg> ffmpegSupplier,
-			@NotNull Supplier<FFprobe> ffprobeSupplier,
-			@NotNull ExecutorService converterExecutor,
-			@NotNull ProgressBar scanningProgressBar,
-			@NotNull ProgressBarSupplier converterProgressBarSupplier,
+			@NonNull Conversion conversion,
+			@NonNull Supplier<FFmpeg> ffmpegSupplier,
+			@NonNull Supplier<FFprobe> ffprobeSupplier,
+			@NonNull ExecutorService converterExecutor,
+			@NonNull ProgressBar scanningProgressBar,
+			@NonNull ProgressBarSupplier converterProgressBarSupplier,
 			boolean dryRun,
 			@Nullable Integer ffmpegThreads,
-			@NotNull ConsoleHandler consoleHandler
+			@NonNull ConsoleHandler consoleHandler
 	) throws IOException{
 		var tempDirectory = conversion.createTempDirectory();
 		try{

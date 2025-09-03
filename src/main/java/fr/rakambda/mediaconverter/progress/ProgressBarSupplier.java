@@ -1,11 +1,11 @@
 package fr.rakambda.mediaconverter.progress;
 
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface ProgressBarSupplier extends AutoCloseable{
-	void addBack(@NotNull ProgressBar progressBar);
+	void addBack(@NonNull ProgressBar progressBar);
 	
-	@NotNull
+	@NonNull
 	ProgressBarHandle get();
 }

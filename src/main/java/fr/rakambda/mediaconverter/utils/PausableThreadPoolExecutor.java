@@ -1,6 +1,6 @@
 package fr.rakambda.mediaconverter.utils;
 
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;

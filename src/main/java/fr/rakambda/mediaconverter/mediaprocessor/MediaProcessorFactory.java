@@ -1,11 +1,11 @@
 package fr.rakambda.mediaconverter.mediaprocessor;
 
 import fr.rakambda.mediaconverter.config.Processor;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class MediaProcessorFactory{
-	@NotNull
-	public static MediaProcessor getMediaProcessor(@NotNull Processor processor){
+	@NonNull
+	public static MediaProcessor getMediaProcessor(@NonNull Processor processor){
 		return switch(processor){
 			case VIDEO_TO_HEVC_MP4 -> new VideoToHevcMp4MediaProcessor();
 			case VIDEO_TO_HEVC_MKV -> new VideoToHevcMkvMediaProcessor();

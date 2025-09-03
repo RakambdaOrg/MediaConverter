@@ -2,7 +2,7 @@ package fr.rakambda.mediaconverter.storage.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.Setter;
 import java.io.IOException;
 import java.nio.file.Files;

@@ -6,9 +6,9 @@ import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.rakambda.mediaconverter.itemprocessor.FfmpegVideoConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 
 @Log4j2

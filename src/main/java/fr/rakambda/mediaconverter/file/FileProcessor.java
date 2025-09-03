@@ -3,10 +3,10 @@ package fr.rakambda.mediaconverter.file;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +27,7 @@ public class FileProcessor implements Runnable{
 	private final Integer ffmpegThreads;
 	private final Consumer<MediaProcessorTask> callback;
 	
-	public FileProcessor(@NonNull FileProber.ProbeResult probeResult,
+	public FileProcessor(FileProber.@NonNull ProbeResult probeResult,
 			@NonNull Supplier<FFmpeg> ffmpegSupplier,
 			@NonNull Path tempDirectory,
 			@NonNull Path baseInput,
@@ -56,7 +56,7 @@ public class FileProcessor implements Runnable{
 		progressBar.step();
 	}
 	
-	private void processFile(@NonNull FileProber.ProbeResult probeResult){
+	private void processFile(FileProber.@NonNull ProbeResult probeResult){
 		var file = probeResult.file();
 		var ffProbeResult = probeResult.fFprobeResult();
 		var processor = probeResult.processor();

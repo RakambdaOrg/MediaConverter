@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.tongfei.progressbar.InteractiveConsoleProgressBarConsumer;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 
 @RequiredArgsConstructor
 public class ConverterProgressBarGenerator {
-	@NotNull
+	@NonNull
 	public ProgressBar generate(int index){
 		return new ProgressBarBuilder()
 				.setTaskName("Converter " + (index + 1))

@@ -1,7 +1,7 @@
 package fr.rakambda.mediaconverter.file;
 
 import fr.rakambda.mediaconverter.storage.IStorage;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import java.io.IOException;

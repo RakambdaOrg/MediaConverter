@@ -4,7 +4,7 @@ import fr.rakambda.mediaconverter.storage.sql.H2Manager;
 import fr.rakambda.mediaconverter.storage.sql.PreparedStatementFiller;
 import fr.rakambda.mediaconverter.storage.sql.SQLValue;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -22,7 +22,7 @@ public class H2Storage implements IStorage{
 	private final Path dbFile;
 	private final ReentrantLock lock;
 	
-	public H2Storage(@NotNull Path dbFile) throws IOException, SQLException{
+	public H2Storage(@NonNull Path dbFile) throws IOException, SQLException{
 		log.info("Loading useless files");
 		this.dbFile = dbFile;
 		this.lock = new ReentrantLock();
@@ -38,12 +38,12 @@ public class H2Storage implements IStorage{
 		save();
 	}
 	
-	public boolean isUseless(@NotNull Path path){
+	public boolean isUseless(@NonNull Path path){
 		var value = path.toString().replace("\\", "/");
 		return useless.contains(value);
 	}
 	
-	public void setUseless(@NotNull Path path){
+	public void setUseless(@NonNull Path path){
 		log.debug("Marking {} as useless", path);
 		var value = path.toString().replace("\\", "/");
 		useless.add(value);

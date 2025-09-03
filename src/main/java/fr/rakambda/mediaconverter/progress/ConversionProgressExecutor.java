@@ -1,7 +1,7 @@
 package fr.rakambda.mediaconverter.progress;
 
 import fr.rakambda.mediaconverter.utils.FutureHelper;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;

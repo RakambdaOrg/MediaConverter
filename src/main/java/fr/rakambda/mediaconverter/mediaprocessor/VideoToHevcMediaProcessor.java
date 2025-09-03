@@ -5,9 +5,9 @@ import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.itemprocessor.ffmpeg.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
-import lombok.NonNull;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +15,7 @@ import java.util.Objects;
 public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	private static final List<String> CODECS = List.of("h264", "vp9", "wmv3", "mpeg2video");
 	
-	@NotNull
+	@NonNull
 	protected abstract String getDesiredFormat();
 	
 	@Override
@@ -37,15 +37,15 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 		return isHevcWithOtherContainer(probeResult);
 	}
 	
-	private boolean isPicture(@NotNull FFprobeResult probeResult){
+	private boolean isPicture(@NonNull FFprobeResult probeResult){
 		return probeResult.getStreams().stream().anyMatch(stream -> "Main Still Picture".equals(stream.getProfile()));
 	}
 	
-	private boolean isOtherVideoType(@NotNull FFprobeResult probeResult){
+	private boolean isOtherVideoType(@NonNull FFprobeResult probeResult){
 		return probeResult.getStreams().stream().anyMatch(stream -> CODECS.contains(stream.getCodecName()));
 	}
 	
-	private boolean isOtherHevcType(@NotNull FFprobeResult probeResult){
+	private boolean isOtherHevcType(@NonNull FFprobeResult probeResult){
 		return probeResult.getStreams().stream()
 				.filter(this::isHevcCodec)
 				.anyMatch(stream -> !isTargetCodecTag(stream));
@@ -59,7 +59,7 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 		return "hvc1".equals(stream.getCodecTagString()) || "[0][0][0][0]".equals(stream.getCodecTagString());
 	}
 	
-	private boolean isHevcWithOtherContainer(@NotNull FFprobeResult probeResult){
+	private boolean isHevcWithOtherContainer(@NonNull FFprobeResult probeResult){
 		var isCorrectContainer = Objects.equals(probeResult.getFormat().getFormatName(), getDesiredFormat());
 		var isCorrectCodecTag = probeResult.getStreams().stream().anyMatch(this::isTargetCodecTag);
 		var isHevc = probeResult.getStreams().stream().anyMatch(this::isHevcCodec);

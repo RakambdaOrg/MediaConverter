@@ -3,7 +3,7 @@ package fr.rakambda.mediaconverter.itemprocessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.utils.FutureHelper;
 import lombok.Getter;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import java.awt.*;

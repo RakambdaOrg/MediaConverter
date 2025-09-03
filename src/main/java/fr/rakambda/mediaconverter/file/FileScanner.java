@@ -1,10 +1,10 @@
 package fr.rakambda.mediaconverter.file;
 
 import fr.rakambda.mediaconverter.storage.IStorage;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;

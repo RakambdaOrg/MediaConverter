@@ -4,7 +4,7 @@ import com.github.kokorin.jaffree.process.Stopper;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinNT;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 

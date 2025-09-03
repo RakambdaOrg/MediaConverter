@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,8 +42,8 @@ public class Configuration {
     @JsonProperty("conversions")
     private List<Conversion> conversions = new LinkedList<>();
 
-    @NotNull
-    public static Optional<Configuration> loadConfiguration(@NotNull Path path) {
+    @NonNull
+    public static Optional<Configuration> loadConfiguration(@NonNull Path path) {
         if (Files.isRegularFile(path)) {
             try (var fis = Files.newBufferedReader(path)) {
                 return Optional.ofNullable(objectReader.readValue(fis));
