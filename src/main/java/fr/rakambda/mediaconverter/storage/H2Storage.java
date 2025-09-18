@@ -1,5 +1,6 @@
 package fr.rakambda.mediaconverter.storage;
 
+import fr.rakambda.mediaconverter.storage.data.UselessEntry;
 import fr.rakambda.mediaconverter.storage.sql.H2Manager;
 import fr.rakambda.mediaconverter.storage.sql.PreparedStatementFiller;
 import fr.rakambda.mediaconverter.storage.sql.SQLValue;
@@ -8,17 +9,21 @@ import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.sql.Timestamp;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Log4j2
 public class H2Storage implements IStorage{
-	private final Collection<String> useless = new ConcurrentSkipListSet<>();
-	private final Queue<String> newUseless = new ConcurrentLinkedQueue<>();
+	private final Map<String, UselessEntry> useless = new ConcurrentHashMap<>();
+	private final Queue<UselessEntry> newUseless = new ConcurrentLinkedQueue<>();
 	private final Path dbFile;
 	private final ReentrantLock lock;
 	
@@ -27,9 +32,16 @@ public class H2Storage implements IStorage{
 		this.dbFile = dbFile;
 		this.lock = new ReentrantLock();
 		try(var db = new H2Manager(dbFile)){
-			db.sendUpdateRequest("CREATE TABLE IF NOT EXISTS Useless(Filee VARCHAR(512) NOT NULL, PRIMARY KEY(Filee));");
+			db.sendUpdateRequest("""
+					CREATE TABLE IF NOT EXISTS Useless(
+						Filee VARCHAR(512) NOT NULL,
+						LastModified TIMESTAMP NOT NULL DEFAULT 0,
+						PRIMARY KEY(Filee)
+					 );""");
+			db.sendUpdateRequest("ALTER TABLE Useless  ADD COLUMN IF NOT EXISTS LastModified TIMESTAMP NOT NULL DEFAULT 0;");
 			
-			useless.addAll(db.sendQueryRequest("SELECT * FROM Useless;", rs -> rs.getString("Filee")));
+			useless.putAll(db.sendQueryRequest("SELECT * FROM Useless;", rs -> new UselessEntry(rs.getString("Filee"), rs.getTimestamp("LastModified")))
+					.stream().collect(Collectors.toMap(UselessEntry::getPath, Function.identity())));
 		}
 	}
 	
@@ -38,15 +50,19 @@ public class H2Storage implements IStorage{
 		save();
 	}
 	
-	public boolean isUseless(@NonNull Path path){
+	public boolean isUseless(@NonNull Path path, @NonNull Timestamp lastModified){
 		var value = path.toString().replace("\\", "/");
-		return useless.contains(value);
+		var entry = useless.get(value);
+		if(Objects.isNull(entry)){
+			return false;
+		}
+		return entry.getLastModified().compareTo(lastModified) >= 0;
 	}
 	
-	public void setUseless(@NonNull Path path){
+	public void setUseless(@NonNull Path path, @NonNull Timestamp lastModified){
 		log.debug("Marking {} as useless", path);
-		var value = path.toString().replace("\\", "/");
-		useless.add(value);
+		var value = new UselessEntry(path.toString().replace("\\", "/"), lastModified);
+		useless.put(value.getPath(), value);
 		newUseless.add(value);
 	}
 	
@@ -59,11 +75,11 @@ public class H2Storage implements IStorage{
 			log.info("Saving new useless files");
 			try(var db = new H2Manager(dbFile)){
 				var statementFillers = new LinkedList<PreparedStatementFiller>();
-				String path;
-				while((path = newUseless.poll()) != null){
-					statementFillers.add(new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path)));
+				UselessEntry entry;
+				while((entry = newUseless.poll()) != null){
+					statementFillers.add(new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, entry.getPath()), new SQLValue(SQLValue.Type.TIMESTAMP, entry.getLastModified())));
 				}
-				var result = db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee) VALUES(?)", statementFillers);
+				var result = db.sendPreparedBatchUpdateRequest("MERGE INTO Useless(Filee, LastModified) VALUES(?,?)", statementFillers);
 				log.info("Saved {}/{} useless files", result, newUseless.size());
 			}
 		}

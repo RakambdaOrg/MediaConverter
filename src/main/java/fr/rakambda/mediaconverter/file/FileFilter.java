@@ -1,6 +1,7 @@
 package fr.rakambda.mediaconverter.file;
 
 import fr.rakambda.mediaconverter.storage.IStorage;
+import fr.rakambda.mediaconverter.utils.FileUtils;
 import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -44,12 +45,13 @@ public class FileFilter implements Runnable{
 	
 	private boolean processFile(@NonNull Path file){
 		try{
-			if(storage.isUseless(file)){
+			var lastModified = FileUtils.getFileLastModified(file);
+			if(storage.isUseless(file, lastModified)){
 				return false;
 			}
 			
 			if(isNotMedia(file) || Files.isHidden(file)){
-				storage.setUseless(file);
+				storage.setUseless(file, lastModified);
 				return false;
 			}
 			return true;

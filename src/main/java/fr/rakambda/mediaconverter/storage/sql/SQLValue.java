@@ -3,6 +3,7 @@ package fr.rakambda.mediaconverter.storage.sql;
 import org.jspecify.annotations.NonNull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 public class SQLValue{
 	private final Object value;
@@ -12,7 +13,7 @@ public class SQLValue{
 	 * A type that the value can take.
 	 */
 	public enum Type{
-		INT, STRING, LONG, DOUBLE
+		INT, STRING, LONG, DOUBLE, TIMESTAMP
 	}
 	
 	/**
@@ -39,6 +40,7 @@ public class SQLValue{
 			case INT -> statement.setInt(index, (Integer) value);
 			case LONG -> statement.setLong(index, (Long) value);
 			case DOUBLE -> statement.setDouble(index, (Double) value);
+			case TIMESTAMP -> statement.setTimestamp(index, (Timestamp) value);
 			default -> statement.setString(index, value.toString());
 		}
 	}

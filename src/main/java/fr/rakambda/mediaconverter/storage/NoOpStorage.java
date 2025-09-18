@@ -1,6 +1,8 @@
 package fr.rakambda.mediaconverter.storage;
 
+import org.jspecify.annotations.NonNull;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 
 public class NoOpStorage implements IStorage{
 	@Override
@@ -8,12 +10,12 @@ public class NoOpStorage implements IStorage{
 	}
 	
 	@Override
-	public boolean isUseless(Path path){
+	public boolean isUseless(@NonNull Path path, @NonNull Timestamp lastModified){
 		return false;
 	}
 	
 	@Override
-	public void setUseless(Path path){
+	public void setUseless(@NonNull Path path, @NonNull Timestamp lastModified){
 	}
 	
 	@Override

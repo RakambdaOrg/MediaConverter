@@ -4,6 +4,7 @@ import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
+import fr.rakambda.mediaconverter.utils.FileUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -51,7 +52,7 @@ public class FileProber implements Runnable{
 			callback.accept(new ProbeResult(file, probeResult, processor.get()));
 		}
 		else{
-			storage.setUseless(file);
+			storage.setUseless(file, FileUtils.getFileLastModified(file));
 			progressBar.step();
 		}
 		progressBar.setExtraMessage("");
