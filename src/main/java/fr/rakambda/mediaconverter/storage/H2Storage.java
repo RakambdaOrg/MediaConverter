@@ -6,6 +6,7 @@ import fr.rakambda.mediaconverter.storage.sql.PreparedStatementFiller;
 import fr.rakambda.mediaconverter.storage.sql.SQLValue;
 import lombok.extern.log4j.Log4j2;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -35,10 +36,10 @@ public class H2Storage implements IStorage{
 			db.sendUpdateRequest("""
 					CREATE TABLE IF NOT EXISTS Useless(
 						Filee VARCHAR(512) NOT NULL,
-						LastModified TIMESTAMP NOT NULL DEFAULT 0,
+						LastModified TIMESTAMP,
 						PRIMARY KEY(Filee)
 					 );""");
-			db.sendUpdateRequest("ALTER TABLE Useless  ADD COLUMN IF NOT EXISTS LastModified TIMESTAMP NOT NULL DEFAULT 0;");
+			db.sendUpdateRequest("ALTER TABLE Useless  ADD COLUMN IF NOT EXISTS LastModified TIMESTAMP;");
 			
 			useless.putAll(db.sendQueryRequest("SELECT * FROM Useless;", rs -> new UselessEntry(rs.getString("Filee"), rs.getTimestamp("LastModified")))
 					.stream().collect(Collectors.toMap(UselessEntry::getPath, Function.identity())));
@@ -50,16 +51,24 @@ public class H2Storage implements IStorage{
 		save();
 	}
 	
-	public boolean isUseless(@NonNull Path path, @NonNull Timestamp lastModified){
+	public boolean isUseless(@NonNull Path path, @Nullable Timestamp lastModified){
+		if(Objects.isNull(lastModified)){
+			return true;
+		}
 		var value = path.toString().replace("\\", "/");
 		var entry = useless.get(value);
 		if(Objects.isNull(entry)){
 			return false;
 		}
-		return entry.getLastModified().compareTo(lastModified) >= 0;
+		
+		var entryLastModified = entry.getLastModified();
+		if(Objects.isNull(entryLastModified)){
+			return true;
+		}
+		return entryLastModified.compareTo(lastModified) >= 0;
 	}
 	
-	public void setUseless(@NonNull Path path, @NonNull Timestamp lastModified){
+	public void setUseless(@NonNull Path path, @Nullable Timestamp lastModified){
 		log.debug("Marking {} as useless", path);
 		var value = new UselessEntry(path.toString().replace("\\", "/"), lastModified);
 		useless.put(value.getPath(), value);
