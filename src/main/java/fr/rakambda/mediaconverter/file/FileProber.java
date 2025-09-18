@@ -4,18 +4,22 @@ import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessor;
 import fr.rakambda.mediaconverter.storage.IStorage;
-import org.jspecify.annotations.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public class FileProber implements Runnable{
+	private static final Semaphore PROBING_LOCK = new Semaphore(10);
+	
 	private final Path file;
 	private final ProgressBar progressBar;
 	private final Supplier<FFprobe> ffprobeSupplier;
@@ -53,8 +57,10 @@ public class FileProber implements Runnable{
 		progressBar.setExtraMessage("");
 	}
 	
+	@SneakyThrows(InterruptedException.class)
 	@Nullable
 	private FFprobeResult probeFile(@NonNull Path file){
+		PROBING_LOCK.acquire();
 		try{
 			log.debug("Scanning file {}", file);
 			var ffprobe = ffprobeSupplier.get();
@@ -66,6 +72,9 @@ public class FileProber implements Runnable{
 		catch(Exception e){
 			log.warn("Failed to probe file {}", file);
 			return null;
+		}
+		finally{
+			PROBING_LOCK.release();
 		}
 	}
 	
