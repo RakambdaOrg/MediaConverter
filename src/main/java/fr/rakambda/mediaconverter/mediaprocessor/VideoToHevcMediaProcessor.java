@@ -6,7 +6,6 @@ import com.github.kokorin.jaffree.ffprobe.Stream;
 import fr.rakambda.mediaconverter.itemprocessor.ffmpeg.HevcConverter;
 import fr.rakambda.mediaconverter.progress.ProgressBarSupplier;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.List;
@@ -38,11 +37,16 @@ public abstract class VideoToHevcMediaProcessor implements MediaProcessor{
 	}
 	
 	private boolean isPicture(@NonNull FFprobeResult probeResult){
-		return probeResult.getStreams().stream().anyMatch(stream -> "Main Still Picture".equals(stream.getProfile()));
+		return probeResult.getStreams().stream()
+				.map(Stream::getProfile)
+				.anyMatch("Main Still Picture"::equals);
 	}
 	
 	private boolean isOtherVideoType(@NonNull FFprobeResult probeResult){
-		return probeResult.getStreams().stream().anyMatch(stream -> CODECS.contains(stream.getCodecName()));
+		return probeResult.getStreams().stream()
+				.map(Stream::getCodecName)
+				.filter(Objects::nonNull)
+				.anyMatch(CODECS::contains);
 	}
 	
 	private boolean isOtherHevcType(@NonNull FFprobeResult probeResult){
