@@ -3,9 +3,9 @@ package fr.rakambda.mediaconverter.itemprocessor;
 import fr.rakambda.mediaconverter.mediaprocessor.MediaProcessorTask;
 import fr.rakambda.mediaconverter.utils.FutureHelper;
 import lombok.Getter;
-import org.jspecify.annotations.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.jspecify.annotations.NonNull;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,10 +17,13 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 
 @Log4j2
 @Getter
 public abstract class ConverterRunnable implements MediaProcessorTask{
+	private static final Semaphore LOCK = new Semaphore(500); // Avoid too many tasks exhausting sockets
+	
 	private final Path input;
 	private final Path output;
 	private final Path temporary;
@@ -34,6 +37,7 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		this.deleteInput = deleteInput;
 		
 		listeners = new ArrayDeque<>();
+		addCompletionListener(LOCK::release);
 	}
 	
 	@Override
@@ -63,8 +67,10 @@ public abstract class ConverterRunnable implements MediaProcessorTask{
 		attributes.setTimes(baseAttributes.lastModifiedTime(), baseAttributes.lastAccessTime(), baseAttributes.creationTime());
 	}
 	
+	@SneakyThrows(InterruptedException.class)
 	@Override
 	public void execute(@NonNull ExecutorService executorService, boolean dryRun){
+		LOCK.acquire();
 		try{
 			FutureHelper.makeCompletableFuture(convert(executorService, dryRun))
 					.thenAccept(r -> handleSuccess(r, dryRun))
