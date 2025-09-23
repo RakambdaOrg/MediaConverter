@@ -10,7 +10,7 @@ progressbar-version = "0.10.1"
 hikari-cp-version = "7.0.2"
 h2-version = "2.3.232"
 lombok-version = "1.18.42"
-jna-version = "5.17.0"
+jna-version = "5.18.0"
 
 shadow-version = "9.1.0"
 jib-version = "3.4.5"
