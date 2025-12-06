@@ -12,7 +12,7 @@ h2-version = "2.4.240"
 lombok-version = "1.18.42"
 jna-version = "5.18.1"
 
-shadow-version = "9.2.2"
+shadow-version = "9.3.0"
 jib-version = "3.5.1"
 
 [libraries]
