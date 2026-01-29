@@ -37,7 +37,7 @@ public class Av1Converter extends FfmpegVideoConverter{
 				.addArguments("-g", "240")
 				.addArguments("-svtav1-params", "tune=0:enable-overlays=1:scd=1:scm=2")
 				.addArguments("-pix_fmt", "yuv420p10le")
-				.addArguments("-movflags", "use_metadata_tags")
+				.addArguments("-movflags", "+faststart+use_metadata_tags")
 				.addArguments("-map_metadata", "0")
 				.addArguments("-map", "0")
 				.addArguments("-map", "-0:d")

@@ -45,7 +45,7 @@ public class HevcConverter extends FfmpegVideoConverter{
 				.addArguments("-preset", "medium")
 				.addArguments("-crf", "21")
 				.addArguments("-vf", "format=yuv420p10le")
-				.addArguments("-movflags", "use_metadata_tags")
+				.addArguments("-movflags", "+faststart+use_metadata_tags")
 				.addArguments("-map_metadata", "0")
 				.addArguments("-map", "0")
 				.addArguments("-map", "-0:d")
