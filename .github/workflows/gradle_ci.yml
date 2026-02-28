@@ -13,6 +13,7 @@ jobs:
     with:
       java-version: ${{ vars.JAVA_VERSION }}
       artifact-name: Gradle-Libs
+      artifact-path: build/libs/mediaconverter-shaded.jar
 
   dropbox:
     uses: RakambdaOrg/rakambda-github-workflows/.github/workflows/dropbox-publish-artifact.yml@main
@@ -20,7 +21,7 @@ jobs:
     needs:
       - build
     with:
-      artifact-name: Gradle-Libs
+      artifact-name: "mediaconverter-shaded.jar"
       source: "mediaconverter-shaded.jar"
       target: "/Documents/JARs/MediaConverter.jar"
       environment: DropboxPersonal
