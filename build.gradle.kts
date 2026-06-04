@@ -80,13 +80,13 @@ application {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_26
+    targetCompatibility = JavaVersion.VERSION_26
 }
 
 jib {
     from {
-        image = "eclipse-temurin:21-jdk"
+        image = "eclipse-temurin:26-jdk-alpine"
         platforms {
             platform {
                 os = "linux"
