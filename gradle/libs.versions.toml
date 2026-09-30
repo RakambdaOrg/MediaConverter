@@ -8,7 +8,7 @@ lang3-version = "3.20.0"
 jackson-version = "2.22.3"
 progressbar-version = "0.10.2"
 hikari-cp-version = "7.1.0"
-h2-version = "2.5.250"
+h2-version = "2.5.252"
 lombok-version = "1.18.48"
 jna-version = "5.19.1"
 
