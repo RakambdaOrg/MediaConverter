@@ -42,7 +42,6 @@ repositories {
 
 tasks {
     processResources {
-        expand(project.properties)
     }
 
     compileJava {
@@ -66,14 +65,14 @@ tasks {
     }
 
     wrapper {
-        val wrapperVersion: String by project
+        val wrapperVersion = project.property("wrapperVersion") as? String
         gradleVersion = wrapperVersion
     }
 }
 
 application {
-    val moduleName: String by project
-    val className: String by project
+    val moduleName = project.property("moduleName") as? String
+    val className = project.property("className") as? String
 
     mainModule.set(moduleName)
     mainClass.set(className)
