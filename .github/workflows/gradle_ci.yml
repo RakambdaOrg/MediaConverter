@@ -11,7 +11,7 @@ jobs:
   build:
     uses: RakambdaOrg/rakambda-github-workflows/.github/workflows/gradle-build.yml@main
     with:
-      java-version: ${{ vars.JAVA_VERSION }}
+      java-version: 27
       artifact-name: Gradle-Libs
       artifact-path: build/libs/mediaconverter-shaded.jar
 
@@ -34,7 +34,7 @@ jobs:
     needs:
       - build
     with:
-      java-version: ${{ vars.JAVA_VERSION }}
+      java-version: 27
       docker-image: ${{ vars.DOCKER_IMAGE }}
       docker-tag: latest
       environment: DockerSelfHosted
